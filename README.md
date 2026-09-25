@@ -38,8 +38,8 @@ ad script you add yourself.
   new fixed Japanese text anywhere, its characters need adding to that offline subset step or they'll render
   blank - see the git history around this file for the exact `pyftsubset`/`otf2ttf` commands used.
 - `results.html` / `js/pdf-viewer.js` - shared PDF viewer page every "Generate" button opens in a new tab
-  instead of downloading directly (renders the PDF with pdf.js, thumbnail rail + Print + Download, ad slots
-  around the viewer). See "Adding a new worksheet tool" below.
+  instead of downloading directly (renders the PDF with pdf.js, thumbnail rail + Print + Download; no ads,
+  `noindex`). See "Adding a new worksheet tool" below.
 - `answers.html` / `js/answers-viewer.js` - decodes and displays the answer QR code's payload (see
   "Answer-key QR code" below). No IndexedDB handoff like `results.html` - everything needed to
   render the page arrives in its own URL, since the QR is meant to be scanned on a phone with no prior visit
@@ -64,33 +64,37 @@ directly via `file://` also works since there's no backend.
 The site is linked to AdSense (publisher `ca-pub-6130154285914649`, verified via the `<script>` tag in every
 page's `<head>` and `/ads.txt` at the site root).
 
-`results.html`:
-- `#ad-slot-bottom-leaderboard` (728x90-ish leaderboard) - **live**, AdSense ad unit slot `7285905093`. Placed
-  below the viewer rather than above it, so a visitor doesn't hit an ad before the worksheet they came for.
-- `#ad-slot-sidebar` (300x250 rectangle, next to the PDF viewer) - **live**, AdSense ad unit slot `8894500230`.
+Current placements (the result of an AdSense "low-value content / ads on screens without publisher content"
+rejection - keep these rules when adding ads):
+- `index.html`: one leaderboard (`#ad-slot-bottom-leaderboard`, slot `7285905093`) below the tool cards and
+  the How it works / FAQ content.
+- `math.html`, `japanese.html`, `japanese-practice.html`: two ads each - `#ad-slot-below-preview` (slot
+  `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot `7199305456`) between the
+  2nd and 3rd sections of the guide article below the tool.
+- **No ads** on `results.html`, `answers.html` (utility screens, also `noindex`), `about.html`, `privacy.html`,
+  or `contact.html`.
 
-`index.html` has two spots: a rectangle ad as the 4th tile in the 2x2 subject-cards grid (`#ad-slot-grid`, reuses
-the sidebar ad unit slot `8894500230`) and a leaderboard banner at the bottom of the page, below the grid
-(`#ad-slot-bottom-leaderboard`, reuses the leaderboard ad unit slot `7285905093`) - deliberately not at the top,
-so a first-time visitor sees the actual subject choices before any ad.
+Rules these placements follow:
+- Never put two ad units next to each other with no content between them, at any viewport width. Check the
+  *mobile* stacking order (CSS `order-*` classes), not just the desktop grid.
+- Never put an ad directly next to a button or other control (the Generate button especially) - AdSense treats
+  that as encouraging accidental clicks.
+- Never style an ad to look like site content (e.g. as a tool card in the homepage grid).
+- Keep at most two ad units per tool page; every ad must have real written content around it.
+- Keep Auto ads **off** in the AdSense dashboard, so Google doesn't inject extra placements that break these rules.
 
-`math.html` and `japanese.html` moved away from a top banner (low-attention position) to three spots nearer
-where visitors are actually looking/acting:
-- `#ad-slot-sidebar` (300x250 rectangle, next to the control panel) - **live**, ad unit slot `8894500230`.
-- `#ad-slot-below-preview` (728x90-ish, under the live problem/kana preview grid) - **live**, reuses the
-  leaderboard ad unit slot `7285905093` (repositioned here instead of the top of the page).
-- `#ad-slot-below-generate` (under the Generate button, left column) - **live**, AdSense ad unit slot
-  `7199305456`.
+`about.html`, `privacy.html` (required by AdSense: discloses Google's ad cookies), and `contact.html` are linked
+from every page's footer. `robots.txt` and `sitemap.xml` are at the site root; add any new indexable page to
+`sitemap.xml`.
 
 All ad slot containers cap their height (`overflow-hidden` + a fixed height) rather than letting
 `data-ad-format="auto"` reserve however much space it wants - useful right after linking a new AdSense account,
 since ads may not start filling for hours to a couple weeks, and an unfilled `auto`-format slot can otherwise
 reserve a very tall blank block while waiting.
 
-Every ad slot is a plain `<div>` placed as a sibling of `#controls`/`#preview` (or the PDF viewer on
-`results.html`) - never nested inside them - so ad content can't overlap form fields or generated worksheet
-content, however the ad network chooses to render. To wire up a new/replacement ad unit, paste its snippet in
-place of the existing `<ins>`/`<script>` pair, e.g.:
+Every ad slot is a plain `<div>` wrapping one `<ins>`/`<script>` pair, never inside a form or the preview grid
+itself, so ad content can't overlap form fields or generated worksheet content. To wire up a new/replacement ad
+unit, paste its snippet in place of the existing `<ins>`/`<script>` pair, e.g.:
 
 ```html
 <div id="ad-slot-below-preview">
@@ -101,7 +105,7 @@ place of the existing `<ins>`/`<script>` pair, e.g.:
 
 ## Adding a new worksheet tool
 
-Every "Generate" button opens the finished PDF in `results.html` (a new tab, ad-supported PDF.js viewer) rather
+Every "Generate" button opens the finished PDF in `results.html` (a new tab, ad-free PDF.js viewer) rather
 than downloading it directly. `results.html` has no idea what subject generated the PDF - it only knows how to
 render whatever bytes it's handed - so a new tool (e.g. a future writing-practice generator) gets this for free
 by following the same three-step contract used by `math-ui.js`/`japanese-ui.js`:
