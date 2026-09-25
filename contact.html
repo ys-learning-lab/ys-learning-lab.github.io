@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact - Ys Learning Lab</title>
+<meta name="description" content="Contact Ys Learning Lab to report a problem with a worksheet, suggest a new worksheet type, or ask a question." />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<link rel="stylesheet" href="assets/css/site.css?v=7" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key">Math</a>
+      <a href="japanese.html" class="nav-key">Japanese</a>
+    </div>
+  </nav>
+</header>
+
+<main class="flex-1 w-full max-w-3xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-extrabold mb-6">Contact</h1>
+
+  <p class="mb-6">Found a wrong answer on an answer key? Have an idea for a new kind of worksheet? We'd like to hear it.</p>
+
+  <section class="card-soft p-5 mb-8">
+    <h2 class="text-lg font-bold mb-2">Send feedback or report a problem</h2>
+    <p class="mb-4 text-sm">Messages are handled through the site's public GitHub issue tracker. You'll need a free GitHub account to post.</p>
+    <a href="https://github.com/ys-learning-lab/ys-learning-lab.github.io/issues/new" rel="noopener" class="btn-key btn-key-primary inline-block px-4 py-2 text-sm">Open a new message</a>
+  </section>
+
+  <section class="mb-8">
+    <h2 class="text-xl font-bold mb-2">What helps us fix a problem quickly</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>Which tool you were using (Math, Kana Quiz, or Writing Practice).</li>
+      <li>The worksheet code printed at the top of the page, such as <code>XRGD0831-A-1</code>.</li>
+      <li>For a wrong answer, the problem number and the answer you expected.</li>
+      <li>For display or printing problems, your browser and device (for example, "Safari on iPad").</li>
+      <li>If you use the Export (.ini) button, attach the settings file so we can reproduce the exact sheet.</li>
+    </ul>
+  </section>
+
+  <p class="text-sm text-stone-500">Please don't include a child's full name or other personal details. The issue tracker is public.</p>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline">About</a>
+      <a href="privacy.html" class="hover:underline">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline">Contact</a>
+    </nav>
+    Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.
+  </div>
+</footer>
+
+</body>
+</html>
