@@ -221,3 +221,6 @@ body {
   top: 0; bottom: 0; left: 50%;
   border-left-width: 1px;
 }
+
+/* Collapse ad units Google couldn't fill, instead of leaving a blank hole in the page. */
+ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }

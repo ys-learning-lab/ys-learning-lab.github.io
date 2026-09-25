@@ -87,7 +87,9 @@ Rules these placements follow:
 from every page's footer. `robots.txt` and `sitemap.xml` are at the site root; add any new indexable page to
 `sitemap.xml`.
 
-All ad slot containers cap their height (`overflow-hidden` + a fixed height) rather than letting
+All ad slot containers cap their height (`overflow-hidden` + a `max-h-[...]`, not a fixed `h-[...]`, so an
+empty or unfilled slot collapses to nothing instead of leaving a blank hole; `site.css` also hides
+`ins.adsbygoogle[data-ad-status="unfilled"]`) rather than letting
 `data-ad-format="auto"` reserve however much space it wants - useful right after linking a new AdSense account,
 since ads may not start filling for hours to a couple weeks, and an unfilled `auto`-format slot can otherwise
 reserve a very tall blank block while waiting.
@@ -242,5 +244,5 @@ Every `<script src="js/...">` and the `site.css` link carries a `?v=N` query par
 that file** - browsers cache these aggressively with no other cache-control here, and without bumping the
 version, visitors (and you, testing) can silently keep running old JS/CSS after a deploy. Cache-busting is
 per-file-type, not global: all `js/*.js` references share one number (`?v=18` currently), `site.css` has its own
-(`?v=7` currently) - bump whichever group you actually touched.
+(`?v=8` currently) - bump whichever group you actually touched.
 
