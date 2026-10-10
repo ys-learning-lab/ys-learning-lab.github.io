@@ -11,6 +11,7 @@ I18N.register('ja', {
   'chart.opt.romaji': 'ローマ字',
   'chart.opt.none': 'なし',
   'chart.qr': 'ほかの無料プリントはこちら',
+  'chart.credit': '音声: AivisSpeech:Lux',
   'chart.print': 'この表を印刷',
   'chart.paper': '用紙',
   'chart.paper.b4': 'B4',

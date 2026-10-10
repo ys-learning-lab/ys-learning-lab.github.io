@@ -1,0 +1,23 @@
+// Japanese strings for results.html (the PDF viewer page).
+I18N.register('ja', {
+  'res.title': 'できあがったプリント - Ys Learning Lab',
+  'res.empty.h': '表示できるものがありません',
+  'res.empty.p': 'このリンクは期限切れか、プリントが渡されていません。前のページに戻って、もう一度作成してください。',
+  'res.empty.back': 'Ys Learning Lab に戻る',
+  'res.zoomOut': '縮小',
+  'res.zoomIn': '拡大',
+  'res.print': '印刷',
+  'res.download': 'ダウンロード',
+  'res.share': '共有',
+  'res.page': '{n} / {total} ページ',
+  'res.back': '← {tool}に戻る',
+  'res.tip.h': '役に立ちましたか？',
+  'res.tip.p': 'Ys Learning Lab は無料でお使いいただけます。役に立ったときは、任意のチップが、制作と改善にかけた時間の支えになります。',
+  'res.tip.note': '別のサービスである Ko-fi が、新しいタブで開きます。<a href="support.html" class="underline">応援のページ</a>もご覧ください。',
+  'res.share.text': 'Ys Learning Lab のプリント',
+  'res.share.fail': '共有メニューを開けませんでした。ダウンロードを使って、ファイルをメールに添付してください。',
+  'res.share.fallback': 'このブラウザでは共有にファイルを添付できないため、PDFをダウンロードしました（{name}）。いま開いたメールに添付してください。',
+  'res.share.subject': 'プリント: {name}',
+  'res.share.body': 'ダウンロードしたPDFを、このメールに添付してください。',
+  'res.error': 'このPDFを表示できませんでした。',
+});

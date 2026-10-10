@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Your Worksheet - Ys Learning Lab</title>
+<title data-i18n-title="res.title">Your Worksheet - Ys Learning Lab</title>
 <meta name="robots" content="noindex" />
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=1"></script>
 <link rel="stylesheet" href="assets/css/site.css?v=8" />
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
@@ -17,8 +18,9 @@
       <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
     </a>
     <div class="flex items-center gap-2 text-sm">
-      <a href="math.html" class="nav-key">Math</a>
-      <a href="kana.html" class="nav-key">Japanese</a>
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="kana.html" class="nav-key" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
     </div>
   </nav>
 </header>
@@ -28,9 +30,9 @@
   <!-- EMPTY / EXPIRED STATE -->
   <div id="empty-state" class="hidden text-center py-24">
     <div class="text-3xl mb-3">📄</div>
-    <h1 class="text-xl font-bold mb-2">Nothing to show here</h1>
-    <p class="text-sm text-stone-600 mb-6">This link has expired or no worksheet was handed off. Go back and generate one.</p>
-    <a href="index.html" class="btn-key btn-key-primary inline-block px-4 py-2 text-sm">Back to Ys Learning Lab</a>
+    <h1 class="text-xl font-bold mb-2" data-i18n="res.empty.h">Nothing to show here</h1>
+    <p class="text-sm text-stone-600 mb-6" data-i18n="res.empty.p">This link has expired or no worksheet was handed off. Go back and generate one.</p>
+    <a href="index.html" class="btn-key btn-key-primary inline-block px-4 py-2 text-sm" data-i18n="res.empty.back">Back to Ys Learning Lab</a>
   </div>
 
   <!-- VIEWER -->
@@ -49,19 +51,29 @@
         <div class="bg-stone-800 text-white px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
           <span id="worksheet-title" class="font-medium truncate max-w-[40%]">worksheet.pdf</span>
           <div class="flex items-center gap-2">
-            <button id="zoom-out" type="button" class="btn-key btn-key-sm btn-key-cream" aria-label="Zoom out">&minus;</button>
+            <button id="zoom-out" type="button" class="btn-key btn-key-sm btn-key-cream" aria-label="Zoom out" data-i18n-aria="res.zoomOut">&minus;</button>
             <span id="page-count" class="tabular-nums">Page 1 of 1</span>
-            <button id="zoom-in" type="button" class="btn-key btn-key-sm btn-key-cream" aria-label="Zoom in">+</button>
+            <button id="zoom-in" type="button" class="btn-key btn-key-sm btn-key-cream" aria-label="Zoom in" data-i18n-aria="res.zoomIn">+</button>
           </div>
           <div class="flex items-center gap-2">
-            <button id="print-btn" type="button" class="btn-key btn-key-sm btn-key-teal">Print</button>
-            <button id="download-btn" type="button" class="btn-key btn-key-sm btn-key-primary">Download</button>
+            <button id="print-btn" type="button" class="btn-key btn-key-sm btn-key-teal" data-i18n="res.print">Print</button>
+            <button id="download-btn" type="button" class="btn-key btn-key-sm btn-key-primary" data-i18n="res.download">Download</button>
+            <button id="share-btn" type="button" class="btn-key btn-key-sm btn-key-gold" data-i18n="res.share">Share</button>
           </div>
         </div>
+        <p id="share-status" class="hidden text-xs px-3 py-2 bg-[#f0ead9] border-b-2 border-stone-800" role="status"></p>
         <div id="viewer-scroll" class="overflow-auto max-h-[75vh] p-4 bg-[#dde1e6]">
           <div id="pages-container"></div>
         </div>
       </div>
+
+      <!-- TIP CARD -->
+      <aside class="order-4 md:order-3 w-full card-soft card-soft-gold p-4">
+        <h2 class="text-base font-bold mb-1" data-i18n="res.tip.h">Did this save you time?</h2>
+        <p class="text-sm text-stone-700 mb-3" data-i18n="res.tip.p">Ys Learning Lab is free to use. If it helped, an optional tip supports the time spent building and improving it.</p>
+        <div><a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key inline-flex items-center justify-center gap-3 text-white font-bold px-8 py-4 text-lg" style="background-color:#72a4f2"><svg viewBox="0 0 28 22" width="32" height="25" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a></div>
+        <p class="text-xs text-stone-500 mt-3" data-i18n-html="res.tip.note">Opens in a new tab on Ko-fi, a separate service. See the <a href="support.html" class="underline">Support page</a>.</p>
+      </aside>
 
     </div>
   </div>
@@ -70,18 +82,22 @@
 <footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
   <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
     <nav class="flex justify-center gap-4 mb-2 text-stone-600">
-      <a href="about.html" class="hover:underline">About</a>
-      <a href="privacy.html" class="hover:underline">Privacy Policy</a>
-      <a href="contact.html" class="hover:underline">Contact</a>
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
     </nav>
-    Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
   </div>
 </footer>
 
 <!-- Hidden iframe purely to drive native browser PDF printing (more reliable than printing the on-screen canvases). -->
 <iframe id="print-frame" class="hidden" title="Print"></iframe>
 
+<script src="js/i18n.js?v=4"></script>
+<script src="js/i18n-ja-common.js?v=9"></script>
+<script src="js/i18n-ja-results.js?v=1"></script>
 <script src="js/pdf-common.js?v=18"></script>
-<script type="module" src="js/pdf-viewer.js?v=18"></script>
+<script type="module" src="js/pdf-viewer.js?v=20"></script>
 </body>
 </html>

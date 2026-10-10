@@ -1,6 +1,6 @@
 // Wires up results.html: pulls the handoff record out of IndexedDB (written by
 // openPdfResults() in pdf-common.js), renders it with pdf.js, and wires up
-// zoom/print/download. getHandoffRecord/downloadPdfBytes come from the classic
+// zoom/print/download/share. getHandoffRecord/downloadPdfBytes come from the classic
 // <script src="js/pdf-common.js"> loaded before this module script - global
 // declarations there are reachable from here since both share `window`.
 
@@ -12,6 +12,15 @@ let currentZoom = 1.0;
 let currentBytes = null;
 let currentFilename = 'worksheet.pdf';
 let printUrl = null;
+
+// "Page 2 of 3" in the chosen language; refreshed on a language change.
+let pageNow = 1;
+let pageTotal = 1;
+function setPageLabel(n, total) {
+  pageNow = n;
+  pageTotal = total;
+  document.getElementById('page-count').textContent = I18N.t('res.page', 'Page {n} of {total}', { n, total });
+}
 
 function showEmptyState() {
   document.getElementById('empty-state').classList.remove('hidden');
@@ -34,7 +43,7 @@ async function renderPdf() {
   const loadingTask = pdfjsLib.getDocument({ data: currentBytes.slice() });
   const pdfDoc = await loadingTask.promise;
   const pageCount = pdfDoc.numPages;
-  document.getElementById('page-count').textContent = `Page 1 of ${pageCount}`;
+  setPageLabel(1, pageCount);
 
   const canvases = [];
   for (let i = 1; i <= pageCount; i++) {
@@ -69,7 +78,7 @@ function observeCurrentPage(canvases, pageCount) {
   const root = document.getElementById('viewer-scroll');
   const observer = new IntersectionObserver((entries) => {
     const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (visible) label.textContent = `Page ${visible.target.dataset.pageNumber} of ${pageCount}`;
+    if (visible) setPageLabel(visible.target.dataset.pageNumber, pageCount);
   }, { root, threshold: [0.5] });
   canvases.forEach((c) => observer.observe(c));
 }
@@ -101,6 +110,32 @@ function wireDownload() {
   });
 }
 
+// Share sends the PDF itself through the device's share sheet (Mail, Gmail, Messages, AirDrop...),
+// so the user can email it to themselves or someone else. Nothing is uploaded by this site.
+// Browsers that can't share files (many desktop ones) get the file downloaded plus a blank email
+// draft to attach it to.
+function wireShare() {
+  const status = document.getElementById('share-status');
+  const say = (text) => { status.textContent = text; status.classList.toggle('hidden', !text); };
+
+  document.getElementById('share-btn').addEventListener('click', async () => {
+    const file = new File([currentBytes.slice()], currentFilename, { type: 'application/pdf' });
+    const data = { files: [file], title: currentFilename, text: I18N.t('res.share.text', 'Worksheet from Ys Learning Lab') };
+    say('');
+    if (navigator.canShare && navigator.canShare(data)) {
+      try {
+        await navigator.share(data);
+      } catch (e) {
+        if (e.name !== 'AbortError') say(I18N.t('res.share.fail', 'Could not open the share menu. Use Download instead, then attach the file to an email.'));
+      }
+      return;
+    }
+    await downloadPdfBytes(currentBytes.slice(), currentFilename);
+    say(I18N.t('res.share.fallback', "This browser can't attach files to a share, so the PDF was downloaded ({name}). Attach it to the email that just opened.", { name: currentFilename }));
+    location.href = `mailto:?subject=${encodeURIComponent(I18N.t('res.share.subject', 'Worksheet: {name}', { name: currentFilename }))}&body=${encodeURIComponent(I18N.t('res.share.body', 'Attach the downloaded PDF to this email.'))}`;
+  });
+}
+
 async function init() {
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
@@ -121,7 +156,10 @@ async function init() {
 
   document.getElementById('worksheet-title').textContent = currentFilename;
   const backLink = document.getElementById('back-link');
-  backLink.textContent = `← Back to ${record.toolLabel || 'generator'}`;
+  const toolLabel = record.toolLabel || 'generator';
+  const showBack = () => { backLink.textContent = I18N.t('res.back', '← Back to {tool}', { tool: toolLabel }); };
+  showBack();
+  document.addEventListener('i18n:change', () => { showBack(); setPageLabel(pageNow, pageTotal); });
   backLink.href = record.toolPage || 'index.html';
 
   showViewer();
@@ -130,12 +168,14 @@ async function init() {
     await renderPdf();
     wirePrint();
     wireDownload();
+    wireShare();
     document.getElementById('zoom-in').addEventListener('click', () => changeZoom(0.15));
     document.getElementById('zoom-out').addEventListener('click', () => changeZoom(-0.15));
   } catch (e) {
     console.error('Failed to render PDF:', e);
-    document.getElementById('pages-container').innerHTML = '<p class="text-sm text-red-600 p-4">Could not render this PDF.</p>';
+    document.getElementById('pages-container').innerHTML = `<p class="text-sm text-red-600 p-4">${I18N.t('res.error', 'Could not render this PDF.')}</p>`;
   }
 }
 
+I18N.init();
 init();

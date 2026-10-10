@@ -126,8 +126,10 @@ ad script you add yourself.
   the PDF language; a title the user typed is printed as typed. Used by the quiz, matching and writing-practice
   renderers; the math tool isn't translated yet. Japanese strings use ASCII punctuation (": ", "!") where possible.
 - `results.html` / `js/pdf-viewer.js` - shared PDF viewer page every "Generate" button opens in a new tab
-  instead of downloading directly (renders the PDF with pdf.js, thumbnail rail + Print + Download; no ads,
-  `noindex`). See "Adding a new worksheet tool" below.
+  instead of downloading directly (renders the PDF with pdf.js, thumbnail rail + Print + Download + Share; no ads,
+  `noindex`). Share (`wireShare()`) uses the Web Share API with the PDF as a file, so the device's share sheet
+  (Mail, Gmail, Messages...) sends it as an attachment, with nothing uploaded; browsers that can't share files get a download plus a
+  blank `mailto:` draft. See "Adding a new worksheet tool" below.
 - `answers.html` / `js/answers-viewer.js` - decodes and displays the answer QR code's payload (see
   "Answer-key QR code" below). No IndexedDB handoff like `results.html` - everything needed to
   render the page arrives in its own URL, since the QR is meant to be scanned on a phone with no prior visit
