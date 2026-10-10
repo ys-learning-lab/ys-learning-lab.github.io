@@ -14,5 +14,6 @@ I18N.register('ja', {
   'footer.about': 'このサイトについて',
   'footer.privacy': 'プライバシーポリシー',
   'footer.contact': 'お問い合わせ',
+  'footer.support': 'サイトを応援する',
   'footer.note': 'Ys Learning Lab ワークシートジェネレーター。PDFはすべてお使いのブラウザ内で作成されます。',
 });
