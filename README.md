@@ -7,7 +7,12 @@ ad script you add yourself.
 
 ## Structure
 
-- `index.html` - landing page, links to each tool
+- `index.html` - landing page: a Japanese section with the same six cards as `kana.html`, then a Math section below it
+  Each section heading is a keycap link (`btn-key` inside the `<h2>`) to `kana.html` or `math.html`; card titles are `<h3>`.
+- `kana.html` / `js/i18n-ja-hub.js` - the Japanese landing page the top bar's "Japanese" button opens on every page.
+  Big cards in learning order: Study Plan, Kana Chart, Writing Practice, Kana Matching, Tap Practice, Conversion Quiz
+  (card text reuses the `idx.*` strings in `i18n-ja-index.js`), then a short "Where to start". No ads, no sub-nav.
+  A new Japanese page needs a card here and on `index.html`, a sub-nav tab, and a sitemap entry.
 - `math.html` / `js/math-generator.js` / `js/math-ui.js` - port of `source/math test advanced.py`
 - `japanese.html` / `js/japanese-generator.js` / `js/japanese-ui.js` - port of `source/Hiragana Katakana Test Maker.py`
   (the katakana<->hiragana conversion quiz)
@@ -29,6 +34,23 @@ ad script you add yourself.
   toggle `#cfg-qr`, on by default; skipped if the payload is too dense to scan at 64pt). The payload is
   `label:answer` entries read by `answers.html` - each left box and its partner, trick boxes as `none (X)`, then any
   right-hand trick boxes - and the instruction text wraps narrower to leave room for the QR.
+- `kana-tap-practice.html` / `js/kana-tap-ui.js` / `js/i18n-ja-tap.js` - an on-screen (not printable) tap quiz: no PDF, no
+  generator class. A teacher/parent sets Question types and Choice types (each a set of hiragana / katakana / romaji
+  checkboxes; every question picks a random (question, choice) pair of *different* ticked types), kana rows (reuses
+  `MATCH_ROWS` from `kana-matching-generator.js`, which this page therefore also loads), choices per question (2-8, default 6),
+  number of questions (1-100; each ticked kana once before any repeats), "wrong choices from the ticked kana"
+  (tops up from all kana), and immediate right/wrong feedback (a miss waits for Next, a hit advances itself).
+  Three screens (setup / play / results) render from one `state` object, so a language switch re-renders mid-quiz.
+  Results show score, % and a table of every question (asked, picked, correct) with a "show only missed" filter, plus
+  Play again / Practice missed only / Change settings. Each question is timed from when it appears to the tap; results show
+  per-question times, the total (sum of those) and the average. The setup (not scores) is saved in localStorage under
+  `ysll-tap-settings` (`saveSettings()` / `loadSettings()`), and mentioned in privacy.html. Nothing is sent anywhere. Number keys 1-8 pick a choice.
+  Results also offer "Make a writing practice sheet": checkboxes pick the letters (missed question letters, wrong picks,
+  their hiragana/katakana conversions, optionally all), a boxes-per-letter number and the PDF language, and "Generate PDF"
+  renders it right on this page (`generateSheet()` uses `HiraganaPracticeRenderer` in custom mode, so this page also loads
+  pdf-lib, pdf-common, pdf-lang, kana-safety and the practice generator). Practice boxes come in steps of 5 (a 5-25 dropdown on both pages, `normalizePracticeRepeats()`), and the renderer keeps one character's columns on one page (a character that doesn't fit in the rest of a page starts a new one). A small link still opens
+  `japanese-practice.html?mode=custom&chars=...&lang=..` for title / teacher options.
+  No ad slots on this page yet.
 - `japanese-practice.html` / `js/japanese-practice-generator.js` / `js/japanese-practice-ui.js` - a separate,
   not-ported-from-Python tool: hiragana handwriting/tracing practice (single character - via a dropdown, not a
   text field, since typing Japanese isn't a given on every device - a whole row/行, or all 46 basic hiragana).
@@ -55,6 +77,35 @@ ad script you add yourself.
   selected character shown, solid; other boxes open) and appends a page 2 with the whole word as the sample answer
   (`'answer'` view). The header uses the Japanese font when a typed title/teacher isn't Latin-only.
   Cross-linked with japanese.html via a small sub-nav row under each page's `<h1>`.
+- Writing Practice's "Selected characters" mode (`cfg-mode=custom`, text box `#cfg-custom`, `parseCustomChars()` in the generator) takes any
+  typed/pasted hiragana or katakana (basic 46 plus dakuten/handakuten, `VOICED_KANA`), kept exactly as typed so scripts can mix
+  (the script radios are hidden and the PDF title defaults to `practice.defaultKana`), de-duplicates, keeps typed order, and lists other
+  characters as left out. `applyIncomingSetup()` in the UI fills it from the URL params above and scrolls to the preview.
+- `kana-study-plan.html` / `js/i18n-ja-plan.js` - a guide page (no tool): a kana curriculum that walks through the
+  three Japanese tools in order (one new letter a day in Writing Practice, a weekly Kana Matching sheet for the
+  finished rows, katakana the same way, then the Conversion Quiz in order and then randomized daily, with missed
+  letters fed back through "Always include" and a point-and-say reading check, plus a "No time for a quiz?"
+  section that offers `kana-tap-practice.html` as the busy-day stand-in and quotes its Question / Choices /
+  Practice missed only / Make a writing practice sheet labels). Linked from the Japanese tools'
+  sub-nav (`tab.plan`) and the home page. It names real button labels, so update it when those change.
+  Its chart steps link to `kana-chart.html`.
+- `kana-chart.html` / `js/i18n-ja-chart.js` - hiragana and katakana charts (46 basic letters, no tool, no ads),
+  sub-nav tab `tab.chart`. Traditional sideways layout: 11 columns read right to left (あ行 on the right, ん on the
+  far left) by 5 rows (あいうえお), built by the page's inline script (katakana = hiragana + 0x60); each letter is a
+  keycap tile in the site's five colorways, the や/わ gaps are dashed empty cells. Three dropdowns pick the big
+  letter (Main) and up to two small ones under it (Sub 1, Sub 2; each hiragana / katakana / romaji, subs also
+  None), defaulting to hiragana / katakana / romaji. Picking a script another dropdown shows swaps the two (if the
+  old value was None and the other is Main, Main takes the unused script instead); presets that repeat a script are
+  fixed on load. URL
+  params `?main=&sub1=&sub2=` preset them (the older `?script=kata` = katakana main, hiragana sub). Setting both subs
+  to None is the point-and-say mode. "Print this chart" prints only the chart card on one landscape page, under a
+  print-only header (logo, "Learning Lab", and a QR code to the home page made with qrcode-generator), sized in `cqw`
+  of the printed page (main is the print container) so it never pushes the chart onto a second page.
+  `@page { margin: 0 }` (the body padding is the print margin) keeps the browser from adding its date/URL lines.
+  A Paper dropdown (A4 default, A3, JIS B4, Letter, Tabloid; `?paper=` presets it) rewrites a `<style id="page-size">`
+  with `@page { size: <paper> landscape; margin: 0 }`; the chart scales to whatever paper is chosen. Every chart size is
+  in `cqw` of the chart's own width, so the printout is the on-screen chart scaled to the paper - don't add
+  separate print font sizes (fixed sizes overflowed the square cells and split the chart over two pages).
 - `js/pdf-common.js` - shared page geometry constants, font loading, drawing helpers, download trigger
 - `assets/fonts/NotoSansJP-Regular.ttf` - embedded Japanese font: a `fontTools` subset (~330 glyphs, ~60KB) of the
   Noto Sans JP variable font (SIL OFL; licence name records are kept), instanced at wght 400 and subset to: ASCII, all
@@ -105,9 +156,10 @@ Current placements (the result of an AdSense "low-value content / ads on screens
 rejection - keep these rules when adding ads):
 - `index.html`: one leaderboard (`#ad-slot-bottom-leaderboard`, slot `7285905093`) below the tool cards and
   the How it works / FAQ content.
-- `math.html`, `japanese.html`, `japanese-practice.html`: two ads each - `#ad-slot-below-preview` (slot
-  `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot `7199305456`) between the
-  2nd and 3rd sections of the guide article below the tool.
+- `math.html`, `japanese.html`, `kana-matching.html`, `japanese-practice.html`: two ads each -
+  `#ad-slot-below-preview` (slot `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot
+  `7199305456`) between the 2nd and 3rd sections of the guide article below the tool.
+- `kana-study-plan.html`: one `#ad-slot-in-article` (slot `7199305456`) between Step 4 and Step 5.
 - **No ads** on `results.html`, `answers.html` (utility screens, also `noindex`), `about.html`, `privacy.html`,
   or `contact.html`.
 

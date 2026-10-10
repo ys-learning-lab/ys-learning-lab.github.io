@@ -11,7 +11,7 @@ function inScript(char) {
   return getScript() === 'kata' ? toKatakana(char) : char;
 }
 
-const DEFAULT_TITLES = { hira: 'Hiragana Writing Practice', kata: 'Katakana Writing Practice' };
+const DEFAULT_TITLES = { hira: 'Hiragana Writing Practice', kata: 'Katakana Writing Practice', kana: 'Kana Writing Practice' };
 
 // Rebuilt whenever the script changes; the ticked rows are kept.
 function buildRowCheckboxes() {
@@ -53,7 +53,7 @@ function buildSingleSelect() {
 
 function onScriptChange() {
   const titleInput = document.getElementById('cfg-title');
-  if (Object.values(DEFAULT_TITLES).includes(titleInput.value)) titleInput.value = DEFAULT_TITLES[getScript()];
+  if (Object.values(DEFAULT_TITLES).includes(titleInput.value) && getMode() !== 'custom') titleInput.value = DEFAULT_TITLES[getScript()];
   buildRowCheckboxes();
   buildSingleSelect();
 }
@@ -95,6 +95,9 @@ function syncModePanels() {
   const mode = getMode();
   document.getElementById('single-panel').classList.toggle('hidden', mode !== 'single');
   document.getElementById('row-panel').classList.toggle('hidden', mode !== 'row');
+  document.getElementById('custom-panel').classList.toggle('hidden', mode !== 'custom');
+  const titleInput = document.getElementById('cfg-title');
+  if (Object.values(DEFAULT_TITLES).includes(titleInput.value)) titleInput.value = DEFAULT_TITLES[mode === 'custom' ? 'kana' : getScript()];
   applyModeDefaults(mode);
 }
 
@@ -103,7 +106,8 @@ function buildConfig() {
   const selectedRows = Array.from(document.querySelectorAll('.row-check:checked')).map((el) => el.value);
   const singleValue = document.getElementById('cfg-single').value;
   const singleChars = singleValue ? [singleValue] : [];
-  const repeats = Math.max(3, Math.min(30, parseInt(document.getElementById('cfg-repeats').value, 10) || 15));
+  const custom = parseCustomChars(document.getElementById('cfg-custom').value, getScript());
+  const repeats = normalizePracticeRepeats(document.getElementById('cfg-repeats').value, 15);
   const includeWords = document.getElementById('cfg-words').checked;
   const wordsActive = includeWords && mode === 'single';
   const script = getScript();
@@ -116,7 +120,7 @@ function buildConfig() {
   const hideOthers = wordsActive && document.getElementById('cfg-hide').checked;
   const title = document.getElementById('cfg-title').value;
   const teacher = document.getElementById('cfg-teacher').value;
-  return { mode, script, pdfLang: getPdfLang(), selectedRows, singleChars, repeats, includeWords, customWords, wordsValid, wordsError, blockedWords: parsed.blocked, hideOthers, title, teacher };
+  return { mode, script, pdfLang: getPdfLang(), selectedRows, singleChars, customChars: custom.chars, customSkipped: custom.skipped, repeats, includeWords, customWords, wordsValid, wordsError, blockedWords: parsed.blocked, hideOthers, title, teacher };
 }
 
 function wordErrorMessage(cfg) {
@@ -136,15 +140,19 @@ function updatePreviewSummary() {
   const wordError = document.getElementById('word-error');
   wordError.classList.toggle('hidden', cfg.wordsValid);
   if (!cfg.wordsValid) wordError.textContent = wordErrorMessage(cfg);
+  const skippedNote = document.getElementById('custom-skipped');
+  const showSkipped = cfg.mode === 'custom' && cfg.customSkipped.length > 0;
+  skippedNote.classList.toggle('hidden', !showSkipped);
+  if (showSkipped) skippedNote.textContent = I18N.t('custom.skipped', 'Left out (only the 46 basic kana can be practiced here): {chars}', { chars: cfg.customSkipped.join(' ') });
   const generator = new HiraganaPracticeGenerator(cfg);
   const chars = generator.selectedChars();
   const summary = document.getElementById('preview-summary');
 
   const tr = I18N.t;
-  const modeLabel = cfg.mode === 'single' ? tr('sum.modeSingle', 'Single character(s)') : cfg.mode === 'row' ? tr('sum.modeRow', 'By row (行)') : tr('sum.modeAll', 'All 46 basic characters');
+  const modeLabel = cfg.mode === 'single' ? tr('sum.modeSingle', 'Single character(s)') : cfg.mode === 'row' ? tr('sum.modeRow', 'By row (行)') : cfg.mode === 'custom' ? tr('sum.modeCustom', 'Selected characters') : tr('sum.modeAll', 'All 46 basic characters');
   const scriptLabel = cfg.script === 'kata' ? tr('script.kata', 'katakana') : tr('script.hira', 'hiragana');
   const lines = [
-    `<div><span class="font-semibold">${tr('sum.script', 'Script:')}</span> <span class="capitalize">${scriptLabel}</span></div>`,
+    ...(cfg.mode === 'custom' ? [] : [`<div><span class="font-semibold">${tr('sum.script', 'Script:')}</span> <span class="capitalize">${scriptLabel}</span></div>`]),
     `<div><span class="font-semibold">${tr('sum.mode', 'Mode:')}</span> ${modeLabel}</div>`,
     `<div><span class="font-semibold">${tr('sum.chars', 'Characters selected:')}</span> ${chars.length ? chars.join(' ') : tr('sum.none', '(none - pick at least one)')}</div>`,
     `<div><span class="font-semibold">${tr('sum.repeats', 'Repetitions per character:')}</span> ${cfg.repeats}</div>`,
@@ -180,7 +188,7 @@ async function handleGenerate() {
   try {
     const renderer = new HiraganaPracticeRenderer(cfg, chars);
     const bytes = await renderer.render();
-    const filename = `${cfg.script === 'kata' ? 'katakana' : 'hiragana'}_practice_${timestamp()}.pdf`;
+    const filename = `${cfg.mode === 'custom' ? 'kana' : cfg.script === 'kata' ? 'katakana' : 'hiragana'}_practice_${timestamp()}.pdf`;
     await openPdfResults(bytes, filename, 'japanese-practice.html', 'Kana Writing Practice', resultTab);
     status.textContent = I18N.t('status.done', 'Opened your worksheet in a new tab.');
   } catch (e) {
@@ -192,11 +200,25 @@ async function handleGenerate() {
   }
 }
 
+// Kana Tap Practice links here with ?mode=custom&chars=... so the quiz's
+// letters arrive already filled in and the preview shows the whole setup.
+function applyIncomingSetup() {
+  const params = new URLSearchParams(location.search);
+  const chars = params.get('chars');
+  if (params.get('mode') !== 'custom' || !chars) return false;
+  document.querySelector('input[name="cfg-mode"][value="custom"]').checked = true;
+  document.getElementById('cfg-custom').value = chars.slice(0, 92);
+  syncModePanels();
+  return true;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   buildRowCheckboxes();
   buildSingleSelect();
   syncModePanels();
+  const arrived = applyIncomingSetup();
   updatePreviewSummary();
+  if (arrived) document.getElementById('preview').scrollIntoView({ block: 'start' });
 
   document.querySelectorAll('input[name="cfg-script"]').forEach((el) => {
     el.addEventListener('change', onScriptChange);

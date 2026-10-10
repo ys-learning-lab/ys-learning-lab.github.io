@@ -16,6 +16,7 @@ const PDF_TEXT = {
 
     'practice.defaultHira': 'Hiragana Writing Practice',
     'practice.defaultKata': 'Katakana Writing Practice',
+    'practice.defaultKana': 'Kana Writing Practice',
     'practice.sample': ' - Sample Answer',
     'practice.writeWord': 'Write this word:',
     'practice.writeFit': 'Write a word that fits:',
@@ -59,6 +60,7 @@ const PDF_TEXT = {
 
     'practice.defaultHira': 'ひらがなのかきかたれんしゅう',
     'practice.defaultKata': 'カタカナのかきかたれんしゅう',
+    'practice.defaultKana': 'かなのかきかたれんしゅう',
     'practice.sample': ' - みほんのこたえ',
     'practice.writeWord': 'このことばをかきましょう:',
     'practice.writeFit': 'あうことばをかきましょう:',

@@ -1,7 +1,10 @@
 // Japanese strings shared by every page (header nav, footer).
 I18N.register('ja', {
+  'tab.plan': '学習プラン',
+  'tab.chart': 'かな表',
   'tab.quiz': 'かな変換クイズ',
   'tab.matching': 'かなマッチング',
+  'tab.tap': 'タップ練習',
   'tab.practice': '書き方練習',
   'nav.math': '算数',
   'nav.japanese': '日本語',

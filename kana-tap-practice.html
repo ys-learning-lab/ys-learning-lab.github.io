@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="tap.page.title">Kana Tap Practice - Ys Learning Lab</title>
+<meta name="description" content="Free on-screen kana practice for phone and computer: see one hiragana, katakana or romaji and tap the matching one from a few choices. Set it up, press start, and review every answer at the end." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-tap-practice.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Tap Practice - Ys Learning Lab" />
+<meta property="og:description" content="Free on-screen kana practice for phone and computer: see one hiragana, katakana or romaji and tap the matching one from a few choices." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-tap-practice.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=1"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=8" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="kana.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="tap.h1">Kana Tap Practice</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="tap.intro">Practice on screen, with no printing: one character is shown and the student taps the matching one from a few choices. A teacher or parent sets it up and presses Start; the score and every answer are shown at the end.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-study-plan.html" class="nav-key" data-i18n="tab.plan">Study Plan</a>
+    <a href="kana-chart.html" class="nav-key" data-i18n="tab.chart">Kana Chart</a>
+    <a href="japanese.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+    <a href="kana-tap-practice.html" class="nav-key nav-key-active" data-i18n="tab.tap">Tap Practice</a>
+    <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+  </div>
+
+  <!-- SETUP -->
+  <section id="screen-setup" class="max-w-3xl">
+    <div class="card-soft p-4 space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="tap.show.legend">What is shown</legend>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-bold mb-1" data-i18n="tap.q.label">Question (the character shown)</p>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="q-script h-5 w-5" value="h" /> <span data-i18n="tap.script.h">Hiragana</span></label>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="q-script h-5 w-5" value="k" checked /> <span data-i18n="tap.script.k">Katakana</span></label>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="q-script h-5 w-5" value="r" /> <span data-i18n="tap.script.r">Romaji</span></label>
+          </div>
+          <div>
+            <p class="text-xs font-bold mb-1" data-i18n="tap.c.label">Choices (the characters to tap)</p>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="c-script h-5 w-5" value="h" checked /> <span data-i18n="tap.script.h">Hiragana</span></label>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="c-script h-5 w-5" value="k" /> <span data-i18n="tap.script.k">Katakana</span></label>
+            <label class="flex items-center gap-2 text-sm py-1"><input type="checkbox" class="c-script h-5 w-5" value="r" /> <span data-i18n="tap.script.r">Romaji</span></label>
+          </div>
+        </div>
+        <p class="text-[11px] text-stone-500 mt-2" data-i18n="tap.show.note">Tick more than one to mix them. Each question shows one of the ticked question types at random. The choices are mixed too: every ticked choice type appears among them, but only one choice is correct, and it is never the same type as the question. For example, Question: Katakana with Choices: Hiragana and Katakana shows ア; the right answer is あ, and wrong choices may be hiragana or katakana (like イ).</p>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-sage p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="tap.kana.legend">Which kana?</legend>
+        <p class="text-xs font-medium mb-1" data-i18n="match.kana.basic">Basic</p>
+        <div id="row-basic" class="grid grid-cols-2 sm:grid-cols-3 gap-1 mb-3"></div>
+        <p class="text-xs font-medium mb-1" data-i18n="match.kana.voiced">Dakuten &amp; handakuten</p>
+        <div id="row-voiced" class="grid grid-cols-2 sm:grid-cols-3 gap-1 mb-3"></div>
+        <div class="flex flex-wrap gap-2">
+          <button id="all-basic-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="tap.kana.allBasic">Select all basic</button>
+          <button id="all-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="tap.kana.all">Select all</button>
+          <button id="clear-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="match.kana.clear">Clear</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="tap.opts.legend">Quiz options</legend>
+        <label class="block text-xs mb-1"><span data-i18n="tap.opts.choices">Choices per question (2-8)</span>
+          <input id="cfg-choices" type="number" min="2" max="8" value="6" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm" />
+        </label>
+        <label class="block text-xs mb-3 mt-3"><span data-i18n="tap.opts.questions">Number of questions (1-100)</span>
+          <input id="cfg-questions" type="number" min="1" max="100" value="10" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm" />
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="tap.opts.questionsNote">Questions come from the kana you ticked, each one before any repeats. If you ask for more questions than there are kana, the list goes around again.</p>
+        <label class="flex items-center gap-2 text-sm mb-1"><input id="cfg-near" type="checkbox" checked class="h-5 w-5" /> <span data-i18n="tap.opts.near">Wrong choices only use the ticked rows</span></label>
+        <p class="text-[11px] text-stone-500 mb-3 pl-7" data-i18n="tap.opts.nearNote">For example, you tick only the ア行 (あいうえお). On: the wrong choices are the other kana from that row (い, う, え, お), so they look alike and it is harder. Off: wrong choices can be any kana (like ね or ぷ), so it is easier. If the ticked rows have too few kana, others fill in.</p>
+        <label class="flex items-center gap-2 text-sm"><input id="cfg-feedback" type="checkbox" checked class="h-5 w-5" /> <span data-i18n="tap.opts.feedback">Show right or wrong right after each answer</span></label>
+        <p class="text-[11px] text-stone-500 mt-1 pl-7" data-i18n="tap.opts.feedbackNote">Off: the student moves straight on and sees everything only at the end.</p>
+      </fieldset>
+
+      <p id="setup-error" class="text-sm text-red-700 font-medium hidden" role="alert"></p>
+      <button id="start-btn" type="button" class="btn-key btn-key-primary w-full py-4 text-lg" data-i18n="tap.start">Start</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="screen-play" class="max-w-xl mx-auto hidden" aria-live="polite">
+    <div class="flex items-center justify-between mb-3 gap-3">
+      <p id="play-progress" class="text-sm font-bold text-stone-700"></p>
+      <button id="quit-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="tap.quit">Stop</button>
+    </div>
+    <div class="h-2 bg-stone-300 rounded-full overflow-hidden mb-4"><div id="play-bar" class="h-full bg-[#d9723f]" style="width:0%"></div></div>
+    <div class="card-soft card-soft-gold p-4 text-center mb-4">
+      <p id="play-prompt" class="text-xs text-stone-600 mb-1"></p>
+      <div id="play-question" class="jp-font font-bold leading-tight" style="font-size:clamp(4.5rem,22vw,8rem)"></div>
+    </div>
+    <div id="play-choices" class="grid gap-3"></div>
+    <p id="play-feedback" class="text-center text-sm font-bold mt-4 min-h-[1.5rem]"></p>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="max-w-3xl mx-auto hidden">
+    <div class="card-soft card-soft-sage p-5 text-center mb-4">
+      <p class="text-sm text-stone-600" data-i18n="tap.result.heading">Your score</p>
+      <p id="result-score" class="text-5xl font-extrabold my-1"></p>
+      <p id="result-pct" class="text-lg font-bold text-stone-700"></p>
+      <p id="result-time" class="text-sm text-stone-700 mt-2"></p>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button id="again-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm" data-i18n="tap.result.again">Play again</button>
+      <button id="missed-btn" type="button" class="btn-key btn-key-gold px-4 py-2 text-sm" data-i18n="tap.result.missed">Practice missed only</button>
+      <button id="settings-btn" type="button" class="btn-key btn-key-cream px-4 py-2 text-sm" data-i18n="tap.result.settings">Change settings</button>
+    </div>
+    <div class="card-soft card-soft-terracotta p-3 mb-4">
+      <h2 class="text-sm font-bold mb-2" data-i18n="tap.sheet.h">Make a writing practice sheet</h2>
+      <p class="text-[11px] text-stone-600 mb-2" data-i18n="tap.sheet.note">Makes a printable tracing sheet of these letters, right here. Each letter gets a model box and practice boxes to write in.</p>
+      <p class="text-xs font-bold mb-1" data-i18n="tap.sheet.include">Include:</p>
+      <div class="space-y-1 mb-2">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="sheet-q" checked class="h-5 w-5" /> <span data-i18n="tap.sheet.q">The letter in each missed question</span></label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="sheet-wrong" checked class="h-5 w-5" /> <span data-i18n="tap.sheet.wrong">The wrong choice the student picked (a letter they may not know)</span></label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="sheet-conv" checked class="h-5 w-5" /> <span data-i18n="tap.sheet.conv">The converted letter of each (hiragana ↔ katakana)</span></label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="sheet-correct" class="h-5 w-5" /> <span data-i18n="tap.sheet.correct">Also the questions answered correctly (every letter in the quiz)</span></label>
+      </div>
+      <p id="sheet-chars" class="jp-font text-xl mb-2"></p>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
+        <label class="text-sm"><span data-i18n="tap.sheet.repeats">Practice boxes per letter</span>
+          <select id="sheet-repeats" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-sm">
+            <option value="5" selected>5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option>
+          </select>
+        </label>
+        <label class="text-sm"><span data-i18n="pdf.lang">PDF language</span>
+          <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-sm">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </label>
+      </div>
+      <button id="sheet-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm" data-i18n="tap.sheet.open">Generate PDF</button>
+      <p id="sheet-status" class="text-xs text-stone-600 mt-2" role="status"></p>
+      <p class="text-[11px] text-stone-500 mt-1"><a id="sheet-more" href="#" class="text-indigo-700 underline" data-i18n="tap.sheet.more">Want a different title, teacher name or other options? Open Writing Practice with these letters.</a></p>
+    </div>
+    <div class="card-soft p-3">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <h2 class="text-sm font-bold" data-i18n="tap.result.review">All answers</h2>
+        <label class="flex items-center gap-2 text-xs"><input id="only-missed" type="checkbox" class="h-4 w-4" /> <span data-i18n="tap.result.onlyMissed">Show only missed</span></label>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-stone-600 border-b-2 border-stone-300">
+              <th class="py-1 pr-2">#</th>
+              <th class="py-1 pr-2" data-i18n="tap.result.col.q">Question</th>
+              <th class="py-1 pr-2" data-i18n="tap.result.col.you">Your answer</th>
+              <th class="py-1 pr-2" data-i18n="tap.result.col.right">Correct answer</th>
+              <th class="py-1 pr-2" data-i18n="tap.result.col.ok">Result</th>
+              <th class="py-1" data-i18n="tap.result.col.time">Time</th>
+            </tr>
+          </thead>
+          <tbody id="result-rows" class="jp-font"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <article id="guide" class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="tap.how.h">How tap practice works</h2>
+      <p class="mb-3" data-i18n="tap.how.p1">Choose which characters are shown as the question and which are offered as choices, tick the rows of kana to practice, and press Start. Each question shows one character, and the student taps the choice that stands for the same sound. It works with a finger on a phone or tablet, and with a mouse or the number keys on a computer.</p>
+      <p data-i18n="tap.how.p2">At the end you see the score and a list of every question with the student's answer and the correct one, so missed kana are easy to spot. Practice missed only starts a new round with just those.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="tap.ideas.h">Setup ideas</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="tap.ideas.1"><strong>Hiragana to katakana:</strong> Question: Hiragana, Choices: Katakana. Good for a learner who knows hiragana and is building katakana.</li>
+        <li data-i18n-html="tap.ideas.2"><strong>Reading practice:</strong> Question: Hiragana, Choices: Romaji, to check that each character is read correctly.</li>
+        <li data-i18n-html="tap.ideas.3"><strong>Start small:</strong> tick one or two rows and use 3 choices. Add rows and choices as it gets easy.</li>
+        <li data-i18n-html="tap.ideas.4"><strong>Look-alike trap:</strong> Question: Katakana, Choices: Hiragana and Katakana. Hiragana and katakana are both among the choices, so the student can't pick by shape alone (only one choice is correct).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="tap.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="tap.faq.q1">Are scores saved?</h3>
+      <p class="mb-3" data-i18n="tap.faq.a1">No. Everything happens in the browser and nothing is sent anywhere. Scores and answers stay on screen until you leave the page or start again. Only your setup (which kana, how many choices and so on) is remembered, in this browser, so you don't have to set it up each time.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="tap.faq.q2">Why is ぢ shown as "di" and づ as "du"?</h3>
+      <p data-i18n="tap.faq.a2">So that each romaji choice has only one correct kana. The more common じ and ず use "ji" and "zu".</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=4"></script>
+<script src="js/i18n-ja-common.js?v=7"></script>
+<script src="js/i18n-ja-matching.js?v=4"></script>
+<script src="js/i18n-ja-tap.js?v=8"></script>
+<script src="js/pdf-common.js?v=19"></script>
+<script src="js/pdf-lang.js?v=3"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-generator.js?v=26"></script>
+<script src="js/japanese-practice-generator.js?v=27"></script>
+<script src="js/kana-matching-generator.js?v=9"></script>
+<script src="js/kana-tap-ui.js?v=8"></script>
+</body>
+</html>

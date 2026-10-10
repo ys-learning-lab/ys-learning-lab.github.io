@@ -90,19 +90,51 @@ function parsePracticeWords(rawWords, selected, script = 'hira') {
   return { words, valid, missing, blocked };
 }
 
+// "Selected characters" mode: letters typed or pasted into a text box (or handed over
+// from Kana Tap Practice). Hiragana and katakana are both accepted and kept exactly as
+// typed, so one sheet can mix them. The 46 basic kana plus the dakuten/handakuten kana
+// (が, ぱ ...) can be practiced; anything else is reported back as skipped.
+// Needs js/japanese-generator.js (KanaDatabase) on the page.
+// Returns { chars (in typed order, no repeats), skipped (distinct, in typed order) }.
+const VOICED_KANA = 'がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ';
+
+// Typing works like the Kana Conversion Quiz's "Always include" box (KanaDatabase.parseKanaList in
+// japanese-generator.js): kana, with or without separators, or romaji ("a, ka, ga" or "akaga"),
+// which becomes `romajiScript` ('hira' or 'kata'). A kana pair like ぎゃ is one unit there, but it
+// won't fit in a practice box, so it comes back as skipped along with anything unrecognized.
+function parseCustomChars(text, romajiScript = 'hira') {
+  const allowed = new Set([...HIRAGANA_ROWS.flatMap((r) => r.chars), ...VOICED_KANA]);
+  const parsed = new KanaDatabase().parseKanaList(text, romajiScript);
+  const chars = parsed.chars.filter((c) => Array.from(c).length === 1 && allowed.has(toHiragana(c)));
+  const skipped = [...parsed.chars.filter((c) => !chars.includes(c)), ...parsed.unknown];
+  return { chars, skipped };
+}
+
+// Practice boxes per character come in whole columns of 5, and at most 5 columns (25 boxes)
+// so one character's whole set always fits on a single page. Rounds to the nearest step.
+const PRACTICE_REPEAT_STEP = 5;
+const PRACTICE_REPEAT_MAX = 25;
+
+function normalizePracticeRepeats(value, fallback) {
+  const n = parseInt(value, 10);
+  const stepped = Math.round((Number.isNaN(n) ? fallback : n) / PRACTICE_REPEAT_STEP) * PRACTICE_REPEAT_STEP;
+  return Math.max(PRACTICE_REPEAT_STEP, Math.min(PRACTICE_REPEAT_MAX, stepped));
+}
+
 class HiraganaPracticeGenerator {
   constructor(config) {
     this.config = config;
   }
 
   // Returns the flat, ordered list of characters to practice based on
-  // config.mode ('single' | 'row' | 'all').
+  // config.mode ('single' | 'row' | 'custom' | 'all').
   selectedChars() {
     // Single mode already holds the chosen character in the right script (it comes
     // straight from the dropdown); row/all come from the hiragana table and are
     // converted for katakana.
     const inScript = (chars) => (this.config.script === 'kata' ? chars.map(toKatakana) : chars);
     if (this.config.mode === 'single') return this.config.singleChars;
+    if (this.config.mode === 'custom') return this.config.customChars;
     if (this.config.mode === 'row') {
       return inScript(HIRAGANA_ROWS.filter((r) => this.config.selectedRows.includes(r.id)).flatMap((r) => r.chars));
     }
@@ -149,6 +181,14 @@ class HiraganaPracticeRenderer {
     let answerLayout = null;
     for (const ch of this.chars) {
       const colsNeeded = Math.max(1, Math.ceil(this.config.repeats / ROWS));
+      // A character's columns stay together: if they don't all fit in what is left of this
+      // page, the character starts on a new page (unless the page is still empty).
+      const setWidth = colsNeeded * boxSize + (colsNeeded - 1) * GAP;
+      if (colRightX - setWidth < PDF_PAGE.MARGIN && colRightX < PDF_PAGE.WIDTH - PDF_PAGE.MARGIN) {
+        page = pdfDoc.addPage([PDF_PAGE.WIDTH, PDF_PAGE.HEIGHT]);
+        this._drawHeader(page);
+        colRightX = PDF_PAGE.WIDTH - PDF_PAGE.MARGIN;
+      }
       for (let c = 0; c < colsNeeded; c++) {
         if (colRightX - boxSize < PDF_PAGE.MARGIN) {
           page = pdfDoc.addPage([PDF_PAGE.WIDTH, PDF_PAGE.HEIGHT]);
@@ -277,9 +317,10 @@ class HiraganaPracticeRenderer {
     const lang = this.config.pdfLang;
     const t = (key, vars) => pdfText(lang, key, vars);
     const draw = (text, x, y, size, color) => page.drawText(text, { x, y, size, font: pdfFontFor(this.fonts, text), color });
-    const defaultKey = this.config.script === 'kata' ? 'practice.defaultKata' : 'practice.defaultHira';
-    const otherKey = this.config.script === 'kata' ? 'practice.defaultHira' : 'practice.defaultKata';
-    const title = pdfTitle(lang, this.config.title, defaultKey, [otherKey]) + (isSampleAnswer ? t('practice.sample') : '');
+    const custom = this.config.mode === 'custom';
+    const defaultKey = custom ? 'practice.defaultKana' : this.config.script === 'kata' ? 'practice.defaultKata' : 'practice.defaultHira';
+    const otherKeys = ['practice.defaultHira', 'practice.defaultKata', 'practice.defaultKana'].filter((k) => k !== defaultKey);
+    const title = pdfTitle(lang, this.config.title, defaultKey, otherKeys) + (isSampleAnswer ? t('practice.sample') : '');
     draw(title, PDF_PAGE.MARGIN, PDF_PAGE.HEIGHT - 40, 14);
 
     draw(t('hdr.name'), PDF_PAGE.MARGIN, PDF_PAGE.HEIGHT - 62, 12);

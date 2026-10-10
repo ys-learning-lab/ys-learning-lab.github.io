@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="chart.page.title">Hiragana and Katakana Charts - Ys Learning Lab</title>
+<meta name="description" content="Free hiragana and katakana charts of the 46 basic letters, laid out in the traditional order. Hide the romaji for reading practice and print either chart on one page." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-chart.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Hiragana and Katakana Charts - Ys Learning Lab" />
+<meta property="og:description" content="Free hiragana and katakana charts of the 46 basic letters, laid out in the traditional order. Hide the romaji for reading practice and print either chart on one page." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-chart.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=1"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+<style>
+/* The chart: 11 columns (ん, わ行 ... あ行 from left to right, so it reads right to left like
+   vertical Japanese) by 5 rows (あいうえお). Each letter is a keycap in the site's colorways.
+   Every size is in cqw (a share of the chart's own width), so the printed chart is the same
+   picture as the on-screen one, just scaled to the paper - no separate print sizes. */
+.kana-chart-wrap { overflow-x: auto; padding-bottom: 6px; }
+.kana-chart-box { min-width: 620px; container-type: inline-size; }
+.kana-chart { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 0.75cqw; }
+.kc-head { text-align: center; font-size: 1.1cqw; font-weight: 700; color: #57534e; padding-bottom: 0.2cqw; }
+.kc-cap, .kc-empty { aspect-ratio: 1 / 1; min-width: 0; min-height: 0; overflow: hidden; border-radius: 0.75cqw; }
+.kc-cap { cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 2px solid #24262a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -3px 4px rgba(0, 0, 0, 0.12), 0 3px 0 #5c5f64;
+}
+.kc-empty { border: 2px dashed #b6bac0; }
+.kc-k { font-size: 3.9cqw; line-height: 1.1; color: #1c1917; }
+.kc-k.kc-latin { font-size: 2.9cqw; font-weight: 600; }
+.kc-subs { display: flex; gap: 0.6cqw; align-items: baseline; line-height: 1.2; color: #44403c; font-weight: 600; }
+.kc-sub { font-size: 1.5cqw; }
+.kc-sub.kc-latin { font-size: 1.25cqw; }
+.kc-c0 { background-color: #efe4de; }
+.kc-c1 { background-color: #f0ead9; }
+.kc-c2 { background-color: #e4ebe1; }
+.kc-c3 { background-color: #dfeae9; }
+.kc-c4 { background-color: #e9e3ef; }
+/* Print header (logo, site name, QR code to the home page): print only. */
+#print-header { display: none; }
+/* Sized in cqw of the printed page width (main is the container in print), like the chart itself,
+   so the header keeps the same share of the page on any paper size and never pushes the chart over. */
+#print-header .ph-brand { display: flex; align-items: center; gap: 1.2cqw; white-space: nowrap; }
+#print-header .ph-brand img { width: 4.6cqw; height: 4.6cqw; object-fit: contain; }
+#print-header .ph-name { font-size: 2.8cqw; font-weight: 800; color: #1c1917; }
+#print-header .ph-qr { display: flex; align-items: center; gap: 0.8cqw; font-size: 1.15cqw; color: #44403c; white-space: nowrap; }
+#print-header .ph-qr img { width: 6.2cqw; height: 6.2cqw; image-rendering: pixelated; }
+/* margin: 0 leaves no room for the browser's own date/title/URL lines; the body padding is the margin. */
+/* Paper size comes from the Paper dropdown (a <style id="page-size"> the script rewrites); A4 until then. */
+@page { size: A4 landscape; margin: 0; }
+@media print {
+  /* Print the chart card as previewed, under the print header; hide the rest of the page. */
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body > :not(main), #page-top, #chart-controls, #chart-help { display: none !important; }
+  body { background: #fff !important; padding: 6mm 7mm !important; min-height: 0 !important; }
+  main { padding: 0 !important; margin: 0 !important; max-width: none !important; container-type: inline-size; }
+  #print-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1cqw; }
+  #chart-card { break-inside: avoid; padding: 1.4cqw 1.6cqw !important; }
+  #chart-title { margin-bottom: 0.6cqw; }
+  .kana-chart-wrap { overflow: visible; }
+  .kana-chart-box { min-width: 0; }
+}
+</style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="kana.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div id="page-top">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <h1 class="text-2xl font-extrabold" data-i18n="chart.h1">Hiragana and Katakana Charts</h1>
+      <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+      </select>
+    </div>
+    <p class="text-sm text-stone-600 mb-2" data-i18n="chart.intro">The 46 basic letters of each script in the traditional order. Choose the main letters and up to two small readings under each one, or print a chart to keep beside the desk. Tap any letter to hear it.</p>
+    <div class="sub-nav flex flex-wrap items-center gap-2 text-xs mb-4">
+      <a href="kana-study-plan.html" class="nav-key" data-i18n="tab.plan">Study Plan</a>
+      <a href="kana-chart.html" class="nav-key nav-key-active" data-i18n="tab.chart">Kana Chart</a>
+      <a href="japanese.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+      <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+      <a href="kana-tap-practice.html" class="nav-key" data-i18n="tab.tap">Tap Practice</a>
+      <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+    </div>
+  </div>
+
+  <div id="print-header">
+    <div class="ph-brand"><img src="assets/YsSchool.png" alt="" /><span class="ph-name">Learning Lab</span></div>
+    <div class="ph-qr"><span data-i18n="chart.qr">Scan for more free worksheets</span><img id="print-qr" alt="" /></div>
+  </div>
+
+  <section id="chart-card" class="card-soft p-4 md:p-6">
+    <div id="chart-controls" class="flex flex-wrap items-center gap-x-5 gap-y-3 mb-5">
+        <label class="flex items-center gap-2 text-sm font-medium"><span data-i18n="chart.main">Main</span>
+          <select id="chart-main" class="border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+            <option value="hira" data-i18n="chart.opt.hira">Hiragana</option>
+            <option value="kata" data-i18n="chart.opt.kata">Katakana</option>
+            <option value="romaji" data-i18n="chart.opt.romaji">Romaji</option>
+          </select>
+        </label>
+        <label class="flex items-center gap-2 text-sm font-medium"><span data-i18n="chart.sub1">Sub 1</span>
+          <select id="chart-sub1" class="border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+            <option value="hira" data-i18n="chart.opt.hira">Hiragana</option>
+            <option value="kata" data-i18n="chart.opt.kata">Katakana</option>
+            <option value="romaji" data-i18n="chart.opt.romaji">Romaji</option>
+            <option value="none" data-i18n="chart.opt.none">None</option>
+          </select>
+        </label>
+        <label class="flex items-center gap-2 text-sm font-medium"><span data-i18n="chart.sub2">Sub 2</span>
+          <select id="chart-sub2" class="border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+            <option value="hira" data-i18n="chart.opt.hira">Hiragana</option>
+            <option value="kata" data-i18n="chart.opt.kata">Katakana</option>
+            <option value="romaji" data-i18n="chart.opt.romaji">Romaji</option>
+            <option value="none" data-i18n="chart.opt.none">None</option>
+          </select>
+        </label>
+      <div class="flex items-center gap-3 md:ml-auto">
+        <label class="flex items-center gap-2 text-sm font-medium"><span data-i18n="chart.paper">Paper</span>
+          <select id="chart-paper" class="border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+            <option value="A4">A4</option>
+            <option value="A3">A3</option>
+            <option value="JIS-B4" data-i18n="chart.paper.b4">B4 (JIS)</option>
+            <option value="letter" data-i18n="chart.paper.letter">Letter</option>
+            <option value="ledger" data-i18n="chart.paper.ledger">Tabloid (11×17)</option>
+          </select>
+        </label>
+        <button id="chart-print" type="button" class="btn-key btn-key-sm btn-key-cream px-3 py-1.5 text-sm" data-i18n="chart.print">Print this chart</button>
+      </div>
+    </div>
+    <h2 id="chart-title" class="jp-font text-xl font-extrabold text-stone-900 mb-3">ひらがな表</h2>
+    <div class="kana-chart-wrap">
+      <div class="kana-chart-box">
+        <div id="kana-chart" class="kana-chart jp-font" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <article id="chart-help" class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="chart.read.h">How to read the chart</h2>
+      <p class="mb-3" data-i18n-html="chart.read.p1">Each column is one row of kana (行), such as あ行 or か行. Read a column from top to bottom (あ, い, う, え, お), and read the columns from <strong>right to left</strong>, starting with あ行 on the right and ending with ん on the far left. This is the order used in Japanese classrooms, and it matches the way Japanese is written in vertical lines.</p>
+      <p data-i18n="chart.read.p2">The や and わ columns have empty spaces. Those sounds either aren't used in modern Japanese or are written with letters from other columns, so the spaces stay blank. ん stands on its own, since it has no vowel.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="chart.use.h">Ways to use it</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="chart.use.wall"><strong>Keep it in view.</strong> Print the chart and put it where the student practices, so each new letter can be found among the ones already learned.</li>
+        <li data-i18n-html="chart.use.say"><strong>Point and say.</strong> Set <em>Sub 1</em> and <em>Sub 2</em> to <em>None</em>, point at letters in any order, and have the student read each one out loud. Any letter they can't read is worth extra practice.</li>
+        <li data-i18n-html="chart.use.compare"><strong>Compare the scripts.</strong> Put hiragana and katakana in <em>Main</em> and <em>Sub 1</em> to see the same sound in both. Pairs that look alike, such as か and カ or り and リ, are easier to remember together.</li>
+      </ul>
+      <p class="mt-3" data-i18n-html="chart.use.plan">The <a href="kana-study-plan.html" class="text-indigo-700 underline">Study Plan</a> shows how to use the chart alongside the worksheets, step by step.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=4"></script>
+<script src="js/i18n-ja-common.js?v=7"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="js/i18n-ja-chart.js?v=4"></script>
+<script>
+(function () {
+  // Columns from right to left: あ行 first. '・' = empty space. Katakana is hiragana + 0x60
+  // for every basic letter, so only the hiragana is written out.
+  const COLUMNS = [
+    ['あいうえお', 'a i u e o'], ['かきくけこ', 'ka ki ku ke ko'], ['さしすせそ', 'sa shi su se so'],
+    ['たちつてと', 'ta chi tsu te to'], ['なにぬねの', 'na ni nu ne no'], ['はひふへほ', 'ha hi fu he ho'],
+    ['まみむめも', 'ma mi mu me mo'], ['や・ゆ・よ', 'ya - yu - yo'], ['らりるれろ', 'ra ri ru re ro'],
+    ['わ・・・を', 'wa - - - wo'], ['ん・・・・', 'n - - - -'],
+  ];
+  const SITE_URL = 'https://ys-learning-lab.github.io/';
+  const TITLES = { hira: 'ひらがな表', kata: 'カタカナ表', romaji: 'ローマ字表' };
+  const toKata = (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60);
+  const chart = document.getElementById('kana-chart');
+  const title = document.getElementById('chart-title');
+  const sel = { main: document.getElementById('chart-main'), sub1: document.getElementById('chart-sub1'), sub2: document.getElementById('chart-sub2') };
+
+  // One letter in a given script: hira / kata / romaji.
+  function letter(script, ch, romaji) {
+    return script === 'romaji' ? romaji : script === 'kata' ? toKata(ch) : ch;
+  }
+
+  function render() {
+    const main = sel.main.value;
+    // Subs never repeat the main script or each other.
+    const subs = [sel.sub1.value, sel.sub2.value].filter((s, i, all) => s !== 'none' && s !== main && all.indexOf(s) === i);
+    const labelScript = main !== 'romaji' ? main : (subs.find((s) => s !== 'romaji') || 'hira');
+    const cols = COLUMNS.slice().reverse(); // the grid fills left to right, so ん goes first
+    const cells = cols.map(([kana]) => `<div class="kc-head">${kana[0] === 'ん' ? '' : letter(labelScript, kana[0]) + '行'}</div>`);
+    for (let row = 0; row < 5; row++) {
+      cols.forEach(([kana, romaji], i) => {
+        const ch = [...kana][row];
+        if (ch === '・') { cells.push('<div class="kc-empty"></div>'); return; }
+        const r = romaji.split(' ')[row];
+        const color = (COLUMNS.length - 1 - i) % 5; // あ行 = first colorway, then on to the left
+        const latin = (s) => (s === 'romaji' ? ' kc-latin' : '');
+        const subHtml = subs.map((s) => `<span class="kc-sub${latin(s)}">${letter(s, ch, r)}</span>`).join('');
+        cells.push(`<div class="kc-cap kc-c${color}" data-r="${r}" data-k="${ch}" role="button" tabindex="0" aria-label="${ch}"><span class="kc-k${latin(main)}">${letter(main, ch, r)}</span>`
+          + (subHtml ? `<span class="kc-subs">${subHtml}</span>` : '') + '</div>');
+      });
+    }
+    chart.innerHTML = cells.join('');
+    title.textContent = TITLES[main];
+  }
+
+  // Tap a letter to hear it. Recorded clips live in audio/kana/<romaji>.wav; if one can't play,
+  // fall back to the browser's Japanese voice.
+  const clips = {};
+  let current = null;
+  function say(r, ch) {
+    if (current) { current.pause(); current = null; }
+    const a = clips[r] || (clips[r] = new Audio('audio/kana/' + r + '.wav'));
+    a.currentTime = 0;
+    current = a;
+    a.play().catch(() => {
+      if (!('speechSynthesis' in window)) return;
+      const u = new SpeechSynthesisUtterance(ch);
+      u.lang = 'ja-JP';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    });
+  }
+  chart.addEventListener('click', (e) => {
+    const cap = e.target.closest('.kc-cap');
+    if (cap) say(cap.dataset.r, cap.dataset.k);
+  });
+  chart.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const cap = e.target.closest('.kc-cap');
+    if (cap) { e.preventDefault(); say(cap.dataset.r, cap.dataset.k); }
+  });
+
+  // ?main=kata&sub1=hira&sub2=none, or the older ?script=kata.
+  const params = new URLSearchParams(location.search);
+  const pick = (el, v) => { if (v && [...el.options].some((o) => o.value === v)) el.value = v; };
+  sel.main.value = 'hira'; sel.sub1.value = 'kata'; sel.sub2.value = 'romaji';
+  if (params.get('script') === 'kata') { sel.main.value = 'kata'; sel.sub1.value = 'hira'; }
+  pick(sel.main, params.get('main')); pick(sel.sub1, params.get('sub1')); pick(sel.sub2, params.get('sub2'));
+  // A preset can repeat a script (e.g. ?main=kata leaves Sub 1 on katakana): give the repeat a free script.
+  ['sub1', 'sub2'].forEach((k) => {
+    const others = Object.keys(sel).filter((o) => o !== k).map((o) => sel[o].value);
+    if (sel[k].value !== 'none' && others.includes(sel[k].value)) {
+      sel[k].value = ['hira', 'kata', 'romaji'].find((s) => !others.includes(s)) || 'none';
+    }
+  });
+  // Choosing a script that another dropdown already shows swaps the two, so each script is used once.
+  // Only "None" (subs) can repeat. If the old value was None and the other dropdown is Main, Main takes
+  // the script no dropdown is using instead.
+  const prev = {};
+  const remember = () => Object.keys(sel).forEach((k) => { prev[k] = sel[k].value; });
+  remember();
+  Object.entries(sel).forEach(([key, el]) => el.addEventListener('change', () => {
+    const v = el.value;
+    if (v !== 'none') {
+      Object.entries(sel).forEach(([other, o]) => {
+        if (other === key || o.value !== v) return;
+        if (prev[key] !== 'none') { o.value = prev[key]; return; }
+        if (other !== 'main') { o.value = 'none'; return; }
+        const used = Object.values(sel).map((s) => s.value);
+        o.value = ['hira', 'kata', 'romaji'].find((s) => !used.includes(s));
+      });
+    }
+    remember();
+    render();
+  }));
+
+  // QR code to the home page, shown only on the printout.
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(SITE_URL);
+    qr.make();
+    document.getElementById('print-qr').src = qr.createDataURL(4, 0);
+  } catch (e) { document.querySelector('#print-header .ph-qr').remove(); }
+
+  // Paper size: one @page rule, rewritten when the dropdown changes (landscape, no margins).
+  const paper = document.getElementById('chart-paper');
+  const pageStyle = document.createElement('style');
+  pageStyle.id = 'page-size';
+  document.head.appendChild(pageStyle);
+  const setPaper = () => { pageStyle.textContent = `@page { size: ${paper.value} landscape; margin: 0; }`; };
+  pick(paper, params.get('paper'));
+  paper.addEventListener('change', setPaper);
+  setPaper();
+
+  document.getElementById('chart-print').addEventListener('click', () => window.print());
+  render();
+  document.addEventListener('DOMContentLoaded', () => I18N.init());
+})();
+</script>
+</body>
+</html>
