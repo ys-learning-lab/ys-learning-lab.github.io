@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="page.title">Kana Writing Practice - Ys Learning Lab</title>
+<meta name="description" content="Free printable hiragana and katakana handwriting practice sheets: trace-and-copy boxes for one character, a whole row, or all 46 basic characters." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/japanese-practice.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Writing Practice - Ys Learning Lab" />
+<meta property="og:description" content="Free printable hiragana and katakana handwriting practice sheets: trace-and-copy boxes for one character, a whole row, or all 46 basic characters." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/japanese-practice.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=1"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=8" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key" data-i18n="nav.japanese">Japanese</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 data-i18n="h1" class="text-2xl font-extrabold">Kana Writing Practice</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+    </select>
+  </div>
+  <p data-i18n="intro" class="text-sm text-stone-600 mb-2">Trace-and-copy handwriting practice for hiragana and katakana - pick a script, then one character, a whole row (行), or all of them.</p>
+  <div class="flex items-center gap-2 text-xs mb-4">
+    <a href="japanese.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+    <a href="japanese-practice.html" class="nav-key nav-key-active" data-i18n="tab.practice">Writing Practice</a>
+  </div>
+
+  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
+
+    <!-- CONTROLS -->
+    <div id="controls" class="order-1 card-soft p-4 w-full space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="header.legend">Worksheet header</legend>
+        <label class="block text-xs mb-2"><span data-i18n="header.title">Worksheet title (printed on the sheet)</span>
+          <input id="cfg-title" type="text" value="Hiragana Writing Practice" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+        <label class="block text-xs"><span data-i18n="header.teacher">Teacher (leave blank for a fill-in line)</span>
+          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" data-i18n-placeholder="header.teacherPlaceholder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-sage p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="chars.legend">Which characters?</legend>
+        <p class="text-xs font-medium mb-1" data-i18n="chars.script">Script</p>
+        <div class="flex gap-4 mb-3">
+          <label class="flex items-center gap-2 text-xs"><input type="radio" name="cfg-script" value="hira" checked class="h-4 w-4" /> <span data-i18n="chars.hira">Hiragana (ひらがな)</span></label>
+          <label class="flex items-center gap-2 text-xs"><input type="radio" name="cfg-script" value="kata" class="h-4 w-4" /> <span data-i18n="chars.kata">Katakana (カタカナ)</span></label>
+        </div>
+        <div class="flex flex-col gap-1 mb-3">
+          <label class="flex items-center gap-2 text-xs"><input type="radio" name="cfg-mode" value="single" class="h-4 w-4" /> <span data-i18n="chars.single">Single character(s)</span></label>
+          <label class="flex items-center gap-2 text-xs"><input type="radio" name="cfg-mode" value="row" checked class="h-4 w-4" /> <span data-i18n="chars.row">By row (行)</span></label>
+          <label class="flex items-center gap-2 text-xs"><input type="radio" name="cfg-mode" value="all" class="h-4 w-4" /> <span data-i18n="chars.all">All 46 basic characters</span></label>
+        </div>
+
+        <div id="single-panel">
+          <label class="block text-xs mb-1" data-i18n="chars.pick">Character (no Japanese keyboard needed - pick from the list)</label>
+          <select id="cfg-single" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 text-sm bg-white"></select>
+        </div>
+
+        <div id="row-panel" class="grid grid-cols-2 gap-1 hidden"></div>
+
+        <p class="text-[11px] text-stone-500 mt-2" data-i18n="chars.note">This tool covers only the 46 basic characters of each script (no dakuten/handakuten/youon) - use the Kana Conversion Quiz for those.</p>
+      </fieldset>
+
+      <fieldset id="word-fieldset" class="card-soft card-soft-terracotta p-3 hidden">
+        <legend class="text-sm font-bold px-1" data-i18n="word.legend">Practice word</legend>
+        <label class="flex items-center gap-2 text-xs"><input id="cfg-words" type="checkbox" class="h-4 w-4" /> <span data-i18n="opts.words">Also practice writing an example word</span></label>
+        <div id="custom-words" class="mt-3 space-y-2">
+          <p class="text-[11px] text-stone-500" data-i18n="word.custom">Your own words (optional): up to 2 words, up to 5 letters each, written in the selected script (hiragana or katakana) and each containing the selected character. The long-vowel mark ー is allowed, for example ケーキ in katakana. Leave both blank to use the built-in example words.</p>
+          <label class="block text-xs"><span data-i18n="word.one">Word 1</span>
+            <input id="cfg-word1" type="text" maxlength="5" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+          </label>
+          <label class="block text-xs"><span data-i18n="word.two">Word 2</span>
+            <input id="cfg-word2" type="text" maxlength="5" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+          </label>
+          <p id="word-error" class="text-[11px] text-red-600 hidden"></p>
+          <label class="flex items-center gap-2 text-xs"><input id="cfg-hide" type="checkbox" class="h-4 w-4" /> <span data-i18n="word.hide">Hide the other letters</span></label>
+          <p class="text-[11px] text-stone-500 pl-6" data-i18n="word.hideNote">Only the selected character is shown and every other box is left open, so students write any word that fits. A word that puts the character in a different spot is fine too. Your word (or the built-in one) is printed on page 2 as a sample answer.</p>
+        </div>
+        <p id="kata-words-note" class="text-[11px] text-amber-700 mt-2 hidden" data-i18n="word.kataNote">Katakana has no built-in example words, so the word row is left out unless you type your own words above.</p>
+        <p id="hira-words-note" class="text-[11px] text-stone-500 mt-2" data-i18n="opts.wordsNote">Not every character has a built-in example word (notably を and ん), so those skip the word row unless you type your own.</p>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="opts.legend">Practice options</legend>
+        <label class="block text-xs mb-2"><span data-i18n="opts.repeats">Repetitions per character</span>
+          <input id="cfg-repeats" type="number" min="3" max="30" value="15" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
+        </label>
+        <p class="text-[11px] text-stone-500 mb-2 pl-0" data-i18n="opts.repeatsNote">Defaults to 15 - enough to fill a page for one character without wasting paper on a mostly-blank sheet.</p>
+      </fieldset>
+
+      <button id="generate-btn" class="btn-key btn-key-primary w-full py-3 text-sm" data-i18n="generate">
+        Generate PDF
+      </button>
+      <label class="block text-xs text-center text-stone-600"><span data-i18n="pdf.lang">PDF language</span>
+        <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-xs">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </label>
+      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
+      <h2 class="text-sm font-semibold text-stone-600 mb-2" data-i18n="preview.heading">What will be generated</h2>
+      <p class="text-[11px] text-stone-400 mb-2" data-i18n="preview.note">A quick summary of your current settings - not a mockup of the page design. The actual PDF has no colors: every trace box is a plain black square on white paper.</p>
+      <div id="preview-summary" class="text-sm space-y-1"></div>
+
+      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+      <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-4">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6130154285914649"
+             data-ad-slot="7285905093"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="how.h">How the practice sheets work</h2>
+      <p class="mb-3" data-i18n-html="how.p1">Each character gets its own column of large square boxes. The top box shows a model of the character. The first box below it has the same character in faint gray to trace over. The rest are empty, so the child writes it without help. This model, then trace, then write-alone pattern is how handwriting is taught in Japanese schools.</p>
+      <p data-i18n-html="how.p2">Columns read from top to bottom and fill the page from <strong>right to left</strong>, the way Japanese is traditionally written. Each box has faint crosshair guide lines that divide it into four quarters. They help a child place and balance each stroke.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="choose.h">Choosing what to practice</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="choose.single"><strong>Single character:</strong> for a character that's giving your child trouble. It defaults to 15 repetitions, which fills a page. You can also add an example word that uses the character, so the child practices it in a real word.</li>
+        <li data-i18n-html="choose.row"><strong>By row (行):</strong> kana are grouped into rows of up to five sharing a consonant, such as あ行 (あいうえお) and か行 (かきくけこ), or ア行 and カ行 in katakana. Practicing one row at a time follows the order most learners and textbooks use.</li>
+        <li data-i18n-html="choose.all"><strong>All 46 basic characters:</strong> a full review once every row has been introduced.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="tips.h">Tips for handwriting practice</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="tips.size"><strong>Size matters early.</strong> Big boxes let young hands build the motion first. Precision comes later.</li>
+        <li data-i18n-html="tips.balance"><strong>Watch the balance.</strong> Use the crosshairs to point out where strokes should start and end. あ and お, for example, differ mainly in how their parts are balanced.</li>
+        <li data-i18n-html="tips.order"><strong>Learn stroke order separately.</strong> These sheets don't show stroke-order arrows. Before tracing a new character, show your child its stroke order from a textbook or a trusted reference, then use these sheets for repetition.</li>
+        <li data-i18n-html="tips.daily"><strong>A few minutes daily.</strong> One row per day, written slowly and carefully, builds better habits than a rushed page of the whole alphabet.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="faq.q1">Why doesn't every character have an example word?</h3>
+      <p class="mb-3" data-i18n="faq.a1">Some hiragana, notably を and ん, almost never begin a word, so there's no natural built-in example. Katakana has no built-in example words at all. In both cases the word row is skipped unless you type your own practice word.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="faq.q2">Does it cover katakana or voiced sounds like が?</h3>
+      <p class="mb-3" data-i18n-html="faq.a2">Katakana is covered: choose Katakana at the top of "Which characters?". Voiced sounds like が, and small combined sounds, are not. To practice recognizing those, use the <a href="japanese.html" class="text-indigo-700 underline">Kana Conversion Quiz</a>.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="faq.q4">What does "Hide the other letters" do?</h3>
+      <p class="mb-3" data-i18n="faq.a4">It turns the word row into a fill-in exercise. The selected character stays visible and the other boxes are left open, so a student writes any word that fits the pattern. For example, with あ selected and the word あんこ, the student sees あ and two open boxes. The word you entered is printed on page 2 as a sample answer.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="faq.q3">Is there an answer key?</h3>
+      <p data-i18n="faq.a3">No. There's nothing to grade on a tracing sheet. Compare your child's writing with the model character at the top of each column instead.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=3"></script>
+<script src="js/i18n-ja-common.js?v=3"></script>
+<script src="js/i18n-ja-practice.js?v=6"></script>
+<script src="js/pdf-common.js?v=19"></script>
+<script src="js/pdf-lang.js?v=2"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-practice-generator.js?v=23"></script>
+<script src="js/japanese-practice-ui.js?v=23"></script>
+</body>
+</html>

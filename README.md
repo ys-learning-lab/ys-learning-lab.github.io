@@ -1,0 +1,295 @@
+# Ys Learning Lab Worksheet Generators
+
+Static, no-build homeschool worksheet site. Everything runs client-side:
+HTML5 + Tailwind CSS (CDN) + vanilla JS + [pdf-lib](https://pdf-lib.js.org/) (CDN)
+for PDF generation. No server, no build step, no analytics beyond whatever
+ad script you add yourself.
+
+## Structure
+
+- `index.html` - landing page, links to each tool
+- `math.html` / `js/math-generator.js` / `js/math-ui.js` - port of `source/math test advanced.py`
+- `japanese.html` / `js/japanese-generator.js` / `js/japanese-ui.js` - port of `source/Hiragana Katakana Test Maker.py`
+  (the katakana<->hiragana conversion quiz)
+- `kana-matching.html` / `js/kana-matching-generator.js` / `js/kana-matching-ui.js` - draw-a-line matching worksheet
+  (distinct from the conversion quiz above, where the student *writes* the answer). One worksheet, two vertical
+  columns of N boxes each (N = "Number of choices", 2-20; box height shrinks via `_rowGeo()` so 20 rows fit one
+  page). The ticked rows' kana are always used; if N is larger the rest is random (`_randomFill()`, split by the
+  Regular kana % between basic and dakuten/handakuten), if smaller N are sampled from the rows; no rows = all random.
+  The right column is shuffled so no kana sits straight across from its partner. "Trick choices" add the same
+  number of partner-less kana (`pair: null`) to BOTH columns, in random positions and with different kana on each
+  side, and they count toward N, so column lengths never reveal them. Every worksheet prints the same instruction
+  (circle a box with no match and write it in the other form beside it) whether or not it has trick choices, and
+  every box gets a faint writing line, so the sheet gives nothing away; the answer key crosses the trick boxes and
+  writes the converted kana. Match types: hiragana-katakana, hiragana-romaji, katakana-romaji. The preview's
+  worksheet is cached and passed straight to the renderer, so the PDF is exactly what was shown (only a settings
+  change or "Draw again" builds a new one). No row names (行) are printed because the embedded font subset lacks 行.
+  ぢ/づ show as "di"/"du" in romaji so they stay distinct from じ/ず.
+  The worksheet page carries the same answer QR as the other tools (top right, print code `XXXX0000-A-1` below it,
+  toggle `#cfg-qr`, on by default; skipped if the payload is too dense to scan at 64pt). The payload is
+  `label:answer` entries read by `answers.html` - each left box and its partner, trick boxes as `none (X)`, then any
+  right-hand trick boxes - and the instruction text wraps narrower to leave room for the QR.
+- `japanese-practice.html` / `js/japanese-practice-generator.js` / `js/japanese-practice-ui.js` - a separate,
+  not-ported-from-Python tool: hiragana handwriting/tracing practice (single character - via a dropdown, not a
+  text field, since typing Japanese isn't a given on every device - a whole row/行, or all 46 basic hiragana).
+  No stroke-order arrows (accurately sourcing stroke-path data for 46+ characters wasn't worth the risk of
+  silently-wrong data) and no answer key / QR / matching-code concept - tracing has nothing to "check". Trace
+  boxes are laid out the way Japanese is actually written: each character gets its own column of up to 5 large
+  boxes read top-to-bottom, and columns fill the page **right-to-left** (`render()`'s `colRightX` cursor in the
+  generator starts at the right margin and decreases) - a whole 行 (5 characters) at the default 5 repetitions
+  each fills exactly one page edge-to-edge, one column per character, in their natural reading order. Single-
+  character mode defaults to 15 repetitions instead (3 columns), using the leftover width for an optional
+  example-word writing line - row/all mode has no such leftover space, so that option is disabled there. The
+  model reference character at the top of each character's first column is a full box-sized cell (not a small
+  aside label) and, like every faint trace-hint inside the boxes below it, is centered on the box with
+  `_drawCenteredJp()` - measuring the actual glyph width via `font.widthOfTextAtSize()` rather than a hand-
+  guessed offset. Example words reuse that exact same box-and-crosshair rule too: each character of the word
+  gets its own box-sized cell in a vertical column (shrunk together, never dropped, if both words don't fit the
+  leftover width at full size), not one word squeezed as plain text into a single wide box.
+  The "Practice word" fieldset (single-character mode only) also takes up to 2 user-typed words of up to 5 kana
+  (`parsePracticeWords()`; used instead of the built-in `HIRAGANA_WORDS` when any are entered). Input is limited to the
+  kana present in the font subset; `ー` isn't in it, so `_drawTraceBox()` draws it as a vertical bar (the boxes read
+  top-to-bottom like vertical writing).
+  Every typed word must contain the selected character in either script (`isPracticeTarget()`: ろ accepts メロン via
+  `toKatakana()`), anywhere in the word. "Hide the other letters" renders the word column as `'blanks'` (only the
+  selected character shown, solid; other boxes open) and appends a page 2 with the whole word as the sample answer
+  (`'answer'` view). The header uses the Japanese font when a typed title/teacher isn't Latin-only.
+  Cross-linked with japanese.html via a small sub-nav row under each page's `<h1>`.
+- `js/pdf-common.js` - shared page geometry constants, font loading, drawing helpers, download trigger
+- `assets/fonts/NotoSansJP-Regular.ttf` - embedded Japanese font: a `fontTools` subset (~330 glyphs, ~60KB) of the
+  Noto Sans JP variable font (SIL OFL; licence name records are kept), instanced at wght 400 and subset to: ASCII, all
+  hiragana and katakana, ー and a few Japanese punctuation marks (。、「」・！？（）～：→), and a small set of
+  common worksheet kanji (kept so a typed title or teacher name like 先生 still prints; the built-in Japanese PDF text in
+  `js/pdf-lang.js` is kana only). Embedded with `{ subset: false }` in `js/pdf-common.js` (the fetch URL carries a
+  `?v=` so browsers pick up a new build) - pdf-lib/fontkit's own in-browser subsetter is unreliable on large CJK
+  fonts, so the font is pre-subsetted offline. **A character missing from the subset prints as a blank box**, so
+  whenever you add Japanese text to `PDF_TEXT.ja` (or any PDF string), rebuild the subset: download
+  `NotoSansJP[wght].ttf` from the google/fonts repo into its own folder, then with fontTools
+  (`fontTools.varLib.instancer.instantiateVariableFont(font, {'wght': 400})`, then `fontTools.subset.Subsetter` with
+  `layout_features = []`, `name_IDs = ['*']`, `hinting = False`) keep the union of the current font's cmap and the new
+  characters. The 2026-10 rebuild kept every existing glyph byte-for-byte identical in bounds and advance. Check
+  coverage with fontkit's `glyphForCodePoint(...).id !== 0` for each character in `PDF_TEXT.ja`.
+- `js/pdf-lang.js` - the text printed on PDFs (`PDF_TEXT.en` / `PDF_TEXT.ja`) and the "PDF language" dropdown
+  (`#pdf-lang`, under each Generate button). The dropdown starts on the page language (so `?lang=ja` gives a Japanese
+  PDF) and keeps following it until the user picks one. A worksheet title left at a built-in English default follows
+  the PDF language; a title the user typed is printed as typed. Used by the quiz, matching and writing-practice
+  renderers; the math tool isn't translated yet. Japanese strings use ASCII punctuation (": ", "!") where possible.
+- `results.html` / `js/pdf-viewer.js` - shared PDF viewer page every "Generate" button opens in a new tab
+  instead of downloading directly (renders the PDF with pdf.js, thumbnail rail + Print + Download; no ads,
+  `noindex`). See "Adding a new worksheet tool" below.
+- `answers.html` / `js/answers-viewer.js` - decodes and displays the answer QR code's payload (see
+  "Answer-key QR code" below). No IndexedDB handoff like `results.html` - everything needed to
+  render the page arrives in its own URL, since the QR is meant to be scanned on a phone with no prior visit
+  to the site.
+- `assets/css/site.css` - small set of utility classes Tailwind's CDN build can't express (dashed ad placeholders,
+  bold worksheet index numbers, crosshair answer boxes)
+
+## Running locally
+
+Just open `index.html` in a browser, or serve the folder with any static file server
+(`python -m http.server`, VS Code Live Server, etc.) - opening `math.html`/`japanese.html`
+directly via `file://` also works since there's no backend.
+
+## Hosting on GitHub Pages
+
+1. Push this folder to a GitHub repo.
+2. Repo Settings -> Pages -> Deploy from branch -> pick `main` / root.
+3. Done - all asset paths are relative, no config needed.
+
+## Ads
+
+The site is linked to AdSense (publisher `ca-pub-6130154285914649`, verified via the `<script>` tag in every
+page's `<head>` and `/ads.txt` at the site root).
+
+Current placements (the result of an AdSense "low-value content / ads on screens without publisher content"
+rejection - keep these rules when adding ads):
+- `index.html`: one leaderboard (`#ad-slot-bottom-leaderboard`, slot `7285905093`) below the tool cards and
+  the How it works / FAQ content.
+- `math.html`, `japanese.html`, `japanese-practice.html`: two ads each - `#ad-slot-below-preview` (slot
+  `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot `7199305456`) between the
+  2nd and 3rd sections of the guide article below the tool.
+- **No ads** on `results.html`, `answers.html` (utility screens, also `noindex`), `about.html`, `privacy.html`,
+  or `contact.html`.
+
+Rules these placements follow:
+- Never put two ad units next to each other with no content between them, at any viewport width. Check the
+  *mobile* stacking order (CSS `order-*` classes), not just the desktop grid.
+- Never put an ad directly next to a button or other control (the Generate button especially) - AdSense treats
+  that as encouraging accidental clicks.
+- Never style an ad to look like site content (e.g. as a tool card in the homepage grid).
+- Keep at most two ad units per tool page; every ad must have real written content around it.
+- Keep Auto ads **off** in the AdSense dashboard, so Google doesn't inject extra placements that break these rules.
+
+`about.html`, `privacy.html` (required by AdSense: discloses Google's ad cookies), and `contact.html` are linked
+from every page's footer. `robots.txt` and `sitemap.xml` are at the site root; add any new indexable page to
+`sitemap.xml`.
+
+All ad slot containers cap their height (`overflow-hidden` + a `max-h-[...]`, not a fixed `h-[...]`, so an
+empty or unfilled slot collapses to nothing instead of leaving a blank hole; `site.css` also hides
+`ins.adsbygoogle[data-ad-status="unfilled"]`) rather than letting
+`data-ad-format="auto"` reserve however much space it wants - useful right after linking a new AdSense account,
+since ads may not start filling for hours to a couple weeks, and an unfilled `auto`-format slot can otherwise
+reserve a very tall blank block while waiting.
+
+Every ad slot is a plain `<div>` wrapping one `<ins>`/`<script>` pair, never inside a form or the preview grid
+itself, so ad content can't overlap form fields or generated worksheet content. To wire up a new/replacement ad
+unit, paste its snippet in place of the existing `<ins>`/`<script>` pair, e.g.:
+
+```html
+<div id="ad-slot-below-preview">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXX" data-ad-slot="XXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+```
+
+## Adding a new worksheet tool
+
+Every "Generate" button opens the finished PDF in `results.html` (a new tab, ad-free PDF.js viewer) rather
+than downloading it directly. `results.html` has no idea what subject generated the PDF - it only knows how to
+render whatever bytes it's handed - so a new tool (e.g. a future writing-practice generator) gets this for free
+by following the same three-step contract used by `math-ui.js`/`japanese-ui.js`:
+
+1. In the Generate click handler, **before any `await`**, call `const resultTab = window.open('', '_blank');` -
+   this must happen synchronously in direct response to the click, or the browser's popup blocker may treat a
+   tab opened after your (async) PDF generation finishes as not user-initiated and block it.
+2. Generate your PDF bytes with pdf-lib as usual.
+3. Call `await openPdfResults(bytes, filename, '<your-tool>.html', '<Tool Label>', resultTab);` (from
+   `js/pdf-common.js`) instead of `downloadPdfBytes(...)`. It hands the bytes off via IndexedDB and points
+   `resultTab` at `results.html?id=...`; if IndexedDB is unavailable it falls back to a direct download so
+   generation never breaks.
+
+No changes to `results.html` or `js/pdf-viewer.js` are needed for a new tool.
+
+## Answer-key QR code
+
+Every worksheet page (not the answer-key pages - they already have the answers printed) can carry a second QR
+code, in the header right under the worksheet-matching code (top-right), alongside the existing homepage QR at
+bottom-right (which now has a small "Print more!" caption). Toggle: `#cfg-answerqr` on both math.html and
+japanese.html, `config.include_answer_qr`, default on. Deliberately placed up in the header rather than the
+bottom margin - a bottom-margin QR sits right where a student's hand rests while writing, risking a smudge that
+makes it unscannable.
+
+Since this whole site is static with no backend, the QR can't look anything up server-side - instead it encodes
+a link to `answers.html` with the answer data itself packed into the URL: `buildAnswerQrUrl({ c, t, a })` in
+`js/pdf-common.js` builds `answers.html?c=<code>&t=<title>&a=<base64url(answerString)>` - only the answer list
+itself is base64'd (unavoidably non-ASCII for Japanese), the code/title travel as plain query params, and there's
+no JSON wrapper (its braces/quotes/colons would otherwise get percent-escaped to 3x their size). `js/answers-viewer.js`
+decodes it entirely client-side and renders a plain answer list (it also still understands the older single
+`?d=<base64url JSON>` format, so an already-printed worksheet's QR doesn't dead-end). This targets parents
+helping with homework: scan once, see the answers, no need to track down the teacher or dig up a saved PDF, and
+no server cost since it's the same static hosting as everything else on this site.
+
+Design notes - getting a QR that's actually legible on a phone at print size turned out to be the hard part,
+not the encoding:
+- The answer text per problem is deliberately terse: just the solved value (`_answerSummary()` in
+  math-generator.js) for math, and for Japanese just the target-script answer with **no prompt half** - a
+  plain comma list in grid reading order (left-to-right, top-to-bottom). Every kana character costs 3 UTF-8
+  bytes, so dropping the redundant prompt roughly halves that payload - it matters far more for scannability
+  here than it does for math's plain-ASCII digits. This only works because every kana cell is now stamped with
+  a small bold index number (Times-Bold, same convention as the math tool's "1.", "2." problem numbers) - the
+  Japanese grid used to carry no printed numbering at all, so an answers-page list read "Q1, Q2, ..." with
+  nothing on the actual worksheet for a student to match it against. The cell numbers and the QR/answers-page
+  numbering are the same reading-order sequence, so "Q1" on the answers page now always means the box printed
+  "1". The number is drawn just *outside* the answer box's top-left corner, in the margin between the box and
+  the cell edge - never inside the box (that would eat into the one place a student needs full room to write)
+  and never stacked above the prompt (the cell's vertical budget has no slack for that). `boxSize` is capped at
+  `cellWidth * 0.75`, so there's always at least `cellWidth * 0.125` of margin on each side by construction;
+  the number shrinks to fit whatever sliver that leaves (down to 5pt on a narrow many-column grid) rather than
+  assuming a fixed size. The prompt is drawn slightly smaller (20pt -> 17pt) purely for a little clearance
+  above it; the answer box keeps its **exact original size** - shrinking that would make it cramped to
+  actually write a character in.
+- The QR is drawn at error-correction level `'L'` (least redundant) instead of the default `'M'` -  fewer
+  redundant bits means a smaller QR version for the same data, which is what actually determines module count.
+- The QR's physical size is derived from its **actual module count**, not guessed from string length -
+  `sizeQrForData()` in `js/pdf-common.js` builds the real QR object first, then sizes the box so each module
+  lands near a target size (~1.3pt/~0.46mm), clamped to what the header has room for (46-64pt). If the payload
+  is so dense that even the max size can't keep modules above a legibility floor (~0.85pt/~0.3mm), the QR is
+  skipped entirely rather than drawn too small to scan - the homepage QR and the full printed answer-key page
+  are always still there as a fallback.
+- The QR is anchored at the very top of the header (right of the title) and gets first claim on the header's
+  vertical space; the worksheet-matching code is drawn small (8pt), *below* the QR rather than above it. It was
+  the other way around originally, which on a denser worksheet left the QR squeezed into whatever space was
+  left under the code text - not enough, so it ended up touching the problem grid below it.
+- **`answers.html` renders fully untrusted input.** Its query params are attacker-controllable (anyone can craft
+  a link), so `js/answers-viewer.js` HTML-escapes every decoded value before inserting it into the page - never
+  pass decoded payload content through `innerHTML` unescaped if you touch this file.
+
+## Kana safety list
+
+`js/kana-safety.js` holds one shared list of clearly inappropriate words (insults, slurs, crude and sexual words), used by
+every kana tool: the quiz grid scan below, the Kana Matching columns (each column, read top to bottom, is re-drawn until it
+spells nothing on the list) and the Writing Practice word boxes (a typed word on the list is refused with a warning).
+Entries are hiragana; katakana and the long-vowel mark are folded away before comparing. The list is stored base64-encoded in
+`KANA_BLOCKED_WORDS` so the words never appear as readable text in the served site (ads / search indexing). The plain list is
+kept outside the repo (`../Ys School private/blocked-words-plain.txt`). To edit: change that file, then re-encode with
+`base64` of its UTF-8 content (newline-separated) and paste the result into the `atob('...')` call.
+
+## Kana adjacency guard
+
+Kana are placed on the grid randomly, so nothing inherently stops two or three adjacent cells from spelling
+something inappropriate when read left-to-right or top-to-bottom - a real risk once a grid gets big enough
+(measured empirically at ~9% of trials on a dense 10x5 mixed-direction grid before this guard existed).
+`RandomizationEngine._sanitizeGrid()` in `js/japanese-generator.js` scans the finished grid for any
+horizontal/vertical run matching `KANA_ADJACENCY_BLACKLIST` (the shared list above) (checked via each cell's hiragana reading,
+regardless of whether the grid displays katakana or hiragana prompts, since they read the same either way) and
+swaps one cell in the offending run with another random cell elsewhere in the grid - only keeping the swap if
+it doesn't just create a new violation at either swapped position. It's a short, curated list of clearly
+inappropriate items, not general profanity/slang filtering, and it only runs in the randomized/mixed-order
+path - sequential ("in order") mode lays out a fixed canonical a-i-u-e-o / ka-ki-ku-ke-ko layout that swapping
+would break, and which never spells anything problematic in that order anyway.
+
+## Notes on the port
+
+- No `eval()`/`new Function()` anywhere. The math tool's mixed-continuous-equation feature (which used Python's
+  `eval()` on a string) is replaced with `evalTokens()` in `js/math-generator.js`, a small recursive-descent
+  evaluator operating directly on the token array (numbers/operators/parens) with standard precedence.
+- PDF coordinate math (page 595.28x841.89pt, MARGIN=40, HEADER_HEIGHT=100, per-cell font-size scaling formulas,
+  box/line drawing) is ported 1:1 from the Python hand-rolled PDF byte writer into pdf-lib calls - pdf-lib uses
+  the same bottom-left-origin coordinate system as raw PDF, so the arithmetic translates directly.
+- Both tools now generate a single combined PDF (worksheet pages followed by answer-key pages), matching the
+  Python apps' `combined_pdf=True` default path.
+- Problem index numbers ("1.", "2.") are rendered in Times-Bold (matching the Python renderer's "F3" font) in
+  both the PDF and the live HTML preview (`.worksheet-index` in `assets/css/site.css`), so they're never
+  confused with equation digits.
+- Every generated PDF gets a small "Powered by Ys Learning Lab" footer line plus a QR code (bottom-right, at
+  `y=20` so it clears the paper edge even on printers with a tight unprintable margin - a partially-clipped QR
+  code is unscannable, unlike text, which degrades more gracefully; `drawQrCode()` in `js/pdf-common.js`)
+  linking back to the site's homepage - drawn as plain filled rectangles from the
+  [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) CDN library's module matrix, not a
+  raster image, consistent with how everything else in these renderers is hand-drawn. Wrapped in a try/catch so
+  a CDN hiccup degrades to "no QR code" rather than breaking generation.
+- Every generated worksheet (and its matching answer key) is stamped with a worksheet-matching code, e.g.
+  `XRGD0831-A-1` (`getWorksheetBatchCode()` in `js/pdf-common.js`) - 4 random uppercase letters plus today's
+  date (`MMDD`), freshly generated per "Generate" click, with a `-A-N` page suffix. Embedding the date means a
+  code from one day's print run can never be confused with a code from a different day using the same settings
+  (a real classroom scenario: the same worksheet config run daily would otherwise print the same code every
+  time). The same per-page code appears on both the worksheet page and its corresponding answer-key page so a
+  teacher can pair a stack of student worksheets to their answer keys by eye.
+- Every worksheet header also has Name/Date/Teacher/Class fill-in lines for students to fill in before turning
+  a sheet in - except the answer-key pages, which drop Name/Date/Class (the teacher doesn't need those on their
+  own key) and keep only the Teacher line. On the Japanese tool these are English-only (Helvetica) even though
+  the sheet is otherwise bilingual, specifically to avoid needing to re-run the offline Noto Sans JP subsetting
+  pipeline for new kanji. The header is a compact 3-4 line block with a small title line instead of the
+  original oversized heading, to leave more of the page for the actual worksheet grid -
+  `PDF_PAGE.HEADER_HEIGHT` (currently `150`) is sized with real margin for the *worst case* (the answer QR at
+  its max size, stacked with a page's densest row-0 text ascending above its own baseline), not just the
+  common case, after a too-tight header let the QR/code visibly collide with the first problem row on some
+  worksheets.
+- The worksheet title and teacher name are editable form fields (`#cfg-title`/`#cfg-teacher` on both
+  math.html and japanese.html, threaded through as `config.title`/`config.teacher`) instead of hardcoded text -
+  Title defaults to "Math Practice Test" / "Kana Practice Test" and is printed as-is (with " - Answer Key"
+  appended on the math tool's answer-key pages); Teacher prints the typed name directly when given, or falls
+  back to a blank fill-in line like Name/Date/Class when left empty. Both round-trip through INI export/import.
+- The math tool now has the same optional settings footer the Japanese tool already had
+  (`#cfg-footer` / `config.show_settings_footer`, `MathPDFRenderer._settingsSummary()` in
+  `js/math-generator.js`) - a small gray line summarizing layout/mode/randomization, and the "Powered by..."
+  footer now also states PRACTICE SHEET vs ANSWER KEY like the Japanese tool's does.
+
+## Cache-busting local script/style changes
+
+Every `<script src="js/...">` and the `site.css` link carries a `?v=N` query param. **Bump it whenever you edit
+that file** - browsers cache these aggressively with no other cache-control here, and without bumping the
+version, visitors (and you, testing) can silently keep running old JS/CSS after a deploy. Cache-busting is
+per-file-type, not global: all `js/*.js` references share one number (`?v=18` currently), `site.css` has its own
+(`?v=8` currently) - bump whichever group you actually touched.
+

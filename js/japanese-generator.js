@@ -1,0 +1,896 @@
+// Port of "Hiragana Katakana Test Maker.py" (KanaDatabase + RandomizationEngine + PDFWorksheetRenderer).
+
+function randInt2(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function randChoice2(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randShuffle2(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function sampleWithoutReplacement(pool, n) {
+  const copy = pool.slice();
+  randShuffle2(copy);
+  return copy.slice(0, n);
+}
+
+// Romaji carries no script, so the quiz direction decides what typed romaji becomes:
+// katakana -> hiragana shows katakana, hiragana -> katakana shows hiragana, mixed picks at random.
+function romajiScriptFor(direction) {
+  return direction === 'k2h' ? 'kata' : direction === 'mixed' ? 'random' : 'hira';
+}
+
+class KanaDatabase {
+  constructor() {
+    this.basic_kana = [
+      ['ア', 'あ'], ['イ', 'い'], ['ウ', 'う'], ['エ', 'え'], ['オ', 'お'],
+      ['カ', 'か'], ['キ', 'き'], ['ク', 'く'], ['ケ', 'け'], ['コ', 'こ'],
+      ['サ', 'さ'], ['シ', 'し'], ['ス', 'す'], ['セ', 'せ'], ['ソ', 'そ'],
+      ['タ', 'た'], ['チ', 'ち'], ['ツ', 'つ'], ['テ', 'て'], ['ト', 'と'],
+      ['ナ', 'な'], ['ニ', 'に'], ['ヌ', 'ぬ'], ['ネ', 'ね'], ['ノ', 'の'],
+      ['ハ', 'は'], ['ヒ', 'ひ'], ['フ', 'ふ'], ['ヘ', 'へ'], ['ホ', 'ほ'],
+      ['マ', 'ま'], ['ミ', 'み'], ['ム', 'む'], ['メ', 'め'], ['モ', 'も'],
+      ['ヤ', 'や'], ['ユ', 'ゆ'], ['ヨ', 'よ'],
+      ['ラ', 'ら'], ['リ', 'り'], ['ル', 'る'], ['レ', 'れ'], ['ロ', 'ろ'],
+      ['ワ', 'わ'], ['ヲ', 'を'], ['ン', 'ん'],
+    ];
+    this.dakuten = [
+      ['ガ', 'が'], ['ギ', 'ぎ'], ['グ', 'ぐ'], ['ゲ', 'げ'], ['ゴ', 'ご'],
+      ['ザ', 'ざ'], ['ジ', 'じ'], ['ズ', 'ず'], ['ゼ', 'ぜ'], ['ゾ', 'ぞ'],
+      ['ダ', 'だ'], ['ヂ', 'ぢ'], ['ヅ', 'づ'], ['デ', 'で'], ['ド', 'ど'],
+      ['バ', 'ば'], ['ビ', 'び'], ['ブ', 'ぶ'], ['ベ', 'べ'], ['ボ', 'ぼ'],
+    ];
+    this.handakuten = [['パ', 'ぱ'], ['ピ', 'ぴ'], ['プ', 'ぷ'], ['ペ', 'ぺ'], ['ポ', 'ぽ']];
+    this.youon = [
+      ['キャ', 'きゃ'], ['キュ', 'きゅ'], ['キョ', 'きょ'],
+      ['シャ', 'しゃ'], ['シュ', 'しゅ'], ['ショ', 'しょ'],
+      ['チャ', 'ちゃ'], ['チュ', 'ちゅ'], ['チョ', 'ちょ'],
+      ['ニャ', 'にゃ'], ['ニュ', 'にゅ'], ['ニョ', 'にょ'],
+      ['ヒャ', 'ひゃ'], ['ヒュ', 'ひゅ'], ['ヒョ', 'ひょ'],
+      ['ミャ', 'みゃ'], ['ミュ', 'みゅ'], ['ミョ', 'みょ'],
+      ['リャ', 'りゃ'], ['リュ', 'りゅ'], ['リョ', 'りょ'],
+      ['ギャ', 'ぎゃ'], ['ギュ', 'ぎゅ'], ['ギョ', 'ぎょ'],
+      ['ジャ', 'じゃ'], ['ジュ', 'じゅ'], ['ジョ', 'じょ'],
+      ['ビャ', 'びゃ'], ['ビュ', 'びゅ'], ['ビョ', 'びょ'],
+      ['ピャ', 'ぴゃ'], ['ピュ', 'ぴゅ'], ['ピョ', 'ぴょ'],
+    ];
+
+    this.categories_map = {
+      basic: this.basic_kana, dakuten: this.dakuten, handakuten: this.handakuten,
+      youon: this.youon,
+    };
+  }
+
+  _makePair(katakana, hiragana, category) {
+    return { katakana, hiragana, category, key: `${katakana}|${hiragana}` };
+  }
+
+  getAllPairs() {
+    const pairs = [];
+    for (const [cat, items] of Object.entries(this.categories_map)) {
+      for (const [k, h] of items) pairs.push(this._makePair(k, h, cat));
+    }
+    return pairs;
+  }
+
+  getByCategories(categories) {
+    const pairs = [];
+    for (const cat of categories) {
+      if (this.categories_map[cat]) {
+        for (const [k, h] of this.categories_map[cat]) pairs.push(this._makePair(k, h, cat));
+      }
+    }
+    return pairs;
+  }
+
+  // Splits typed kana into units: "あいうえお" or "ヤキャギャそ" or "あ, ピ、ギャ" all work.
+  // Commas (, or 、), spaces and similar separators are optional; a kana followed by a small
+  // ゃゅょ is one unit (キャ). Romaji works too ("gya, wo, byu", or "kyaonu"): it is split
+  // at the vowels, so separators are optional there as well. Small kana can be typed with x
+  // ("kixya" = きゃ). Romaji has no script, so romajiScript says which one it becomes:
+  // 'hira', 'kata' or 'random'.
+  // Returns { chars, unknown } - unknown is anything that is not a kana this quiz uses.
+  parseKanaList(text, romajiScript = 'hira') {
+    const toKata = new Map();
+    const known = new Set();
+    for (const p of this.getAllPairs()) { known.add(p.hiragana); known.add(p.katakana); toKata.set(p.hiragana, p.katakana); }
+    const SMALL = 'ぁぃぅぇぉゃゅょァィゥェォャュョ';
+    const units = []; // { u, romaji }
+    const unknown = [];
+    const bad = (u) => { if (!unknown.includes(u)) unknown.push(u); };
+    let prev = -1; // index of the unit right before this character, if no separator came between
+    const list = [...String(text == null ? '' : text).normalize('NFKC')];
+    // A small kana joins the kana before it (き+ゃ). If that is not a kana this quiz uses
+    // (ティ, ファ), the whole attempt is ignored, including the kana it was attached to.
+    const mergeSmall = (small, shown) => {
+      if (prev >= 0 && known.has(units[prev].u + small)) { units[prev].u += small; return; }
+      if (prev >= 0) { bad(units[prev].u + shown); units.splice(prev, 1); } else bad(shown);
+      prev = -1;
+    };
+    for (let i = 0; i < list.length; i++) {
+      const ch = list[i];
+      if (/[\s,;、，。.・/|]/.test(ch)) { prev = -1; continue; }
+      if (/[A-Za-z']/.test(ch)) {
+        let run = '';
+        while (i < list.length && /[A-Za-z']/.test(list[i])) run += list[i++];
+        i--;
+        run = run.toLowerCase();
+        for (let k = 0; k < run.length;) {
+          // "kanna" is か・ん・な (an n before another n+vowel is ん on its own), not かんあ
+          if (run.substr(k, 2) === 'nn' && /[aiueoy]/.test(run[k + 2] || '')) { units.push({ u: 'ん', romaji: true }); prev = units.length - 1; k++; continue; }
+          let hit = null;
+          for (let len = Math.min(3, run.length - k); len >= 1; len--) {
+            const t = run.substr(k, len);
+            const h = KanaDatabase.ROMAJI[t];
+            if (h && known.has(h)) { hit = { h, len }; break; }
+            if (KanaDatabase.ROMAJI_SMALL[t]) { hit = { small: KanaDatabase.ROMAJI_SMALL[t], len, t }; break; }
+          }
+          if (!hit) { if (run[k] !== "'") bad(run[k]); k++; prev = -1; continue; }
+          if (hit.small) mergeSmall(hit.small, hit.t);
+          else { units.push({ u: hit.h, romaji: true }); prev = units.length - 1; }
+          k += hit.len;
+        }
+        continue;
+      }
+      if (SMALL.includes(ch)) { mergeSmall(ch, ch); continue; }
+      if (known.has(ch)) { units.push({ u: ch, romaji: false }); prev = units.length - 1; } else { bad(ch); prev = -1; }
+    }
+    const chars = [];
+    for (const { u, romaji } of units) {
+      let out = u;
+      if (romaji) {
+        const script = romajiScript === 'random' ? (Math.random() < 0.5 ? 'hira' : 'kata') : romajiScript;
+        if (script === 'kata') out = toKata.get(u);
+      }
+      if (out && !chars.includes(out)) chars.push(out);
+    }
+    return { chars, unknown };
+  }
+
+  findPairsWithDirection(chars) {
+    const found = [];
+    const allPairs = this.getAllPairs();
+    for (let c of chars) {
+      c = c.trim();
+      if (!c) continue;
+      for (const p of allPairs) {
+        if (p.hiragana === c) {
+          if (!found.some((x) => x[0].key === p.key)) found.push([p, 'h2k']);
+          break;
+        } else if (p.katakana === c) {
+          if (!found.some((x) => x[0].key === p.key)) found.push([p, 'k2h']);
+          break;
+        }
+      }
+    }
+    return found;
+  }
+}
+
+const FAMILY_MAP = [
+  ['あいうえおぁぃぅぇぉ', 'A'], ['かきくけこがぎぐげご', 'K'], ['さしすせそざじずぜぞ', 'S'],
+  ['たちつてとだぢづでどっ', 'T'], ['なにぬねの', 'N'], ['はひふへほばびぶべぼぱぴぷぺぽ', 'H'],
+  ['まみむめも', 'M'], ['やゆよゃゅょ', 'Y'], ['らりるれろ', 'R'], ['わをん', 'W'],
+];
+
+// Kana are randomly placed, so nothing stops a few adjacent cells from spelling
+// something inappropriate when read left-to-right or top-to-bottom (a real risk once
+// a grid gets big) - checked here in hiragana form regardless of whether the grid is
+// showing katakana or hiragana prompts, since the two read identically. The word list
+// is shared with the other worksheets: see js/kana-safety.js.
+const KANA_ADJACENCY_BLACKLIST = KANA_BLOCKED_WORDS;
+const KANA_ADJACENCY_MAX_CELLS = 6; // the longest entry in the list, in cells (one kana per cell)
+
+// Romaji -> hiragana, for typing kana without a Japanese keyboard. Hepburn spellings
+// (shi, chi, tsu, fu, ji, sha...) and the common Nihon-shiki ones (si, ti, tu, hu, zi, sya...).
+KanaDatabase.ROMAJI = (() => {
+  const V = 'aiueo';
+  const R = {};
+  const rows = {
+    '': 'あいうえお', k: 'かきくけこ', g: 'がぎぐげご', s: 'さしすせそ', z: 'ざじずぜぞ', t: 'たちつてと', d: 'だぢづでど',
+    n: 'なにぬねの', h: 'はひふへほ', b: 'ばびぶべぼ', p: 'ぱぴぷぺぽ', m: 'まみむめも', r: 'らりるれろ',
+  };
+  for (const [c, kana] of Object.entries(rows)) [...kana].forEach((k, i) => { R[c + V[i]] = k; });
+  Object.assign(R, { la: 'ら', li: 'り', lu: 'る', le: 'れ', lo: 'ろ' }); // l is accepted for r (le = れ)
+  Object.assign(R, { ya: 'や', yu: 'ゆ', yo: 'よ', wa: 'わ', wo: 'を', n: 'ん', "n'": 'ん', nn: 'ん', shi: 'し', chi: 'ち', tsu: 'つ', fu: 'ふ', ji: 'じ' });
+  const small = { a: 'ゃ', u: 'ゅ', o: 'ょ' };
+  const youon = [[['ky'], 'き'], [['gy'], 'ぎ'], [['ny'], 'に'], [['hy'], 'ひ'], [['by'], 'び'], [['py'], 'ぴ'], [['my'], 'み'], [['ry'], 'り'],
+    [['sh', 'sy'], 'し'], [['j', 'zy', 'jy'], 'じ'], [['ch', 'ty', 'cy'], 'ち'], [['dy'], 'ぢ']];
+  for (const [prefixes, kana] of youon) for (const pre of prefixes) for (const v of 'auo') R[pre + v] = kana + small[v];
+  return R;
+})();
+// Small kana typed with x (kixya = きゃ). They only make sense after another kana, so the
+// parser merges them into the unit before.
+KanaDatabase.ROMAJI_SMALL = { xa: 'ぁ', xi: 'ぃ', xu: 'ぅ', xe: 'ぇ', xo: 'ぉ', xya: 'ゃ', xyu: 'ゅ', xyo: 'ょ' };
+
+class RandomizationEngine {
+  constructor(config, database) {
+    this.config = config;
+    this.database = database;
+  }
+
+  _antiClusterShuffle(items) {
+    if (!items.length) return items;
+    randShuffle2(items);
+    for (let i = 1; i < items.length; i++) {
+      if (items[i] !== null && items[i] === items[i - 1]) {
+        for (let j = i + 1; j < items.length; j++) {
+          if (items[j] !== items[i] && (i + 1 === items.length || items[j] !== items[i + 1])) {
+            [items[i], items[j]] = [items[j], items[i]];
+            break;
+          }
+        }
+      }
+    }
+    return items;
+  }
+
+  _getFamilyId(hiragana) {
+    if (!hiragana) return 'Other';
+    const h = hiragana[0];
+    for (const [chars, family] of FAMILY_MAP) {
+      if (chars.includes(h)) return family;
+    }
+    return 'Other';
+  }
+
+  // Assigns k2h/h2k per whole consonant-row "family" (mixed/anti-cheat mode),
+  // aiming for mixed_k2h_ratio of the total. Families are decided as a group -
+  // shuffled into random order, then greedily added to the k2h side while that
+  // keeps the running total close to target. (An earlier per-pair version
+  // decided each family the instant its first member was seen, using a fixed
+  // "any remaining budget > 0.4" gate - with typical pool sizes that gate is
+  // almost always true early on, so nearly every family got waved through to
+  // k2h before the running total had a chance to reflect anything, badly
+  // overshooting the target ratio.)
+  _assignMixedDirections(unforcedPairs, freqOf, forcedFamilyDirs, currentK2h, targetK2hCount) {
+    const familyWeights = new Map();
+    for (const p of unforcedPairs) {
+      const fam = this._getFamilyId(p.hiragana);
+      familyWeights.set(fam, (familyWeights.get(fam) || 0) + freqOf(p));
+    }
+
+    const undecidedFamilies = [...familyWeights.keys()].filter((f) => !forcedFamilyDirs.has(f));
+    randShuffle2(undecidedFamilies);
+
+    const familyDir = new Map(forcedFamilyDirs);
+    let running = currentK2h;
+    for (const fam of undecidedFamilies) {
+      const weight = familyWeights.get(fam);
+      const assignK2h = running + weight <= targetK2hCount
+        || (running < targetK2hCount && (targetK2hCount - running) >= weight / 2);
+      if (assignK2h) {
+        familyDir.set(fam, 'k2h');
+        running += weight;
+      } else {
+        familyDir.set(fam, 'h2k');
+      }
+    }
+
+    const dirMap = new Map();
+    for (const p of unforcedPairs) {
+      dirMap.set(p.key, familyDir.get(this._getFamilyId(p.hiragana)));
+    }
+    return dirMap;
+  }
+
+  generatePagesData() {
+    this.lastSequentialPagesNeeded = null; // set by _generateSequentialPages when is_ordered is true
+    const mandatoryChars = this.database.parseKanaList(this.config.always_include, romajiScriptFor(this.config.direction)).chars;
+    const mandatoryTuples = this.database.findPairsWithDirection(mandatoryChars);
+    const mandatoryPairs = mandatoryTuples.map((t) => t[0]);
+    const forcedDirs = new Map(mandatoryTuples.map((t) => [t[0].key, t[1]]));
+
+    const totalItemsPerPage = this.config.rows * this.config.columns;
+    const pagesData = [];
+    const allPairsOrdered = this.database.getAllPairs();
+
+    const hasBasic = this.config.categories.includes('basic');
+    const otherCats = this.config.categories.filter((c) => c !== 'basic');
+    const hasOther = otherCats.length > 0;
+
+    const poolBasic = hasBasic ? this.database.getByCategories(['basic']) : [];
+    const poolOther = hasOther ? this.database.getByCategories(otherCats) : [];
+
+    if (!poolBasic.length && !poolOther.length && !mandatoryPairs.length) {
+      throw new Error('No Kana available. Check your category and mandatory inputs.');
+    }
+
+    if (this.config.is_ordered) {
+      return this._generateSequentialPages(mandatoryPairs, forcedDirs, totalItemsPerPage, allPairsOrdered);
+    }
+
+    for (let page = 0; page < this.config.num_pages; page++) {
+      let pageSelected = mandatoryPairs.slice(0, totalItemsPerPage);
+      let needed = totalItemsPerPage - pageSelected.length;
+
+      const mBasicCount = pageSelected.filter((p) => p.category === 'basic').length;
+
+      if (needed > 0) {
+        let neededBasic, neededOther;
+        if (hasBasic && hasOther) {
+          const targetBasic = Math.trunc(totalItemsPerPage * (this.config.basic_ratio / 100.0));
+          neededBasic = Math.max(0, targetBasic - mBasicCount);
+          neededOther = needed - neededBasic;
+        } else if (hasBasic) {
+          neededBasic = needed; neededOther = 0;
+        } else if (hasOther) {
+          neededBasic = 0; neededOther = needed;
+        } else {
+          neededBasic = 0; neededOther = 0;
+        }
+
+        let pBasic = poolBasic.slice();
+        let pOther = poolOther.slice();
+
+        if (!this.config.allow_duplicates) {
+          const selectedKeys = new Set(pageSelected.map((p) => p.key));
+          pBasic = pBasic.filter((p) => !selectedKeys.has(p.key));
+          pOther = pOther.filter((p) => !selectedKeys.has(p.key));
+
+          if (pBasic.length < neededBasic) {
+            const deficit = neededBasic - pBasic.length;
+            neededBasic = pBasic.length;
+            if (hasOther) neededOther += deficit;
+          }
+          if (pOther.length < neededOther) {
+            const deficit = neededOther - pOther.length;
+            neededOther = pOther.length;
+            if (hasBasic) {
+              neededBasic += deficit;
+              neededBasic = Math.min(neededBasic, pBasic.length);
+            }
+          }
+
+          pageSelected = pageSelected.concat(sampleWithoutReplacement(pBasic, neededBasic));
+          pageSelected = pageSelected.concat(sampleWithoutReplacement(pOther, neededOther));
+
+          const stillNeeded = totalItemsPerPage - pageSelected.length;
+          if (stillNeeded > 0) pageSelected = pageSelected.concat(new Array(stillNeeded).fill(null));
+        } else {
+          const sampleWithReplacement = (poolSource, count, fallbackPool) => {
+            const res = [];
+            for (let i = 0; i < count; i++) {
+              if (poolSource.length) res.push(randChoice2(poolSource));
+              else if (fallbackPool.length) res.push(randChoice2(fallbackPool));
+            }
+            return res;
+          };
+          pageSelected = pageSelected.concat(sampleWithReplacement(pBasic, neededBasic, pOther));
+          pageSelected = pageSelected.concat(sampleWithReplacement(pOther, neededOther, pBasic));
+
+          const stillNeeded = totalItemsPerPage - pageSelected.length;
+          if (stillNeeded > 0 && mandatoryPairs.length) {
+            for (let i = 0; i < stillNeeded; i++) pageSelected.push(randChoice2(mandatoryPairs));
+          } else if (stillNeeded > 0) {
+            pageSelected = pageSelected.concat(new Array(stillNeeded).fill(null));
+          }
+        }
+      }
+
+      // Shuffle only the real pairs and push empty slots to the end, so an
+      // under-full pool fills the grid from the top instead of leaving
+      // randomly scattered holes. (Sequential/ordered mode never reaches this
+      // loop - see _generateSequentialPages.)
+      {
+        const realPairs = pageSelected.filter((p) => p !== null);
+        const nones = pageSelected.filter((p) => p === null);
+        pageSelected = this._antiClusterShuffle(realPairs).concat(nones);
+      }
+
+      const uniqueKeys = [...new Set(pageSelected.filter((p) => p !== null).map((p) => p.key))];
+      const uniquePairs = uniqueKeys.map((k) => pageSelected.find((p) => p && p.key === k));
+      const freq = new Map(uniquePairs.map((p) => [p.key, pageSelected.filter((x) => x && x.key === p.key).length]));
+
+      const dirMap = new Map();
+      const forcedFamilyDirs = new Map();
+
+      for (const p of uniquePairs) {
+        if (forcedDirs.has(p.key)) {
+          dirMap.set(p.key, forcedDirs.get(p.key));
+          forcedFamilyDirs.set(this._getFamilyId(p.hiragana), forcedDirs.get(p.key));
+        }
+      }
+
+      const unforcedPairs = uniquePairs.filter((p) => !forcedDirs.has(p.key));
+
+      if (this.config.direction !== 'mixed') {
+        for (const p of unforcedPairs) {
+          const fam = this._getFamilyId(p.hiragana);
+          dirMap.set(p.key, forcedFamilyDirs.has(fam) ? forcedFamilyDirs.get(fam) : this.config.direction);
+        }
+      } else {
+        const targetK2hCount = Math.trunc(totalItemsPerPage * (this.config.mixed_k2h_ratio / 100.0));
+        const currentK2h = uniquePairs.filter((p) => forcedDirs.get(p.key) === 'k2h').reduce((s, p) => s + freq.get(p.key), 0);
+        const mixedDirs = this._assignMixedDirections(unforcedPairs, (p) => freq.get(p.key), forcedFamilyDirs, currentK2h, targetK2hCount);
+        for (const [k, v] of mixedDirs) dirMap.set(k, v);
+      }
+
+      const grid = [];
+      let itemIndex = 0;
+      for (let r = 0; r < this.config.rows; r++) {
+        const row = [];
+        for (let c = 0; c < this.config.columns; c++) {
+          const pair = pageSelected[itemIndex];
+          itemIndex++;
+          if (pair === null) {
+            row.push({ prompt: '', answer: '', prompt_type: 'empty', is_empty: true });
+            continue;
+          }
+          const itemDir = dirMap.get(pair.key);
+          if (itemDir === 'k2h') row.push({ prompt: pair.katakana, answer: pair.hiragana, prompt_type: 'katakana', is_empty: false, _hiragana: pair.hiragana });
+          else row.push({ prompt: pair.hiragana, answer: pair.katakana, prompt_type: 'hiragana', is_empty: false, _hiragana: pair.hiragana });
+        }
+        grid.push(row);
+      }
+      this._sanitizeGrid(grid);
+      pagesData.push(grid);
+    }
+
+    return pagesData;
+  }
+
+  // Breaks up any accidental horizontal/vertical run of adjacent cells that
+  // spells something in KANA_ADJACENCY_BLACKLIST, by swapping one cell in
+  // the offending run with another random cell elsewhere in the grid (and
+  // only keeping the swap if it doesn't just create a new violation at
+  // either swapped position). Not applied in sequential/"in order" mode -
+  // that mode's whole point is a fixed canonical a-i-u-e-o / ka-ki-ku-ke-ko
+  // layout, which swapping would break, and which never spells anything
+  // problematic in that fixed order anyway.
+  _sanitizeGrid(grid) {
+    if (!grid.length || !grid[0].length) return grid;
+    const rows = grid.length;
+    const cols = grid[0].length;
+
+    const coords = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!grid[r][c].is_empty) coords.push([r, c]);
+      }
+    }
+    if (coords.length < 2) return grid;
+
+    const runFrom = (r, c, dr, dc) => {
+      const hira = [];
+      for (let k = 0; k < KANA_ADJACENCY_MAX_CELLS; k++) {
+        const rr = r + dr * k;
+        const cc = c + dc * k;
+        if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) break;
+        const item = grid[rr][cc];
+        if (!item || item.is_empty) break;
+        hira.push(item._hiragana);
+      }
+      return hira;
+    };
+    const runIsBad = (r, c, dr, dc) => {
+      const hira = runFrom(r, c, dr, dc);
+      for (let n = 2; n <= hira.length; n++) {
+        if (KANA_ADJACENCY_BLACKLIST.includes(kanaFold(hira.slice(0, n).join('')))) return true;
+      }
+      return false;
+    };
+    const findViolation = () => {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (runIsBad(r, c, 0, 1)) return { r, c, dr: 0, dc: 1 };
+          if (runIsBad(r, c, 1, 0)) return { r, c, dr: 1, dc: 0 };
+        }
+      }
+      return null;
+    };
+    const cellIsBad = (r, c) => {
+      for (const [dr, dc] of [[0, 1], [1, 0]]) {
+        for (let start = -(KANA_ADJACENCY_MAX_CELLS - 1); start <= 0; start++) {
+          const sr = r + dr * start;
+          const sc = c + dc * start;
+          if (sr < 0 || sc < 0 || sr >= rows || sc >= cols) continue;
+          if (runIsBad(sr, sc, dr, dc)) return true;
+        }
+      }
+      return false;
+    };
+    const swap = (a, b) => {
+      const tmp = grid[a[0]][a[1]];
+      grid[a[0]][a[1]] = grid[b[0]][b[1]];
+      grid[b[0]][b[1]] = tmp;
+    };
+
+    const MAX_PASSES = 60;
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      const violation = findViolation();
+      if (!violation) break;
+
+      const target = [violation.r + violation.dr, violation.c + violation.dc];
+      const candidates = coords
+        .filter(([r, c]) => !(r === violation.r && c === violation.c) && !(r === target[0] && c === target[1]));
+      randShuffle2(candidates);
+
+      let resolved = false;
+      for (const other of candidates) {
+        swap(target, other);
+        if (!cellIsBad(target[0], target[1]) && !cellIsBad(other[0], other[1])) {
+          resolved = true;
+          break;
+        }
+        swap(target, other); // revert and try the next candidate
+      }
+      if (!resolved) {
+        console.warn('Could not resolve an inappropriate kana adjacency; leaving as generated.');
+        break;
+      }
+    }
+    return grid;
+  }
+
+  // Sequential/"in order" mode: instead of randomly sampling a subset per page
+  // (which is what the ratio-based sampling above does), lay out every
+  // selected-category kana exactly once, in canonical order (basics first,
+  // then dakuten/handakuten/youon - matching KanaDatabase's own
+  // insertion order), across as many pages as needed to fit them all. The
+  // "copies" field (config.num_pages) then repeats that whole multi-page set.
+  _generateSequentialPages(mandatoryPairs, forcedDirs, totalItemsPerPage, allPairsOrdered) {
+    const selectedSet = new Set(this.config.categories);
+    const canonicalSelected = allPairsOrdered.filter((p) => selectedSet.has(p.category));
+
+    const mandatoryKeys = new Set(mandatoryPairs.map((p) => p.key));
+    const rest = canonicalSelected.filter((p) => !mandatoryKeys.has(p.key));
+    const fullOrdered = mandatoryPairs.concat(rest);
+
+    // Group-by-row mode: lay out one "family" (consonant row - a/i/u/e/o,
+    // ka/ki/ku/ke/ko, etc.) per grid row, padding short rows (ya/yu/yo,
+    // wa/wo/n have only 3 members) with empty cells so every row lines up in
+    // a 5-wide table instead of the next family's items bleeding into the
+    // same row. Direction/dirMap below is still computed from the ungrouped
+    // fullOrdered - padding nulls aren't real pairs and don't need a direction.
+    let renderList = fullOrdered;
+    if (this.config.group_by_row) {
+      renderList = [];
+      let currentGroup = null;
+      for (const p of fullOrdered) {
+        const group = mandatoryKeys.has(p.key) ? '__mandatory__' : this._getFamilyId(p.hiragana);
+        if (group !== currentGroup) {
+          while (renderList.length % 5 !== 0) renderList.push(null);
+          currentGroup = group;
+        }
+        renderList.push(p);
+      }
+      while (renderList.length % 5 !== 0) renderList.push(null);
+    }
+
+    const pagesNeeded = Math.max(1, Math.ceil(renderList.length / totalItemsPerPage));
+    this.lastSequentialPagesNeeded = pagesNeeded;
+
+    // Direction assignment: same rules as the randomized path (forced chars/
+    // families win, then mixed-mode balances toward mixed_k2h_ratio), just
+    // computed once over the whole ordered set since every item appears
+    // exactly once, rather than per-page with sampled frequencies.
+    const dirMap = new Map();
+    const forcedFamilyDirs = new Map();
+    for (const p of fullOrdered) {
+      if (forcedDirs.has(p.key)) {
+        dirMap.set(p.key, forcedDirs.get(p.key));
+        forcedFamilyDirs.set(this._getFamilyId(p.hiragana), forcedDirs.get(p.key));
+      }
+    }
+    const unforced = fullOrdered.filter((p) => !forcedDirs.has(p.key));
+
+    if (this.config.direction !== 'mixed') {
+      for (const p of unforced) {
+        const fam = this._getFamilyId(p.hiragana);
+        dirMap.set(p.key, forcedFamilyDirs.has(fam) ? forcedFamilyDirs.get(fam) : this.config.direction);
+      }
+    } else {
+      const targetK2hCount = Math.trunc(fullOrdered.length * (this.config.mixed_k2h_ratio / 100.0));
+      const currentK2h = fullOrdered.filter((p) => forcedDirs.get(p.key) === 'k2h').length;
+      const mixedDirs = this._assignMixedDirections(unforced, () => 1, forcedFamilyDirs, currentK2h, targetK2hCount);
+      for (const [k, v] of mixedDirs) dirMap.set(k, v);
+    }
+
+    const basePages = [];
+    for (let i = 0; i < pagesNeeded; i++) {
+      const chunk = renderList.slice(i * totalItemsPerPage, (i + 1) * totalItemsPerPage);
+      while (chunk.length < totalItemsPerPage) chunk.push(null);
+
+      const grid = [];
+      let itemIndex = 0;
+      for (let r = 0; r < this.config.rows; r++) {
+        const row = [];
+        for (let c = 0; c < this.config.columns; c++) {
+          const pair = chunk[itemIndex];
+          itemIndex++;
+          if (pair === null) {
+            row.push({ prompt: '', answer: '', prompt_type: 'empty', is_empty: true });
+            continue;
+          }
+          const itemDir = dirMap.get(pair.key);
+          if (itemDir === 'k2h') row.push({ prompt: pair.katakana, answer: pair.hiragana, prompt_type: 'katakana', is_empty: false });
+          else row.push({ prompt: pair.hiragana, answer: pair.katakana, prompt_type: 'hiragana', is_empty: false });
+        }
+        grid.push(row);
+      }
+      basePages.push(grid);
+    }
+
+    const copies = Math.max(1, this.config.num_pages || 1);
+    const pagesData = [];
+    for (let c = 0; c < copies; c++) pagesData.push(...basePages);
+    return pagesData;
+  }
+}
+
+// ---------- PDF renderer (port of PDFWorksheetRenderer using pdf-lib) ----------
+class PDFWorksheetRenderer {
+  constructor(config, pagesData) {
+    this.config = config;
+    this.pagesData = pagesData;
+    this.fonts = null; // set once the owning PDFDocument exists
+
+    this.usableWidth = PDF_PAGE.WIDTH - PDF_PAGE.MARGIN * 2;
+    this.usableHeight = PDF_PAGE.HEIGHT - PDF_PAGE.MARGIN - PDF_PAGE.HEADER_HEIGHT - 30;
+
+    this.cellWidth = this.usableWidth / this.config.columns;
+    this.cellHeight = this.usableHeight / this.config.rows;
+  }
+
+  _getCenterOffsetJp(text, fontSize, font) {
+    // Python used a fixed-width approximation (len*fs*0.95/2); pdf-lib gives us
+    // real glyph widths via font.widthOfTextAtSize, which we prefer for accuracy.
+    try {
+      return font.widthOfTextAtSize(text, fontSize) / 2;
+    } catch (e) {
+      return (text.length * fontSize * 0.95) / 2;
+    }
+  }
+
+  async renderCombined() {
+    const pdfDoc = await PDFLib.PDFDocument.create();
+    this.fonts = await getFonts(pdfDoc);
+    const baseCode = getWorksheetBatchCode();
+    this._renderInto(pdfDoc, false, baseCode);
+    if (this.config.include_answer_key !== false) this._renderInto(pdfDoc, true, baseCode);
+    return pdfDoc.save();
+  }
+
+  // One PDF for a whole class: every student's worksheet in turn, then (if the
+  // config asks for it) every student's answer key in the same order. `sheets`
+  // is [{ cfg, pagesData }], each with its own cfg (name, teacher, forced kana).
+  // Returns { bytes, missingGlyphs } - names whose characters the embedded
+  // Japanese font does not have (they would print as blank boxes).
+  static async renderBatch(sheets) {
+    const pdfDoc = await PDFLib.PDFDocument.create();
+    const fonts = await getFonts(pdfDoc);
+    const baseCode = getWorksheetBatchCode();
+    const renderers = sheets.map((s) => {
+      const r = new PDFWorksheetRenderer(s.cfg, s.pagesData);
+      r.fonts = fonts;
+      return r;
+    });
+    const codeFor = (i) => `${baseCode}-S${String(i + 1).padStart(2, '0')}`;
+    renderers.forEach((r, i) => r._renderInto(pdfDoc, false, codeFor(i)));
+    renderers.forEach((r, i) => { if (r.config.include_answer_key !== false) r._renderInto(pdfDoc, true, codeFor(i)); });
+
+    const missingGlyphs = [];
+    try {
+      const fk = fonts.notoSansJP.embedder.font;
+      for (const s of sheets) {
+        const text = `${s.cfg.studentName || ''}${s.cfg.teacher || ''}${s.cfg.className || ''}`;
+        if ([...text].some((ch) => ch.codePointAt(0) > 0x7f && !fk.hasGlyphForCodePoint(ch.codePointAt(0)))) {
+          missingGlyphs.push(s.cfg.studentName || s.cfg.teacher || '');
+        }
+      }
+    } catch (e) {
+      // font internals unavailable - skip the check
+    }
+    return { bytes: await pdfDoc.save(), missingGlyphs };
+  }
+
+  async render(isAnswerKey = false) {
+    const pdfDoc = await PDFLib.PDFDocument.create();
+    this.fonts = await getFonts(pdfDoc);
+    const baseCode = getWorksheetBatchCode();
+    this._renderInto(pdfDoc, isAnswerKey, baseCode);
+    return pdfDoc.save();
+  }
+
+  _renderInto(pdfDoc, isAnswerKey, baseCode) {
+    const { helvetica, timesBold, notoSansJP } = this.fonts;
+
+    // Printed text follows the PDF language; a title the user typed is printed as typed.
+    const lang = this.config.pdfLang;
+    const T = (key, vars) => pdfText(lang, key, vars);
+    const F = (text) => pdfFontFor(this.fonts, text);
+    let jpTitle, enTitle;
+    if (this.config.direction === 'k2h') { jpTitle = T('quiz.title.k2h'); enTitle = T('quiz.write.k2h'); }
+    else if (this.config.direction === 'h2k') { jpTitle = T('quiz.title.h2k'); enTitle = T('quiz.write.h2k'); }
+    else { jpTitle = T('quiz.title.mixed'); enTitle = T('quiz.write.mixed'); }
+
+    const totalPages = this.pagesData.length;
+
+    const catsShort = [];
+    if (this.config.categories.includes('basic')) catsShort.push('Basic');
+    if (this.config.categories.includes('dakuten')) catsShort.push('Dak');
+    if (this.config.categories.includes('handakuten')) catsShort.push('Han');
+    if (this.config.categories.includes('youon')) catsShort.push('You');
+    const catStr = catsShort.length ? catsShort.join('+') : 'None';
+
+    let dirStr = this.config.direction;
+    if (dirStr === 'mixed') dirStr += `(${this.config.mixed_k2h_ratio}%)`;
+
+    const alwaysStr = this.config.always_include || 'None';
+
+    const enSettings = `Layout: ${this.config.rows}x${this.config.columns} | Dir: ${dirStr} | Cats: ${catStr} | Basic: ${this.config.basic_ratio}% | Ord: ${this.config.is_ordered} | Dupes: ${this.config.allow_duplicates} | Always: `;
+
+    this.pagesData.forEach((gridData, pageIdx) => {
+      const pageNum = pageIdx + 1;
+      const page = pdfDoc.addPage([PDF_PAGE.WIDTH, PDF_PAGE.HEIGHT]);
+
+      const baseTitle = pdfTitle(lang, this.config.title, 'quiz.default');
+      page.drawText(baseTitle, { x: PDF_PAGE.MARGIN, y: PDF_PAGE.HEIGHT - 36, size: 13, font: F(baseTitle) });
+
+      // Worksheet-matching code, e.g. "XRGD0831-A-1" - same code on the
+      // worksheet page and its matching answer-key page (same pageNum).
+      // Drawn small, below the answer QR (not above it) so the QR - which
+      // needs the room far more, to stay scannable - gets first claim on
+      // the vertical space available at the top of the header.
+      const code = `${baseCode}-A-${pageNum}`;
+
+      // Answer-key QR, worksheet pages only, anchored at the very top of
+      // the header (right of the title) - scanning it opens a plain-text
+      // answer list (js/answers-viewer.js) instead of needing the separate
+      // answer-key PDF/page. Kept up here (not the bottom margin) so it
+      // can't get smudged by a student writing near the bottom of the
+      // page, and given first claim on the header's vertical space rather
+      // than being squeezed under the code text, which previously left it
+      // touching the grid on denser worksheets. Only the target-script
+      // answers are sent (no prompt half) in grid reading order
+      // (left-to-right, top-to-bottom, matching how the grid itself reads)
+      // - every kana character is 3 UTF-8 bytes, so dropping the redundant
+      // prompt half roughly halves the payload, which matters far more for
+      // scannability here than for the math tool's plain-ASCII digits.
+      // Sized to its actual module count (see sizeQrForData() in
+      // pdf-common.js), not just guessed from string length, and skipped
+      // entirely if even the max available size can't keep its modules
+      // legibly large - a QR a phone can't focus on is worse than no QR.
+      const qrTop = PDF_PAGE.HEIGHT - 34;
+      let qrBottom = qrTop;
+      if (!isAnswerKey && this.config.include_answer_qr !== false) {
+        const answers = [];
+        gridData.forEach((row) => row.forEach((item) => {
+          if (!item.is_empty) answers.push(item.answer);
+        }));
+        const url = buildAnswerQrUrl({ c: code, t: baseTitle, a: answers.join(',') });
+        try {
+          const fit = sizeQrForData(url, 'L', { maxSize: 64 });
+          if (fit) {
+            qrBottom = qrTop - fit.size;
+            drawQrCode(page, url, PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - fit.size, qrBottom, fit.size, 'L');
+          }
+        } catch (e) {
+          console.warn('Answer QR code unavailable:', e);
+        }
+      }
+
+      const codeStr = T('quiz.code', { code });
+      const codeWidth = F(codeStr).widthOfTextAtSize(codeStr, 8);
+      page.drawText(codeStr, {
+        x: PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - codeWidth, y: qrBottom - 12, size: 8, font: F(codeStr), color: PDFLib.rgb(0.3, 0.3, 0.3),
+      });
+
+      page.drawText(jpTitle, { x: PDF_PAGE.MARGIN, y: PDF_PAGE.HEIGHT - 52, size: 11, font: notoSansJP });
+      page.drawText(enTitle, { x: PDF_PAGE.MARGIN, y: PDF_PAGE.HEIGHT - 66, size: 9, font: F(enTitle), color: PDFLib.rgb(0.4, 0.4, 0.4) });
+
+      const teacherName = (this.config.teacher || '').trim();
+      // A roster import fills in the student's name (and class); otherwise they stay blank lines.
+      const fill = (text, value) => (value ? text.replace(/_+/, value) : text);
+      const studentName = (this.config.studentName || '').trim();
+      const className = (this.config.className || '').trim();
+      const drawLabel = (text, x, y) => page.drawText(text, { x, y, size: 11, font: F(text) });
+      const teacherLine = T('hdr.teacher', { name: teacherName || '_________________________' });
+      if (isAnswerKey) {
+        drawLabel(teacherLine, PDF_PAGE.MARGIN, PDF_PAGE.HEIGHT - 84);
+        if (studentName) drawLabel(fill(T('quiz.name'), studentName), 320, PDF_PAGE.HEIGHT - 84);
+      } else {
+        drawLabel(fill(T('quiz.name'), studentName), PDF_PAGE.MARGIN, PDF_PAGE.HEIGHT - 84);
+        drawLabel(T('hdr.date'), 320, PDF_PAGE.HEIGHT - 84);
+        drawLabel(teacherLine, PDF_PAGE.MARGIN, PDF_PAGE.HEIGHT - 100);
+        drawLabel(fill(T('hdr.class'), className), 320, PDF_PAGE.HEIGHT - 100);
+      }
+
+      const startY = PDF_PAGE.HEIGHT - PDF_PAGE.HEADER_HEIGHT;
+
+      // Small bold index number in the corner of every cell (same
+      // Times-Bold convention the math tool uses for its "1.", "2." problem
+      // numbers) - without this, the answer QR/page's "Q1, Q2, ..." list
+      // has nothing printed on the worksheet itself to match against, since
+      // a kana grid otherwise carries no visible numbering at all.
+      let cellIndex = 0;
+
+      gridData.forEach((row, rIdx) => {
+        row.forEach((item, cIdx) => {
+          if (item.is_empty) return;
+          cellIndex += 1;
+
+          const x = PDF_PAGE.MARGIN + cIdx * this.cellWidth;
+          const y = startY - rIdx * this.cellHeight;
+          const centerX = x + this.cellWidth / 2;
+
+          // Prompt shrunk slightly (20pt -> 17pt) purely to buy a little
+          // vertical breathing room above it - the answer box below keeps
+          // its exact original size (min(cellWidth*0.75, cellHeight*0.6)),
+          // since shrinking *that* would make it cramped to actually write
+          // a character in.
+          const promptSize = 17;
+          const promptY = y - this.cellHeight * 0.25;
+          page.drawText(item.prompt, {
+            x: centerX - this._getCenterOffsetJp(item.prompt, promptSize, notoSansJP),
+            y: promptY, size: promptSize, font: notoSansJP,
+          });
+
+          const boxSize = Math.min(this.cellWidth * 0.75, this.cellHeight * 0.6);
+          const boxX = centerX - boxSize / 2;
+          const boxY = promptY - boxSize - 8;
+
+          drawBoxOutline(page, boxX, boxY, boxSize, boxSize, { width: 1.0 });
+
+          const midX = boxX + boxSize / 2;
+          const midY = boxY + boxSize / 2;
+          const dashColor = PDFLib.rgb(0.6, 0.6, 0.6);
+          drawLineSeg(page, boxX, midY, boxX + boxSize, midY, 0.5, [2, 2], dashColor);
+          drawLineSeg(page, midX, boxY, midX, boxY + boxSize, 0.5, [2, 2], dashColor);
+
+          // Index number sits just outside the box's top-left corner, in
+          // the margin between the box and the cell edge - never inside the
+          // box itself (that would eat into the one place a student
+          // actually needs full room to write) and never stacked above the
+          // prompt (the cell's vertical budget has no slack for that; see
+          // the promptSize comment above). boxSize is capped at
+          // cellWidth*0.75, so there's always at least cellWidth*0.125 of
+          // margin on each side by construction - shrink the number to fit
+          // whatever sliver that leaves rather than assuming a fixed size.
+          const idxStr = String(cellIndex);
+          const leftMargin = boxX - x;
+          const idxSize = leftMargin >= 16 ? 7 : 5;
+          const idxWidth = timesBold.widthOfTextAtSize(idxStr, idxSize);
+          const idxX = Math.max(x + 1, boxX - idxWidth - 3);
+          page.drawText(idxStr, { x: idxX, y: boxY + boxSize - idxSize - 1, size: idxSize, font: timesBold });
+
+          if (isAnswerKey) {
+            const ansSize = boxSize * 0.7;
+            const ansY = boxY + boxSize * 0.22;
+            page.drawText(item.answer, {
+              x: centerX - this._getCenterOffsetJp(item.answer, ansSize, notoSansJP),
+              y: ansY, size: ansSize, font: notoSansJP, color: PDFLib.rgb(0.9, 0.2, 0.2),
+            });
+          }
+        });
+      });
+
+      const docType = T(isAnswerKey ? 'quiz.docKey' : 'quiz.docSheet');
+      const pageInfo = T('quiz.page', { n: pageNum, total: totalPages });
+      const pageInfoStr = T('quiz.footer', { doc: docType, page: pageInfo });
+      const pageInfoWidth = F(pageInfoStr).widthOfTextAtSize(pageInfoStr, 10);
+      page.drawText(pageInfoStr, {
+        x: PDF_PAGE.WIDTH / 2 - pageInfoWidth / 2, y: 28, size: 10, font: F(pageInfoStr), color: PDFLib.rgb(0.5, 0.5, 0.5),
+      });
+
+      if (this.config.show_settings_footer) {
+        page.drawText(enSettings, { x: PDF_PAGE.MARGIN, y: 14, size: 6, font: helvetica, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+        const offset = PDF_PAGE.MARGIN + enSettings.length * 3.1;
+        page.drawText(alwaysStr, { x: offset, y: 14, size: 6, font: notoSansJP, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+      }
+
+      try {
+        drawQrCode(page, 'https://ys-learning-lab.github.io/', PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - 32, 20, 32);
+        const printMoreText = T('quiz.printMore');
+        const printMoreWidth = F(printMoreText).widthOfTextAtSize(printMoreText, 7);
+        page.drawText(printMoreText, {
+          x: PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - 16 - printMoreWidth / 2, y: 56, size: 7, font: F(printMoreText), color: PDFLib.rgb(0.5, 0.5, 0.5),
+        });
+      } catch (e) {
+        console.warn('QR code unavailable (qrcode-generator failed to load?):', e);
+      }
+    });
+  }
+}

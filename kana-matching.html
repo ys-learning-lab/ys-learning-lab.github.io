@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="match.page.title">Kana Matching Worksheet - Ys Learning Lab</title>
+<meta name="description" content="Free printable kana matching worksheets: students draw lines to connect hiragana, katakana and romaji pairs. Choose rows, set size and an optional answer key." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-matching.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Matching Worksheet - Ys Learning Lab" />
+<meta property="og:description" content="Free printable kana matching worksheets: students draw lines to connect hiragana, katakana and romaji pairs. Choose rows, set size and an optional answer key." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-matching.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=1"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=8" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="match.h1">Kana Matching Worksheet</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="match.intro">Two columns of kana, one shuffled: students draw lines to connect each pair. Pick rows, add random kana, and add optional trick choices.</p>
+  <div class="flex items-center gap-2 text-xs mb-4">
+    <a href="japanese.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key nav-key-active" data-i18n="tab.matching">Kana Matching</a>
+    <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+  </div>
+
+  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
+
+    <!-- CONTROLS -->
+    <div id="controls" class="order-1 card-soft p-4 w-full space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="match.header.legend">Worksheet header</legend>
+        <label class="block text-xs mb-2"><span data-i18n="match.header.title">Worksheet title (printed on the sheet)</span>
+          <input id="cfg-title" type="text" value="Kana Matching" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+        <label class="block text-xs"><span data-i18n="match.header.teacher">Teacher (leave blank for a fill-in line)</span>
+          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" data-i18n-placeholder="match.header.teacherPlaceholder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-sage p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="match.kana.legend">Which kana?</legend>
+        <p class="text-xs font-medium mb-1" data-i18n="match.kana.basic">Basic</p>
+        <div id="row-basic" class="grid grid-cols-2 gap-1 mb-3"></div>
+        <p class="text-xs font-medium mb-1" data-i18n="match.kana.voiced">Dakuten &amp; handakuten</p>
+        <div id="row-voiced" class="grid grid-cols-2 gap-1 mb-3"></div>
+        <div class="flex gap-2">
+          <button id="clear-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1" data-i18n="match.kana.clear">Clear</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="match.opts.legend">Matching options</legend>
+        <label class="block text-xs mb-3"><span data-i18n="match.opts.type">Match</span>
+          <select id="cfg-type" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+            <option value="h-k" data-i18n="match.opts.hk">Hiragana &#8596; Katakana</option>
+            <option value="h-r" data-i18n="match.opts.hr">Hiragana &#8596; Romaji</option>
+            <option value="k-r" data-i18n="match.opts.kr">Katakana &#8596; Romaji</option>
+          </select>
+        </label>
+        <label class="block text-xs mb-1"><span data-i18n="match.opts.count">Number of choices (2-20)</span>
+          <input id="cfg-count" type="number" min="2" max="20" value="5" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="match.opts.countNote">Each column gets this many boxes. Kana from the rows you tick are always used. If the number is bigger, random kana fill the rest; if it is smaller, that many are picked at random from your rows. Tick no rows and every kana is random.</p>
+        <label class="block text-xs"><span data-i18n="match.random.regular">Regular kana (%) among the random kana</span>
+          <input id="cfg-regular" type="number" min="0" max="100" value="70" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
+        </label>
+        <p class="text-[11px] text-stone-500 mt-1 mb-3"><span data-i18n="match.random.voiced">Dakuten and handakuten kana:</span> <span id="voiced-pct">30</span>%</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-mix" type="checkbox" class="h-4 w-4" /> <span data-i18n="match.opts.mix">Mix hiragana and katakana in both columns</span></label>
+        <p class="text-[11px] text-stone-500 mb-3 pl-6" data-i18n="match.opts.mixNote">Only for Hiragana ↔ Katakana. Each box is randomly hiragana or katakana, and its partner is the other form, so a column can hold both (for example あ and カ on the left, ア and か on the right).</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-shuffle" type="checkbox" class="h-4 w-4" /> <span data-i18n="match.opts.shuffle">Shuffle the left column too</span></label>
+        <p class="text-[11px] text-stone-500 mb-3 pl-6" data-i18n="match.opts.shuffleNote">When off, the left column follows the kana table order.</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-trick" type="checkbox" class="h-4 w-4" /> <span data-i18n="match.trick.label">Add trick choices that match nothing</span></label>
+        <label class="block text-xs mb-1 pl-6"><span data-i18n="match.trick.count">Trick choices per column (1-3)</span>
+          <input id="cfg-decoys" type="number" min="1" max="3" value="1" class="w-14 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3 pl-6" data-i18n="match.trick.note">The same number is added to both columns, so students can't tell whether any exist. They count toward the number of choices above.</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-key" type="checkbox" class="h-4 w-4" /> <span data-i18n="match.opts.key">Include answer key page (with the lines drawn in)</span></label>
+        <label class="flex items-center gap-2 text-xs"><input id="cfg-qr" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="match.opts.qr">Add an answer QR code to the worksheet (scan it to see the answers on a phone)</span></label>
+      </fieldset>
+
+      <button id="generate-btn" class="btn-key btn-key-primary w-full py-3 text-sm" data-i18n="match.generate">Generate PDF</button>
+      <label class="block text-xs text-center text-stone-600"><span data-i18n="pdf.lang">PDF language</span>
+        <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-xs">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </label>
+      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-semibold text-stone-600" data-i18n="match.preview.heading">What will be generated</h2>
+        <button id="reshuffle-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="match.reshuffle">Draw again</button>
+      </div>
+      <p class="text-[11px] text-stone-400 mb-2" data-i18n="match.preview.note">A sample of your worksheet. The PDF uses exactly this arrangement. The actual PDF has no colors: every box is a plain black square on white paper.</p>
+      <div id="preview-summary" class="text-sm space-y-1 mb-3"></div>
+      <div id="preview-sets" class="space-y-4 jp-font"></div>
+
+      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+      <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-4">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6130154285914649"
+             data-ad-slot="7285905093"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="match.how.h">How the matching sheets work</h2>
+      <p class="mb-3" data-i18n="match.how.p1">Each worksheet has two columns with the same number of boxes. The left column lists kana in order, and the right column lists their partners shuffled. The student draws a line from each box on the left to its match on the right. The black dots between the columns mark where each line starts and ends.</p>
+      <p data-i18n="match.how.p2">The right column is always rearranged so that no item sits directly across from its partner. The student can't just draw straight lines, and has to read each character.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="match.choose.h">Choosing what to match</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="match.choose.hk"><strong>Hiragana &#8596; Katakana:</strong> connect the two characters that stand for the same sound. It suits learners who know hiragana and find katakana harder to remember.</li>
+        <li data-i18n-html="match.choose.r"><strong>Hiragana &#8596; Romaji, Katakana &#8596; Romaji:</strong> practice reading kana. The rarely used ぢ and づ are shown as "di" and "du" so they stay distinct from じ and ず.</li>
+        <li data-i18n-html="match.choose.size"><strong>Number of choices:</strong> how many boxes each column has, up to 20. Start with one row (5 boxes) and raise the number for a harder sheet. Bigger sheets use smaller boxes so they still fit on one page.</li>
+        <li data-i18n-html="match.choose.random"><strong>Rows plus random kana:</strong> the kana from the rows you tick are always used. Tick only the ア行 and set the number to 15, for example, and you get those 5 kana plus 10 random ones. If the number is smaller than the rows' kana, that many are picked from them at random. Tick no rows and every kana is random. Regular kana (%) sets the mix of basic kana and dakuten/handakuten kana among the random ones.</li>
+        <li data-i18n-html="match.choose.trick"><strong>Trick choices:</strong> boxes with no partner, added to both columns in equal numbers (they count toward the number of choices). When a student finds one, they circle it and write that kana in its other form beside it, for example hiragana as katakana. Every worksheet carries this instruction, whether or not it has trick choices, so students can't tell. The answer key marks trick choices with an X and shows the answer.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="match.tips.h">Tips for using the sheets</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="match.tips.1"><strong>Read before drawing.</strong> Have the student read the left column aloud before drawing any line.</li>
+        <li data-i18n-html="match.tips.2"><strong>Watch for look-alikes.</strong> Shapes such as シ and ツ, or ソ and ン, make good practice when they share a set.</li>
+        <li data-i18n-html="match.tips.3"><strong>Follow up with writing.</strong> Once matching feels easy, move on to the <a href="japanese.html" class="text-indigo-700 underline">Kana Conversion Quiz</a>, where the student writes the answer.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="match.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="match.faq.q1">Is there an answer key?</h3>
+      <p class="mb-3" data-i18n="match.faq.a1">Yes. With "Include answer key page" on, the PDF ends with the same page again, with every correct line drawn in. Trick choices are marked with an X and the correct form is written beside them. The worksheet can also carry a QR code (on by default) that opens a plain list of the answers on a phone; untick "Add an answer QR code" to leave it off.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="match.faq.q2">How is this different from the Kana Conversion Quiz?</h3>
+      <p class="mb-3" data-i18n-html="match.faq.a2">Matching only needs lines, with no writing, so it suits younger children and first-time learners. The <a href="japanese.html" class="text-indigo-700 underline">Kana Conversion Quiz</a> asks the student to look at one script and write the other.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="match.faq.q3">Why doesn't the PDF print 行 for each row?</h3>
+      <p data-i18n="match.faq.a3">The Japanese font embedded in the PDFs contains only the characters the worksheets use, and 行 isn't one of them, so the PDF doesn't print row names.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=3"></script>
+<script src="js/i18n-ja-common.js?v=3"></script>
+<script src="js/i18n-ja-matching.js?v=4"></script>
+<script src="js/pdf-common.js?v=19"></script>
+<script src="js/pdf-lang.js?v=2"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/kana-matching-generator.js?v=9"></script>
+<script src="js/kana-matching-ui.js?v=7"></script>
+</body>
+</html>
