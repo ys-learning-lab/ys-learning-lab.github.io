@@ -1,6 +1,6 @@
 // Simplified Chinese strings for kana-search-sheet.html. Shared strings (header, status, summary) come from i18n-zh-puzzlesheet.js.
 I18N.register('zh', {
-  'tab.searchsheet': '假名找词练习页',
+  'tab.searchsheet': '假名找词练习纸',
   'ss.page.title': '假名找词练习纸 - Ys Learning Lab',
   'ss.h1': '假名找词练习纸',
   'ss.intro': '可打印的找词游戏。许多平假名词以直线的形式藏在假名方格里。学生把找到的词圈出来，并写在横线上。每个字 1 分，所以越长的词分越高。',
@@ -10,7 +10,7 @@ I18N.register('zh', {
   'ss.opts.words': '藏起来的词数',
   'ss.opts.wordsNote': '特意藏起来的词有多少个。较小的方格可能放不下这么多。词表中的其他真实词语也可能偶然出现，它们同样算数。',
   'ss.opts.goal': '要找的词数',
-  'ss.opts.goalNote': '练习页会要求学生至少找到这么多个词。藏起来的词比这更多，所以学生可以选择，而且越长的词分越高。',
+  'ss.opts.goalNote': '练习纸会要求学生至少找到这么多个词。藏起来的词比这更多，所以学生可以选择，而且越长的词分越高。',
   'ss.opts.dirs': '方向',
   'ss.dirs.easy': '横向和纵向',
   'ss.dirs.normal': '加上斜向',
@@ -21,10 +21,10 @@ I18N.register('zh', {
   'ss.preview.size': '{n} × {n} 个字，藏起来的词 {words} 个',
   'ss.sum.goal': '要找的词数：',
 
-  'ss.how.h': '假名找词练习页的玩法',
-  'ss.how.p1': '每页是一个平假名方格，词以直线的形式藏在里面。学生把找到的词圈出来，写在方格下面的横线上，每个字得 1 分。练习页上写着要找的个数，但藏起来的词比这更多，所以学生可以选择，找到长词就能得高分。',
+  'ss.how.h': '假名找词练习纸的玩法',
+  'ss.how.p1': '每页是一个平假名方格，词以直线的形式藏在里面。学生把找到的词圈出来，写在方格下面的横线上，每个字得 1 分。练习纸上写着要找的个数，但藏起来的词比这更多，所以学生可以选择，找到长词就能得高分。',
   'ss.how.p2': '藏起来的词都是简单的日常词语，方格足够大时，总会藏有一两个较长的词。学生在方格里找到的其他真实词语也可以。填充用的字都经过检查，不会拼出不适合课堂的内容。',
-  'ss.use.h': '练习页的使用方法',
+  'ss.use.h': '练习纸的使用方法',
   'ss.use.when': '<strong>什么时候用。</strong>学生能读大部分平假名之后。它能练习在方格中找假名，也能练习读短词。',
   'ss.use.size': '<strong>难度。</strong>先从 6 × 6 或 7 × 7 的方格和“横向和纵向”开始。方格更大、加上斜向和倒着读的词，会更难。',
   'ss.use.score': '<strong>计分。</strong>学生在页面底部把得分加起来：写下的每个词，每个字 1 分。',
@@ -36,4 +36,11 @@ I18N.register('zh', {
   'ss.faq.a2': '暂时没有。词表只有平假名，所以题目也是平假名。',
   'ss.faq.q3': '会保存或发送任何内容吗？',
   'ss.faq.a3': '不会。题目和 PDF 都在您的浏览器中生成，不会被存储或上传。',
+
+  'ss.ideas.h': '课堂和家庭的使用建议',
+  'ss.ideas.intro': '学生写在格子下面的词，正好是一份现成的词表，可以继续练习：',
+  'ss.ideas.1': '<strong>给词语排序。</strong>按假名的个数，或按第一个假名在<a href="kana-chart.html" class="text-indigo-700 underline">五十音图</a>中的顺序，把找到的词排一排。',
+  'ss.ideas.2': '<strong>一张纸，两种颜色。</strong>两个学生轮流各找一个词，用自己的颜色圈出来，最后各自计算得分。',
+  'ss.ideas.3': '<strong>读一读，说一说。</strong>学生把每个词读出来并说出意思。',
+  'ss.ideas.4': '<strong>过几天再看。</strong>把练习纸留着，几天后让学生不看格子，直接读出写在下面的词。',
 });

@@ -21,5 +21,5 @@ I18N.register('zh', {
   'footer.privacy': '隐私政策',
   'footer.contact': '联系我们',
   'footer.support': '支持本站',
-  'footer.note': 'Ys Learning Lab 练习册生成器。所有 PDF 都在您的浏览器中生成。',
+  'footer.note': 'Ys Learning Lab 练习纸生成器。所有 PDF 都在您的浏览器中生成。',
 });

@@ -168,7 +168,7 @@ class KanaWordBuilderRenderer {
 
   async render() {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    this.fonts = await getFonts(pdfDoc);
+    this.fonts = await getFonts(pdfDoc, this.config.pdfLang);
     this.code = `${getWorksheetBatchCode()}-A-1`;
     const sheet = pdfDoc.addPage([PDF_PAGE.WIDTH, PDF_PAGE.HEIGHT]);
     this._drawHeader(sheet, false);

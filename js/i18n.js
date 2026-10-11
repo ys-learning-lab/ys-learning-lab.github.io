@@ -105,7 +105,15 @@
     if (!SUPPORTED.includes(lang)) return;
     current = lang;
     try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) { /* ignore */ }
-    document.documentElement.lang = lang;
+    document.documentElement.lang = lang === 'zh' ? 'zh-Hans' : lang;
+    if (lang === 'zh' && !document.getElementById('zh-font')) {
+      // Same Chinese web font that i18n-boot.js loads when the page opens in Chinese.
+      const link = document.createElement('link');
+      link.id = 'zh-font';
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400..900&display=swap';
+      document.head.appendChild(link);
+    }
     applyTo(document);
     document.querySelectorAll('select[data-lang-select]').forEach((sel) => { sel.value = lang; });
     syncUrl(lang);

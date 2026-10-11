@@ -66,7 +66,7 @@ async function getJapaneseFont(pdfDoc, lang) {
   try {
     await loadFontKit();
     pdfDoc.registerFontkit(fontkit);
-    const fontFile = lang === 'zh' ? 'NotoSansSC-Regular.ttf?v=3' : 'NotoSansJP-Regular.ttf?v=3';
+    const fontFile = lang === 'zh' ? 'NotoSansSC-Regular.ttf?v=4' : 'NotoSansJP-Regular.ttf?v=3';
     const fontBytes = await fetch('assets/fonts/' + fontFile).then((r) => {
       if (!r.ok) throw new Error('font fetch failed');
       return r.arrayBuffer();

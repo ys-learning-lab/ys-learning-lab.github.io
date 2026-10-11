@@ -8,7 +8,15 @@
     if (lang !== 'en' && lang !== 'ja' && lang !== 'zh') lang = localStorage.getItem('ysll-lang');
     if (lang === 'ja' || lang === 'zh') {
       var root = document.documentElement;
-      root.lang = lang;
+      root.lang = lang === 'zh' ? 'zh-Hans' : lang;
+      // Chinese needs a Chinese web font: Windows otherwise mixes Japanese glyphs into the text.
+      if (lang === 'zh') {
+        var link = document.createElement('link');
+        link.id = 'zh-font';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400..900&display=swap';
+        document.head.appendChild(link);
+      }
       root.classList.add('i18n-pending');
       var style = document.createElement('style');
       style.textContent = 'html.i18n-pending body{visibility:hidden}';

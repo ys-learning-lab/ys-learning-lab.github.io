@@ -1,12 +1,12 @@
 // Simplified Chinese strings for kana-puzzle-sheet.html.
 I18N.register('zh', {
-  'tab.puzzlesheet': '拼图练习页',
+  'tab.puzzlesheet': '拼图练习纸',
   'ps.page.title': '假名词语拼图练习纸 - Ys Learning Lab',
   'ps.h1': '假名词语拼图练习纸',
   'ps.intro': '可打印的填字游戏。格子里已经有一些平假名。学生把名单里的假名写进空格，使每一个横向的词和每一个纵向的词都是真实存在的词。方格很大，所以拼图可以铺满整张纸。',
 
-  'ps.header.legend': '练习页页眉',
-  'ps.header.title': '练习页标题（会印在页面上）',
+  'ps.header.legend': '练习纸页眉',
+  'ps.header.title': '练习纸标题（会印在页面上）',
   'ps.header.teacher': '老师姓名（留空则印成填写横线）',
   'ps.header.teacherPlaceholder': '例如：王老师',
 
@@ -35,13 +35,13 @@ I18N.register('zh', {
   'ps.sum.yes': '有',
   'ps.sum.no': '无',
   'ps.status.working': '正在生成 PDF...',
-  'ps.status.done': '已在新标签页中打开您的练习页。',
+  'ps.status.done': '已在新标签页中打开您的练习纸。',
   'ps.status.error': '生成 PDF 时出错：',
 
-  'ps.how.h': '拼图练习页如何使用',
+  'ps.how.h': '拼图练习纸如何使用',
   'ps.how.p1': '每一页是一个小小的填字游戏。盘面上方印着要用的假名名单，空格恰好需要这些假名。学生在每个空格里写一个假名，使横着读和竖着读的每一个词都是真实存在的平假名词，并在名单里划掉已经用过的假名。',
   'ps.how.p2': '这些词来自与其他日语工具相同的日常词表。没有提示，学生需要在格子里试着填入假名，并检查组成的词。有些假名已经填好，起到帮助作用。',
-  'ps.use.h': '使用练习页',
+  'ps.use.h': '使用练习纸',
   'ps.use.when': '<strong>什么时候用。</strong>学生能读出大部分平假名之后。它能练习读短词，也能让学生注意到哪些假名常常搭配。',
   'ps.use.size': '<strong>词数。</strong>先从 7 个词、显示“多”开始。想要更大的挑战，可以把词数增加到 15，并选择“少”。',
   'ps.use.paper': '<strong>节省纸张。</strong>每道拼图占一页，方格很大，可以写得工整，也不浪费空白。',
@@ -53,4 +53,11 @@ I18N.register('zh', {
   'ps.faq.a2': '暂时没有。词表只有平假名，所以拼图也是平假名。',
   'ps.faq.q3': '会保存或发送什么内容吗？',
   'ps.faq.a3': '不会。拼图和 PDF 都在您的浏览器里生成，不会被保存或上传。',
+
+  'ps.ideas.h': '课堂和家庭的使用建议',
+  'ps.ideas.intro': '做完的拼图上就是一组真实的词语，每张练习纸还能继续用来练习：',
+  'ps.ideas.1': '<strong>读一读，说一说。</strong>学生把格子里的每个词读出来并说出意思，或者在空白处画一幅小图。',
+  'ps.ideas.2': '<strong>两人合作。</strong>一个学生提出某个格子填什么假名，另一个检查经过这个格子的词是否都还是真实的词。',
+  'ps.ideas.3': '<strong>抄写词语。</strong>学生在纸的背面把格子里的词再写一遍，再用片假名写一遍作为额外练习。',
+  'ps.ideas.4': '<strong>用作热身。</strong>7 个词、“多”的提示字母的拼图，适合在课堂开始时快速做一做。',
 });

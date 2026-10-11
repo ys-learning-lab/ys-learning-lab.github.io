@@ -1,8 +1,8 @@
 // Simplified Chinese strings for results.html (the PDF viewer).
 I18N.register('zh', {
-  'res.title': '您的练习页 - Ys Learning Lab',
+  'res.title': '您的练习纸 - Ys Learning Lab',
   'res.empty.h': '这里没有可显示的内容',
-  'res.empty.p': '此链接已过期，或没有传递任何练习页。请返回并重新生成。',
+  'res.empty.p': '此链接已过期，或没有传递任何练习纸。请返回并重新生成。',
   'res.empty.back': '返回 Ys Learning Lab',
   'res.zoomOut': '缩小',
   'res.zoomIn': '放大',
@@ -11,13 +11,13 @@ I18N.register('zh', {
   'res.share': '分享',
   'res.page': '第 {n} 页，共 {total} 页',
   'res.back': '← 返回{tool}',
-  'res.tip.h': '这帮您节省时间了吗？',
+  'res.tip.h': '这份练习纸帮到您了吗？',
   'res.tip.p': 'Ys Learning Lab 可免费使用。如果它帮到了您，自愿打赏可以支持制作和改进所花的时间。',
   'res.tip.note': '将在新标签页中打开 Ko-fi，这是一项独立的服务。请参阅<a href="support.html" class="underline">支持页面</a>。',
-  'res.share.text': '来自 Ys Learning Lab 的练习页',
+  'res.share.text': '来自 Ys Learning Lab 的练习纸',
   'res.share.fail': '无法打开分享菜单。请改用“下载”，然后把文件附加到电子邮件中。',
   'res.share.fallback': '此浏览器无法在分享中附带文件，因此已下载 PDF（{name}）。请把它附加到刚刚打开的邮件中。',
-  'res.share.subject': '练习页：{name}',
+  'res.share.subject': '练习纸：{name}',
   'res.share.body': '请把下载的 PDF 附加到这封邮件中。',
-  'res.error': '无法渲染此 PDF。',
+  'res.error': '无法显示此 PDF。',
 });

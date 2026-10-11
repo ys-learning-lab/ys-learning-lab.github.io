@@ -284,3 +284,10 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 @media (max-width: 639px) {
   html.mnav-pending body { visibility: hidden; }
 }
+
+/* Chinese pages: one Simplified Chinese font for all text, so Windows doesn't mix in
+   Japanese glyphs (the font is loaded by js/i18n-boot.js / js/i18n.js only for zh).
+   .jp-font (kana previews) keeps its Japanese font. */
+html:lang(zh-Hans) body {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}

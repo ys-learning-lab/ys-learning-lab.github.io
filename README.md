@@ -179,11 +179,12 @@ ad script you add yourself.
   `layout_features = []`, `name_IDs = ['*']`, `hinting = False`) keep the union of the current font's cmap and the new
   characters. The 2026-10 rebuild kept every existing glyph byte-for-byte identical in bounds and advance. Check
   coverage with fontkit's `glyphForCodePoint(...).id !== 0` for each character in `PDF_TEXT.ja`.
-- `assets/fonts/NotoSansSC-Regular.ttf` - Simplified Chinese PDF font (~114KB), built like the JP one (fontTools subset of
-  Noto Sans SC at wght 400): the JP font's characters plus every character in `PDF_TEXT.zh`, common school words and the
-  100 most common surnames. `getFonts(pdfDoc, lang)` embeds it in the `notoSansJP` slot when the PDF language is `zh`.
-  Rebuild it whenever `PDF_TEXT.zh` gains new characters (2026-10: rebuilt to add the characters of `psheet.*` in
-  `js/pdf-lang-puzzlesheet.js`, then those of `ssheet.*` in `js/pdf-lang-searchsheet.js`; the fetch URL is `?v=3` in `js/pdf-common.js`, as is the JP font's, which gained 例 for こたえの例).
+- `assets/fonts/NotoSansSC-Regular.ttf` - Simplified Chinese PDF font (~1.2MB): a fontTools subset of the official
+  `NotoSansSC[wght].ttf` from the google/fonts repo (SIL OFL; licence name records kept), instanced at wght 400 and
+  subset to ASCII, all kana, CJK punctuation, full-width forms, every character in the JP font and in `js/pdf-lang.js`,
+  and all 3,755 GB2312 level-1 hanzi, so typed Chinese titles and names print. Embedded only when the PDF language is
+  `zh` (`getFonts(pdfDoc, lang)` puts it in the `notoSansJP` slot), so Chinese PDFs are ~800KB. Rebuild with the same
+  fontTools options as the JP font if `PDF_TEXT.zh` gains a character outside GB2312 level 1.
 - Chinese UI: `js/i18n-zh-*.js` mirror `js/i18n-ja-*.js` key for key (loaded right after each ja file); `zh` is in
   `SUPPORTED` in `js/i18n.js` and `js/i18n-boot.js`. The math page stays English (it shows the "coming soon" notice).
 - `js/pdf-lang.js` - the text printed on PDFs (`PDF_TEXT.en` / `.ja` / `.zh`) and the "PDF language" dropdown
@@ -220,13 +221,14 @@ directly via `file://` also works since there's no backend.
 The site is linked to AdSense (publisher `ca-pub-6130154285914649`, verified via the `<script>` tag in every
 page's `<head>` and `/ads.txt` at the site root).
 
-Current placements (the result of an AdSense "low-value content / ads on screens without publisher content"
-rejection - keep these rules when adding ads):
+Current placements (keep these review-safety rules when adding ads):
 - `index.html`: one leaderboard (`#ad-slot-bottom-leaderboard`, slot `7285905093`) below the tool cards and
   the How it works / FAQ content.
-- `math.html`, `kana-quiz.html`, `kana-matching.html`, `japanese-practice.html`, `kana-word-builder.html`, `kana-puzzle-sheet.html`, `kana-word-puzzle.html`, `kana-word-search.html`: two ads each -
+- `math.html`, `kana-quiz.html`, `kana-matching.html`, `japanese-practice.html`, `kana-word-builder.html`, `kana-puzzle-sheet.html`, and `kana-search-sheet.html`: two ads each -
   `#ad-slot-below-preview` (slot `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot
   `7199305456`) between the 2nd and 3rd sections of the guide article below the tool.
+- `kana-word-puzzle.html` and `kana-word-search.html`: one `#ad-slot-in-article` each (slot `7199305456`). Their
+  below-game slots are removed during the approval review and must not return next to game controls.
 - `kana-study-plan.html`: one `#ad-slot-in-article` (slot `7199305456`) between Step 4 and Step 5.
 - **No ads** on `results.html`, `answers.html` (utility screens, also `noindex`), `about.html`, `privacy.html`,
   or `contact.html`.
@@ -244,12 +246,9 @@ Rules these placements follow:
 from every page's footer. `robots.txt` and `sitemap.xml` are at the site root; add any new indexable page to
 `sitemap.xml`.
 
-All ad slot containers cap their height (`overflow-hidden` + a `max-h-[...]`, not a fixed `h-[...]`, so an
-empty or unfilled slot collapses to nothing instead of leaving a blank hole; `site.css` also hides
-`ins.adsbygoogle[data-ad-status="unfilled"]`) rather than letting
-`data-ad-format="auto"` reserve however much space it wants - useful right after linking a new AdSense account,
-since ads may not start filling for hours to a couple weeks, and an unfilled `auto`-format slot can otherwise
-reserve a very tall blank block while waiting.
+Do not cap an ad slot's height or hide overflow: a responsive creative can be taller than its wrapper and must
+never be cropped. Unfilled units collapse through the `site.css` rule
+`ins.adsbygoogle[data-ad-status="unfilled"]`.
 
 Every ad slot is a plain `<div>` wrapping one `<ins>`/`<script>` pair, never inside a form or the preview grid
 itself, so ad content can't overlap form fields or generated worksheet content. To wire up a new/replacement ad
@@ -412,4 +411,3 @@ that file** - browsers cache these aggressively with no other cache-control here
 version, visitors (and you, testing) can silently keep running old JS/CSS after a deploy. Cache-busting is
 per-file-type, not global: all `js/*.js` references share one number (`?v=18` currently), `site.css` has its own
 (`?v=8` currently) - bump whichever group you actually touched.
-

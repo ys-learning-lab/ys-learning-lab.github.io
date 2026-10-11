@@ -120,18 +120,18 @@ const PDF_TEXT = {
   zh: {
     // Simplified Chinese PDF text. Drawn with assets/fonts/NotoSansSC-Regular.ttf (see the
     // header note), so every Chinese character used here must be in that subset.
-    'hdr.name': '姓名: _________________________',
-    'hdr.date': '日期: _______________',
-    'hdr.teacher': '老师: {name}',
-    'hdr.class': '班级: _______________',
+    'hdr.name': '姓名：_________________________',
+    'hdr.date': '日期：_______________',
+    'hdr.teacher': '老师：{name}',
+    'hdr.class': '班级：_______________',
 
     'practice.defaultHira': '平假名书写练习',
     'practice.defaultKata': '片假名书写练习',
     'practice.defaultKana': '假名书写练习',
     'practice.sample': ' - 参考答案',
-    'practice.writeWord': '请写出这个词:',
-    'practice.writeFit': '请写出合适的词:',
-    'practice.answer': '参考答案:',
+    'practice.writeWord': '请写出这个词：',
+    'practice.writeFit': '请写出合适的词：',
+    'practice.answer': '参考答案：',
     'practice.footer': 'Ys Learning Lab - 书写练习',
 
     'match.default': '假名配对',
@@ -148,12 +148,13 @@ const PDF_TEXT = {
 
     'words.default': '假名拼词游戏',
     'words.keySuffix': ' - 答案',
-    'words.intro': '用字牌拼词。每个词里，每张字牌只能用一次。把每个词写在一列方框里，从上往下写。把它的字牌上的小数字加起来，将分数写在下面的小方框里。把所有分数相加，就是总分。',
-    'words.keyNote': '这些字牌能拼出的学习词表中的词及其分值。字牌能拼出的其他真实存在的词也同样可以。',
+    'words.intro': '用这些假名拼词。在一个词里，每个假名只能用一次。把每个词竖着写在一列方框里，一格写一个字，从上往下写。每个字算 1 分，所以请在词下面的小方框里写上字数：2 个字就是 2 分，3 个字就是 3 分。把所有分数加起来，就是总分。',
+    'words.keyNote': '这些假名能拼出的学习词表中的词及其分数，包括用到小写假名、ー或浊音的词，以及片假名词。这些假名能拼出的其他真实存在的词也都算对。',
+    'words.free': '小写假名（ゃ ゅ ょ っ）、ー和浊音（が ば ぱ）也可以用来拼词。例如，组里有か，就可以用が。写成片假名也可以。',
     'words.keyList': '词表中的词',
     'words.puzzle': '第 {n} 题',
     'words.pts': '分数',
-    'words.total': '总分:',
+    'words.total': '总分：',
     'words.footer': 'Ys Learning Lab - 假名拼词游戏',
 
     'quiz.default': '假名练习测验',
@@ -163,10 +164,10 @@ const PDF_TEXT = {
     'quiz.write.k2h': '请在下面写出对应的平假名。',
     'quiz.write.h2k': '请在下面写出对应的片假名。',
     'quiz.write.mixed': '请在下面写出另一种对应的假名。',
-    'quiz.name': '姓名: _________________',
-    'quiz.code': '代码: {code}',
+    'quiz.name': '姓名：_________________',
+    'quiz.code': '编号：{code}',
     'quiz.docKey': '答案',
-    'quiz.docSheet': '练习页',
+    'quiz.docSheet': '练习纸',
     'quiz.page': '第 {n} 页，共 {total} 页',
     'quiz.footer': 'Ys Learning Lab - {doc} - {page}',
     'quiz.printMore': '多打印几份！',
@@ -205,7 +206,9 @@ function pdfWrap(text, font, size, maxWidth) {
   let line = '';
   for (const token of tokens) {
     const next = line ? line + joiner + token : token;
-    if (line && font.widthOfTextAtSize(next, size) > maxWidth) {
+    // A CJK closing mark (，。、 etc.) never starts a line; it stays on the end of this one.
+    const closing = !spaced && '，。、；：！？）」』'.includes(token);
+    if (line && !closing && font.widthOfTextAtSize(next, size) > maxWidth) {
       lines.push(line);
       line = token;
     } else {
