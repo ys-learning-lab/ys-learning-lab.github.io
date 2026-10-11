@@ -322,3 +322,8 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 html:lang(zh-Hans) body {
   font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
+
+/* Home hero: even line lengths, and Japanese breaks between words (no lone character on the last line). */
+.hero-title, .hero-lead { text-wrap: balance; }
+html:lang(ja) .hero-title, html:lang(ja) .hero-lead { word-break: auto-phrase; line-break: strict; }
+html:lang(ja) .hero-title { font-size: clamp(1.75rem, 5vw, 2.75rem); line-height: 1.3; }
