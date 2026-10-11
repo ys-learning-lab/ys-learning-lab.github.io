@@ -42,6 +42,37 @@ body {
   transform: none;
 }
 
+/* Small, text-first trail above each inner-page title. It remains plainly
+   navigation, never an ad-shaped card or an interactive control cluster. */
+.site-breadcrumb {
+  margin: 0 0 0.65rem;
+  color: #63666b;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+.site-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-breadcrumb li:not(:last-child)::after {
+  content: '/';
+  margin-left: 0.45rem;
+  color: #9a9ea4;
+}
+.site-breadcrumb a {
+  color: #4f5f86;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.site-breadcrumb [aria-current="page"] {
+  color: #3a3d42;
+  font-weight: 600;
+}
+
 /* Base keycap button: sculpted bevel (inset highlight/shadow) + a solid
    offset "deck" shadow underneath that collapses on press, like a real
    keyswitch bottoming out. Pair with a .btn-key-<color> modifier for the

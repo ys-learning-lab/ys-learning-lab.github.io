@@ -40,6 +40,11 @@ Do not commit or push unless the user asks. Many other files already have uncomm
 - Deploy (push) the changes, wait 1-2 weeks for indexing, check Search Console indexed page count, then request review.
 - After approval the user may add ads to game pages again, but must keep ads away from buttons/play areas and not styled like game UI.
 
+## Navigation improvement (2026-10-11)
+- Added a shared, visible breadcrumb trail and `BreadcrumbList` JSON-LD to content, tool, and utility-information pages. It is localized in English, Japanese, and Chinese; the homepage plus results/answer utility pages intentionally have no trail.
+- Implementation: `js/mobile-nav.js` (shared builder and page map), `assets/css/site.css` (text-first trail styling), and the two common language dictionaries. All pages now load `mobile-nav.js?v=5` and `site.css?v=13`; pages using the common dictionaries load their new cache versions.
+- Added `id="printables"` to the Japanese hub's printable section, so the breadcrumb's intermediate link reaches a real page section. Static JavaScript and diff checks pass; browser visual verification remains outstanding.
+
 ## Task 5 detail: reference content on thin pages (replaces the optional line above)
 Status: completed in the working tree on 2026-10-11. Added the planned reference sections to all four priority pages, their Japanese and Chinese dictionaries, and bumped every affected dictionary cache version. `node --check`, key-presence checks, and `git diff --check` pass; visual browser verification remains outstanding.
 
