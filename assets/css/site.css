@@ -87,6 +87,17 @@ body {
     0 4px 0 #5c5f64 !important;
 }
 
+/* Keycap used as a plain section heading: same look, but not interactive. */
+.btn-key.key-static,
+.btn-key.key-static:hover,
+.btn-key.key-static:active {
+  cursor: default;
+  transform: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.14),
+    0 4px 0 #5c5f64;
+}
 .btn-key-terracotta { background-color: #d9b8a8; color: #4a2b1a; }
 .btn-key-gold        { background-color: #d9c896; color: #4a3c10; }
 .btn-key-sage         { background-color: #b9cbb0; color: #223a1c; }

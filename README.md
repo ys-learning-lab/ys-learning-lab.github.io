@@ -7,14 +7,14 @@ ad script you add yourself.
 
 ## Structure
 
-- `index.html` - landing page: a Japanese section with the same six cards as `kana.html`, then a Math section below it
-  Each section heading is a keycap link (`btn-key` inside the `<h2>`) to `kana.html` or `math.html`; card titles are `<h3>`.
-- `kana.html` / `js/i18n-ja-hub.js` - the Japanese landing page the top bar's "Japanese" button opens on every page.
-  Big cards in learning order: Study Plan, Kana Chart, Writing Practice, Kana Matching, Tap Practice, Conversion Quiz
+- `index.html` - landing page: a Japanese section with the same cards as `japanese.html` (printables), then an online-learning section (Tap Practice, Word Puzzle, heading links to `kana-online.html`), then a Math section below it
+  Each section heading is a keycap link (`btn-key` inside the `<h2>`) to `japanese.html` or `math.html`; card titles are `<h3>`.
+- `japanese.html` / `js/i18n-ja-hub.js` - the Japanese landing page the top bar's "Japanese" button opens on every page.
+  Big cards in learning order: Study Plan, Kana Chart, Writing Practice, Kana Matching, Conversion Quiz, then an "Online learning" section (heading links to `kana-online.html`) with Tap Practice and Word Puzzle
   (card text reuses the `idx.*` strings in `i18n-ja-index.js`), then a short "Where to start". No ads, no sub-nav.
-  A new Japanese page needs a card here and on `index.html`, a sub-nav tab, and a sitemap entry.
+  A new Japanese page needs a card here and on `index.html`, a sub-nav tab, and a sitemap entry (online tools: see `kana-online.html`).
 - `math.html` / `js/math-generator.js` / `js/math-ui.js` - port of `source/math test advanced.py`
-- `japanese.html` / `js/japanese-generator.js` / `js/japanese-ui.js` - port of `source/Hiragana Katakana Test Maker.py`
+- `kana-quiz.html` / `js/japanese-generator.js` / `js/japanese-ui.js` - port of `source/Hiragana Katakana Test Maker.py`
   (the katakana<->hiragana conversion quiz)
 - `kana-matching.html` / `js/kana-matching-generator.js` / `js/kana-matching-ui.js` - draw-a-line matching worksheet
   (distinct from the conversion quiz above, where the student *writes* the answer). One worksheet, two vertical
@@ -51,6 +51,65 @@ ad script you add yourself.
   pdf-lib, pdf-common, pdf-lang, kana-safety and the practice generator). Practice boxes come in steps of 5 (a 5-25 dropdown on both pages, `normalizePracticeRepeats()`), and the renderer keeps one character's columns on one page (a character that doesn't fit in the rest of a page starts a new one). A small link still opens
   `japanese-practice.html?mode=custom&chars=...&lang=..` for title / teacher options.
   No ad slots on this page yet.
+- `kana-online.html` / `js/i18n-ja-online.js` - the **Online Learning** page (オンライン学習), a hub like `japanese.html` with no ads and no
+  sub-nav. Online Learning lives *under the Japanese section*: there is no top-bar button for it (the header's "Japanese" key is the
+  active one on every online page), it is linked from a section of `japanese.html` (heading `hub.online.h`, cards for Tap Practice and
+  Word Puzzle), from a "Japanese: online learning" section on `index.html`, and from a sub-nav tab (`tab.online`) at the end of the
+  printable Japanese pages. The online pages' own sub-nav is Online Learning / Tap Practice / Word Puzzle / Word Search. Rule: printable
+  sheets, charts and the plan stay in the Japanese hub; anything that runs on screen goes in Online Learning. A new online tool needs a
+  card on `kana-online.html`, `japanese.html` and `index.html`, a tab in the online sub-nav, and a sitemap entry.
+- `kana-word-puzzle.html` / `js/kana-word-puzzle-generator.js` / `js/kana-word-puzzle-ui.js` / `js/i18n-ja-wordpuzzle.js` - an
+  on-screen (not printable) crossword played by **drag and drop**. No picture clues and no spare tiles (both were tried and dropped).
+  `KanaWordPuzzleGenerator.build()` places 5-10 words (default 7; the grid may grow to 10x10 squares) from `wpLibrary()` (every `HIRAGANA_WORDS` entry plus the five-kana words in `WP_FIVE_KANA_WORDS`, of 2+ kana, that the
+  safety list accepts): the first word across, then random words crossing a placed word at a shared letter (`_fits()` lets a new word
+  touch others only by crossing, so no accidental words appear; tested by reading every grid run), at most 8x8. Some letters of each word
+  start filled in ("Letters shown": few = 1 per word, some = half, many = all but 2; every word keeps at least one empty square). The tiles
+  are exactly the letters the empty squares need (a shared letter is one tile), shuffled, and the puzzle is redrawn if the tiles could spell
+  anything on the safety list. A puzzle is solved when every across and down run is a word from the list (`puzzle.dict`), not only the
+  intended one, so another valid arrangement also solves it; a full run turns green when it is on the list; a full run that is not on the list is not marked at all (no red, no message), so the student gets no hint. A move that would spell something on the safety list is refused (`wpBlockedAfter()`). Nothing is locked except
+  the given letters and hinted squares. Dragging uses Pointer Events (mouse, touch and pen): press a tile (or a tile already in the grid)
+  and move more than 6px and a copy follows the pointer (`wpDragStart/Move/End`), letting go over a square drops it there (a tile already
+  there goes to the dragged tile's old spot), over `#wp-tray` returns a grid tile; press-and-release is a tap (tap a square, then a tile);
+  Enter/Space on a button works as a tap. Tiles and squares are `touch-action: none` so a drag does not scroll the page. "Hint" fills the
+  chosen square. A tile plays its sound when it is picked up (sound is off until ticked) (`audio/kana/<romaji>.wav` for the 46 basic kana, the browser's Japanese voice for the rest or
+  on failure) (a finished word is not read out). Scoring is one point per letter (`wpWordPoints()`, shared with the Word Builder), so はし is 2 and
+  はしら is 3; score = points of the words that are right minus 1 per hint used (never below 0). Tiles carry no points. Nothing is stored. All state is in `wp`,
+  rendered by `wpRender()`. Needs `japanese-practice-generator.js`, `kana-safety.js` and `kana-matching-generator.js` (`MATCH_ROWS`, for the romaji
+  of a clip).
+- `kana-word-search.html` / `js/kana-word-search-generator.js` / `js/kana-word-search-ui.js` / `js/i18n-ja-wordsearch.js` - an on-screen word search. `KanaWordSearchGenerator.build()` plants 3-15 words ("Hidden words", default 10; word lengths are picked evenly so short words are not crowded out) from the simple example words of `wpLibrary()` (`HIRAGANA_WORDS` only, 2-4 kana; `plantable`), plus one long word (5+ kana, from `longWords`) when the grid is 5+ wide and 3+ words are hidden, two when 6+ are hidden in straight lines in a 4x4 to 10x10 grid (default 7x7) (directions: easy = across and down, normal = plus diagonals, hard = all 8 directions; `WS_MODES`), fills the rest with random kana, then repairs the filler: any run containing a `KANA_BLOCKED_WORDS` entry (checked in every line, both ways, whatever the mode) or a list word that is not planted gets a filler square re-rolled. A list word made only of planted squares (りす inside きりぎりす) stays, and any list word in the grid counts when found. The game ends ("Cleared!") when the "Words to find" number of words (`cfg-goal`) (1-10, default 5, capped at the hidden count) is found, so the student chooses between short and long words. If the words don't fit, fewer are planted and the page says so. The UI is tap-only (no drag): taps must follow one straight line (the second tap sets the direction, each later tap continues it), tapping an already picked letter drops it and the letters after it (there are no Undo/Clear buttons), and Submit checks the string against `puzzle.valid`. Letters of found words turn green (darker when shared) and can be reused; a found word can't score twice. One point per letter, Hint (marks the first square of an unfound word) costs 1. Found words are checked against a larger list, `KANA_SEARCH_DICT` in `js/kana-word-dictionary.js` (common JMdict nouns of 2-6 kana, filtered like `data-pipeline/build.js`; generated by `node data-pipeline/build-search-dict.js`, then filtered again by `kanaWordBlocked` at load), so everyday words such as うた are accepted even when the teaching list lacks them. Sub-nav tab `tab.search`; cards `idx.search.*` on `kana-online.html`, `japanese.html`, `index.html`.
+- `kana-search-sheet.html` / `js/kana-search-sheet-generator.js` / `js/kana-search-sheet-ui.js` / `js/pdf-lang-searchsheet.js` / `js/i18n-ja-searchsheet.js` - the **printable** word search, built from the same `KanaWordSearchGenerator` as the online one (grid 6-12, hidden words, "Words to find" goal, directions, 1-3 puzzles). `KanaSearchSheetRenderer` extends `KanaPuzzleSheetRenderer` (which now takes its header text keys from `this.keys`): title/name/date header, "Find at least N words", the grid as large as fits, then numbered answer lines with a points box and a total. The key page is labelled "Example Answers" / こたえの例 (other real words count too): it rings each hidden word with a rounded outline along its direction (`_drawRing`) and lists the hidden words with letter counts. The sheet has no word list, so students pick words themselves; tab `tab.searchsheet` (on the Puzzle Sheet and this page), cards `idx.searchsheet.*` on `japanese.html` and `index.html`.
+- `kana-word-builder.html` / `js/kana-word-builder-generator.js` / `js/kana-word-builder-ui.js` / `js/i18n-ja-words.js` - the **printable** word
+  sheet (Japanese section, sub-nav tab `tab.builder`), reusing `wpLibrary()` and `wpWordPoints()` from `kana-word-puzzle-generator.js` (which
+  this page therefore loads). The page says "kana", never "tiles". **Nothing but the title, teacher and answer key is adjustable**: every sheet has
+  **2 puzzles** side by side as vertical panels (`WB_PUZZLES`, dashed divider, 30pt page margin, 14pt between panels), each a set of **10 different kana**
+  (`WB_RACK`) that asks for **4 words in 5 boxes each** (`WB_COLUMNS`, `WB_BOXES`; 5 fits the longest list words). A set holds only *plain* kana (no
+  dakuon) and is built around a random five-kana word with five different plain kana (`WP_FIVE_KANA_WORDS` joins Writing Practice's example
+  words in `wpLibrary()`; `wbBase()` strips the dots), the rest filled with whole list words that fit the room left (60% of the time) or single plain
+  kana, never one the set already has (**no duplicate kana**); tried up to 400 times for 7-16 list words the set can make. **Fairness:** 14 candidate
+  sets are drawn and `buildPuzzles()` picks the pair with the smallest difference in the number of buildable list words and in the points of their four
+  best words (and at least `WB_MIN_WORDS`), so neither puzzle has fewer words to find. A set is refused if any word on the safety list could be built from
+  its kana (dots and free letters added), and the order is reshuffled so it never reads as one. **Forgiving rules** (printed on the sheet, listed on the
+  page; worded "can also be used to create words", and the dots are called **dakuon**, not "dots"): the small kana (`WB_SMALL`, folded: ぁぃぅぇぉゃゅょゎっ) and ー can
+  also be used in any word, **dakuon can also be used** (with か in the set a student may use が, with は ば or ぱ), and a word may be written in katakana. `wbDictionary()` is the list the answer key draws on: the shared list plus `WB_EXTRA_WORDS`
+  (hiragana words with small kana or ー, and katakana loanwords), five letters or fewer, each word once in either script; `wbCore()` folds a word to hiragana,
+  drops the free small kana and takes the dots off, and a word is buildable when its core is within the set. Points are one per written letter (small kana
+  and ー included), so はし is 2 and はしら is 3; tiles carry no points. The preview's "Shuffle" button builds new sets. One worksheet page (the panels start
+  below however many header lines the rules need), no answer QR; an optional key page lists the buildable words, longest first. Like Kana Matching, the
+  preview's sets are cached and passed straight to `KanaWordBuilderRenderer`. PDF text is in `js/pdf-lang.js` (`words.*`, kana-only Japanese, no font-subset
+  rebuild needed).
+- `kana-puzzle-sheet.html` / `js/kana-puzzle-sheet-generator.js` / `js/kana-puzzle-sheet-ui.js` / `js/pdf-lang-puzzlesheet.js` /
+  `js/i18n-ja-puzzlesheet.js` / `js/i18n-zh-puzzlesheet.js` - the **printable** Kana Word Puzzle (Japanese section, sub-nav tab
+  `tab.puzzlesheet`, hub card `idx.puzzlesheet.*`). The same crossword as the online puzzle: it reuses `KanaWordPuzzleGenerator`, whose
+  constructor takes `wordsMin` / `wordsMax` / `maxSide` overrides (the sheet uses 7-15 words, default 10, on a grid of at most 10 x 10
+  squares, or 12 x 12 for 14-15 words, so boxes stay big). The generator never leaves a **one-square gap** (two squares in a line with
+  exactly one empty position between them, which reads as a missing box): `_makesGap()` rejects such placements while building, and if the
+  words will not fit `build()` lets the grid grow a little (up to +4) instead of dropping words. One puzzle per page (1-3, default 1), A4:
+  header, a row of boxes holding the kana to place (to cross out), then the grid with every box as large as the page allows (`PS_BOX_MAX`
+  72pt; a grid wider than tall is drawn turned on its side when that makes the boxes bigger, since a crossword reads the same sideways).
+  Given letters are grey boxes, empty boxes carry a faint crosshair. "Letters shown" few / some / many as online. Answer key: one page per
+  puzzle, grid filled in. The preview puzzles are cached and passed straight to `KanaPuzzleSheetRenderer`. PDF strings (`psheet.*`) are
+  added to `PDF_TEXT` by `pdf-lang-puzzlesheet.js` (load after `pdf-lang.js`); the Chinese ones needed new characters, so
+  `NotoSansSC-Regular.ttf` was rebuilt (see the font notes below).
 - `japanese-practice.html` / `js/japanese-practice-generator.js` / `js/japanese-practice-ui.js` - a separate,
   not-ported-from-Python tool: hiragana handwriting/tracing practice (single character - via a dropdown, not a
   text field, since typing Japanese isn't a given on every device - a whole row/行, or all 46 basic hiragana).
@@ -76,7 +135,7 @@ ad script you add yourself.
   `toKatakana()`), anywhere in the word. "Hide the other letters" renders the word column as `'blanks'` (only the
   selected character shown, solid; other boxes open) and appends a page 2 with the whole word as the sample answer
   (`'answer'` view). The header uses the Japanese font when a typed title/teacher isn't Latin-only.
-  Cross-linked with japanese.html via a small sub-nav row under each page's `<h1>`.
+  Cross-linked with kana-quiz.html via a small sub-nav row under each page's `<h1>`.
 - Writing Practice's "Selected characters" mode (`cfg-mode=custom`, text box `#cfg-custom`, `parseCustomChars()` in the generator) takes any
   typed/pasted hiragana or katakana (basic 46 plus dakuten/handakuten, `VOICED_KANA`), kept exactly as typed so scripts can mix
   (the script radios are hidden and the PDF title defaults to `practice.defaultKana`), de-duplicates, keeps typed order, and lists other
@@ -120,7 +179,14 @@ ad script you add yourself.
   `layout_features = []`, `name_IDs = ['*']`, `hinting = False`) keep the union of the current font's cmap and the new
   characters. The 2026-10 rebuild kept every existing glyph byte-for-byte identical in bounds and advance. Check
   coverage with fontkit's `glyphForCodePoint(...).id !== 0` for each character in `PDF_TEXT.ja`.
-- `js/pdf-lang.js` - the text printed on PDFs (`PDF_TEXT.en` / `PDF_TEXT.ja`) and the "PDF language" dropdown
+- `assets/fonts/NotoSansSC-Regular.ttf` - Simplified Chinese PDF font (~114KB), built like the JP one (fontTools subset of
+  Noto Sans SC at wght 400): the JP font's characters plus every character in `PDF_TEXT.zh`, common school words and the
+  100 most common surnames. `getFonts(pdfDoc, lang)` embeds it in the `notoSansJP` slot when the PDF language is `zh`.
+  Rebuild it whenever `PDF_TEXT.zh` gains new characters (2026-10: rebuilt to add the characters of `psheet.*` in
+  `js/pdf-lang-puzzlesheet.js`, then those of `ssheet.*` in `js/pdf-lang-searchsheet.js`; the fetch URL is `?v=3` in `js/pdf-common.js`, as is the JP font's, which gained 例 for こたえの例).
+- Chinese UI: `js/i18n-zh-*.js` mirror `js/i18n-ja-*.js` key for key (loaded right after each ja file); `zh` is in
+  `SUPPORTED` in `js/i18n.js` and `js/i18n-boot.js`. The math page stays English (it shows the "coming soon" notice).
+- `js/pdf-lang.js` - the text printed on PDFs (`PDF_TEXT.en` / `.ja` / `.zh`) and the "PDF language" dropdown
   (`#pdf-lang`, under each Generate button). The dropdown starts on the page language (so `?lang=ja` gives a Japanese
   PDF) and keeps following it until the user picks one. A worksheet title left at a built-in English default follows
   the PDF language; a title the user typed is printed as typed. Used by the quiz, matching and writing-practice
@@ -140,7 +206,7 @@ ad script you add yourself.
 ## Running locally
 
 Just open `index.html` in a browser, or serve the folder with any static file server
-(`python -m http.server`, VS Code Live Server, etc.) - opening `math.html`/`japanese.html`
+(`python -m http.server`, VS Code Live Server, etc.) - opening `math.html`/`kana-quiz.html`
 directly via `file://` also works since there's no backend.
 
 ## Hosting on GitHub Pages
@@ -158,7 +224,7 @@ Current placements (the result of an AdSense "low-value content / ads on screens
 rejection - keep these rules when adding ads):
 - `index.html`: one leaderboard (`#ad-slot-bottom-leaderboard`, slot `7285905093`) below the tool cards and
   the How it works / FAQ content.
-- `math.html`, `japanese.html`, `kana-matching.html`, `japanese-practice.html`: two ads each -
+- `math.html`, `kana-quiz.html`, `kana-matching.html`, `japanese-practice.html`, `kana-word-builder.html`, `kana-puzzle-sheet.html`, `kana-word-puzzle.html`, `kana-word-search.html`: two ads each -
   `#ad-slot-below-preview` (slot `7285905093`) at the bottom of the preview card, and `#ad-slot-in-article` (slot
   `7199305456`) between the 2nd and 3rd sections of the guide article below the tool.
 - `kana-study-plan.html`: one `#ad-slot-in-article` (slot `7199305456`) between Step 4 and Step 5.
@@ -219,7 +285,7 @@ No changes to `results.html` or `js/pdf-viewer.js` are needed for a new tool.
 Every worksheet page (not the answer-key pages - they already have the answers printed) can carry a second QR
 code, in the header right under the worksheet-matching code (top-right), alongside the existing homepage QR at
 bottom-right (which now has a small "Print more!" caption). Toggle: `#cfg-answerqr` on both math.html and
-japanese.html, `config.include_answer_qr`, default on. Deliberately placed up in the header rather than the
+kana-quiz.html, `config.include_answer_qr`, default on. Deliberately placed up in the header rather than the
 bottom margin - a bottom-margin QR sits right where a student's hand rests while writing, risking a smudge that
 makes it unscannable.
 
@@ -330,7 +396,7 @@ would break, and which never spells anything problematic in that order anyway.
   common case, after a too-tight header let the QR/code visibly collide with the first problem row on some
   worksheets.
 - The worksheet title and teacher name are editable form fields (`#cfg-title`/`#cfg-teacher` on both
-  math.html and japanese.html, threaded through as `config.title`/`config.teacher`) instead of hardcoded text -
+  math.html and kana-quiz.html, threaded through as `config.title`/`config.teacher`) instead of hardcoded text -
   Title defaults to "Math Practice Test" / "Kana Practice Test" and is printed as-is (with " - Answer Key"
   appended on the math tool's answer-key pages); Teacher prints the typed name directly when given, or falls
   back to a blank fill-in line like Name/Date/Class when left empty. Both round-trip through INI export/import.

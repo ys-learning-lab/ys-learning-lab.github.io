@@ -1,4 +1,4 @@
-// Wires up japanese.html: reads controls -> WorksheetConfig, live HTML preview, PDF generation.
+// Wires up kana-quiz.html: reads controls -> WorksheetConfig, live HTML preview, PDF generation.
 
 function buildJpConfig() {
   const categories = [];
@@ -470,7 +470,7 @@ async function handleJpGenerate() {
     const filename = cfg.include_answer_key
       ? `japanese_worksheet_and_answers_${timestamp()}.pdf`
       : `japanese_worksheet_${timestamp()}.pdf`;
-    await openPdfResults(bytes, filename, 'japanese.html', 'Kana Conversion Quiz', resultTab);
+    await openPdfResults(bytes, filename, 'kana-quiz.html', 'Kana Conversion Quiz', resultTab);
     pushJpHistory(cfg);
     status.textContent = I18N.t('kana.status.done', 'Opened your worksheet in a new tab.');
   } catch (e) {

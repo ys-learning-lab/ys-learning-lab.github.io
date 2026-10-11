@@ -1,4 +1,4 @@
-// Text printed on the generated PDFs, in English or Japanese, plus the "PDF language"
+// Text printed on the generated PDFs, in English, Japanese or Simplified Chinese, plus the "PDF language"
 // dropdown that picks between them. Shared by the three Japanese tools.
 //
 // Every Japanese character used here must exist in assets/fonts/NotoSansJP-Regular.ttf,
@@ -6,6 +6,10 @@
 // the subset from this file's strings - a missing glyph prints as a blank box.
 // The Japanese PDF text is kana only (hiragana and katakana, no kanji), with ASCII
 // punctuation (": ", "!").
+//
+// Chinese PDFs are drawn with assets/fonts/NotoSansSC-Regular.ttf instead (a subset that
+// also holds every kana the worksheets draw). Every Chinese character in PDF_TEXT.zh must
+// be in that subset too; see the README for how both subsets are rebuilt.
 
 const PDF_TEXT = {
   en: {
@@ -34,6 +38,17 @@ const PDF_TEXT = {
     'match.intro': 'Draw a line from each box on the left to its match on the right. Some boxes may have no match. If you find one, circle it and write it in the other form beside it ({form}).',
     'match.keyNote': 'Boxes marked with an X have no match. The converted kana is written beside each one.',
     'match.footer': 'Powered by Ys Learning Lab - KANA MATCHING',
+
+    'words.default': 'Kana Word Builder',
+    'words.keySuffix': ' - Answer Key',
+    'words.intro': 'Use the kana to build words. Each kana can be used once in a word. Write each word in a column of boxes, one letter in each box, from top to bottom. Each letter is worth 1 point, so write the number of letters in the small box under the word: 2 letters is 2 points, 3 letters is 3 points. Add all your points for a total score.',
+    'words.keyNote': 'Words from the Learning Lab word list that these kana can make, with their points. Words that use small kana, ー or dakuon, and words in katakana, are included. Any other real word the kana can make is good too.',
+    'words.free': 'Small kana (ゃ ゅ ょ っ), ー and dakuon (が ば ぱ) can also be used to create words. For example, if your set has か, you can use が. Katakana is fine too.',
+    'words.keyList': 'Words from the list',
+    'words.puzzle': 'Puzzle {n}',
+    'words.pts': 'Points',
+    'words.total': 'Total score:',
+    'words.footer': 'Powered by Ys Learning Lab - KANA WORD BUILDER',
 
     'quiz.default': 'Kana Practice Test',
     'quiz.title.k2h': 'カタカナ → ひらがな 練習',
@@ -76,6 +91,17 @@ const PDF_TEXT = {
     'match.keyNote': 'Xがついたはこは、あうあいてがいません。となりに、ほんとうのこたえがかいてあります。',
     'match.footer': 'Ys Learning Lab - かなマッチング',
 
+    'words.default': 'かなことばづくり',
+    'words.keySuffix': ' - こたえ',
+    'words.intro': 'かなをつかって、ことばをつくりましょう。1つのことばに、おなじかなは1かいだけつかえます。ことばは、はこのたてのれつに、1もじを1はこに、うえからしたへかきます。1もじが1てんなので、ことばのしたのちいさなはこに、もじのかずをかきましょう。2もじなら2てん、3もじなら3てんです。ぜんぶのてんすうをたすと、ごうけいてんになります。',
+    'words.keyNote': 'このかなでつくれることばのれいと、そのてんすうです。ちいさいかなや「ー」、だくおんをつかうことばと、カタカナのことばもはいっています。ほかにも、ほんとうにあることばなら、つくってかまいません。',
+    'words.free': 'ちいさい「ゃ ゅ ょ っ」、「ー」、だくおん（が ば ぱ）も、ことばをつくるのにつかえます。たとえば、セットに「か」があれば、「が」もつかえます。カタカナもつかえます。',
+    'words.keyList': 'ことばのれい',
+    'words.puzzle': 'もんだい {n}',
+    'words.pts': 'てん',
+    'words.total': 'ごうけいてん:',
+    'words.footer': 'Ys Learning Lab - かなことばづくり',
+
     'quiz.default': 'かなれんしゅうテスト',
     'quiz.title.k2h': 'カタカナ → ひらがな れんしゅう',
     'quiz.title.h2k': 'ひらがな → カタカナ れんしゅう',
@@ -91,10 +117,64 @@ const PDF_TEXT = {
     'quiz.footer': 'Ys Learning Lab - {doc} - {page}',
     'quiz.printMore': 'Print more!',
   },
+  zh: {
+    // Simplified Chinese PDF text. Drawn with assets/fonts/NotoSansSC-Regular.ttf (see the
+    // header note), so every Chinese character used here must be in that subset.
+    'hdr.name': '姓名: _________________________',
+    'hdr.date': '日期: _______________',
+    'hdr.teacher': '老师: {name}',
+    'hdr.class': '班级: _______________',
+
+    'practice.defaultHira': '平假名书写练习',
+    'practice.defaultKata': '片假名书写练习',
+    'practice.defaultKana': '假名书写练习',
+    'practice.sample': ' - 参考答案',
+    'practice.writeWord': '请写出这个词:',
+    'practice.writeFit': '请写出合适的词:',
+    'practice.answer': '参考答案:',
+    'practice.footer': 'Ys Learning Lab - 书写练习',
+
+    'match.default': '假名配对',
+    'match.keySuffix': ' - 答案',
+    'match.hira': '平假名',
+    'match.kata': '片假名',
+    'match.romaji': '罗马字',
+    'match.form.h-k': '平假名写成片假名，或片假名写成平假名',
+    'match.form.h-r': '平假名写成罗马字，或罗马字写成平假名',
+    'match.form.k-r': '片假名写成罗马字，或罗马字写成片假名',
+    'match.intro': '从左边的每个方框向右边与之对应的方框画一条线。有些方框可能没有对应项。如果发现，请把它圈出来，并在旁边写出另一种写法（{form}）。',
+    'match.keyNote': '标有 X 的方框没有对应项，旁边写着转换后的假名。',
+    'match.footer': 'Ys Learning Lab - 假名配对',
+
+    'words.default': '假名拼词游戏',
+    'words.keySuffix': ' - 答案',
+    'words.intro': '用字牌拼词。每个词里，每张字牌只能用一次。把每个词写在一列方框里，从上往下写。把它的字牌上的小数字加起来，将分数写在下面的小方框里。把所有分数相加，就是总分。',
+    'words.keyNote': '这些字牌能拼出的学习词表中的词及其分值。字牌能拼出的其他真实存在的词也同样可以。',
+    'words.keyList': '词表中的词',
+    'words.puzzle': '第 {n} 题',
+    'words.pts': '分数',
+    'words.total': '总分:',
+    'words.footer': 'Ys Learning Lab - 假名拼词游戏',
+
+    'quiz.default': '假名练习测验',
+    'quiz.title.k2h': '片假名 → 平假名 练习',
+    'quiz.title.h2k': '平假名 → 片假名 练习',
+    'quiz.title.mixed': '平假名 & 片假名 混合',
+    'quiz.write.k2h': '请在下面写出对应的平假名。',
+    'quiz.write.h2k': '请在下面写出对应的片假名。',
+    'quiz.write.mixed': '请在下面写出另一种对应的假名。',
+    'quiz.name': '姓名: _________________',
+    'quiz.code': '代码: {code}',
+    'quiz.docKey': '答案',
+    'quiz.docSheet': '练习页',
+    'quiz.page': '第 {n} 页，共 {total} 页',
+    'quiz.footer': 'Ys Learning Lab - {doc} - {page}',
+    'quiz.printMore': '多打印几份！',
+  },
 };
 
 function pdfText(lang, key, vars) {
-  const table = PDF_TEXT[lang === 'ja' ? 'ja' : 'en'];
+  const table = PDF_TEXT[lang === 'ja' || lang === 'zh' ? lang : 'en'];
   const text = Object.prototype.hasOwnProperty.call(table, key) ? table[key] : PDF_TEXT.en[key];
   return vars ? text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)) : text;
 }
@@ -109,7 +189,8 @@ function pdfTitle(lang, rawTitle, defaultKey, otherDefaultKeys = []) {
   return !typed || untouched.includes(typed) ? pdfText(lang, defaultKey) : typed;
 }
 
-// Helvetica can't encode Japanese, and the Japanese font is only needed for it.
+// Helvetica can't encode Japanese or Chinese. `fonts.notoSansJP` is the non-Latin font:
+// the Japanese subset normally, the Simplified Chinese subset when the PDF is Chinese.
 function pdfFontFor(fonts, text) {
   return /^[\x20-\x7e]*$/.test(text) ? fonts.helvetica : fonts.notoSansJP;
 }
@@ -143,7 +224,7 @@ function initPdfLangSelect() {
   let chosenByUser = false;
   select.addEventListener('change', () => { chosenByUser = true; });
   const follow = () => {
-    if (!chosenByUser) select.value = window.I18N && I18N.getLang() === 'ja' ? 'ja' : 'en';
+    if (!chosenByUser) select.value = window.I18N && I18N.getLang() === 'zh' ? 'zh' : I18N.getLang() === 'ja' ? 'ja' : 'en';
   };
   document.addEventListener('i18n:change', follow);
   follow();
@@ -151,5 +232,5 @@ function initPdfLangSelect() {
 
 function getPdfLang() {
   const select = document.getElementById('pdf-lang');
-  return select && select.value === 'ja' ? 'ja' : 'en';
+  return select && (select.value === 'ja' || select.value === 'zh') ? select.value : 'en';
 }

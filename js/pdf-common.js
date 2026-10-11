@@ -55,15 +55,19 @@ async function getBaseFonts(pdfDoc) {
   return { helvetica, timesBold };
 }
 
+// For lang === 'zh' the Simplified Chinese subset (NotoSansSC-Regular.ttf) is embedded
+// instead and still returned as `notoSansJP`: it holds the same kana plus the Chinese
+// characters, so the generators need no second font.
 // Full Noto Sans JP embed (used for all Japanese glyphs, matching the Python
 // renderer's F2 = HeiseiMin-W3 CID font role). Only call this from tools that
 // actually draw Japanese text (japanese-generator.js) - it adds several MB to
 // the output PDF, so math-generator.js must not load it.
-async function getJapaneseFont(pdfDoc) {
+async function getJapaneseFont(pdfDoc, lang) {
   try {
     await loadFontKit();
     pdfDoc.registerFontkit(fontkit);
-    const fontBytes = await fetch('assets/fonts/NotoSansJP-Regular.ttf?v=2').then((r) => {
+    const fontFile = lang === 'zh' ? 'NotoSansSC-Regular.ttf?v=3' : 'NotoSansJP-Regular.ttf?v=3';
+    const fontBytes = await fetch('assets/fonts/' + fontFile).then((r) => {
       if (!r.ok) throw new Error('font fetch failed');
       return r.arrayBuffer();
     });
@@ -82,9 +86,9 @@ async function getJapaneseFont(pdfDoc) {
 }
 
 // Back-compat convenience for callers that want everything at once.
-async function getFonts(pdfDoc) {
+async function getFonts(pdfDoc, lang) {
   const { helvetica, timesBold } = await getBaseFonts(pdfDoc);
-  const notoSansJP = await getJapaneseFont(pdfDoc);
+  const notoSansJP = await getJapaneseFont(pdfDoc, lang);
   return { helvetica, timesBold, notoSansJP };
 }
 

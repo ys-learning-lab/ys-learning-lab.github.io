@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="ws.page.title">Kana Word Search - Ys Learning Lab</title>
+<meta name="description" content="A free online hiragana word search: find the hidden words in a grid of kana by tapping the letters one by one, then press Submit. Works on a phone, tablet or computer, by touch or mouse." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-word-search.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Word Search - Ys Learning Lab" />
+<meta property="og:description" content="A free online hiragana word search: find the hidden words in a grid of kana by tapping the letters one by one, then press Submit. Works on a phone, tablet or computer, by touch or mouse." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-word-search.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+<style>
+  /* Cell size shrinks with the grid so up to 10 columns fit a phone screen. */
+  #ws-game { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #ws-grid { display: grid; gap: 4px; justify-content: center; --cs: min(3.5rem, calc((100vw - 5rem) / var(--cols))); grid-template-columns: repeat(var(--cols), var(--cs)); }
+  @media (min-width: 768px) { #ws-grid { --cs: min(3.5rem, calc((min(100vw, 64rem) - 25rem) / var(--cols))); } }
+  .ws-cell { position: relative; width: var(--cs); height: var(--cs); border: 2px solid #3a3d42; border-radius: 6px; background: #fff; font-size: calc(var(--cs) * 0.56); line-height: 1; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .ws-cell.ws-used { background: #dbe8d6; border-color: #3c6b34; }
+  .ws-cell.ws-used2 { background: #bcd7b3; }
+  .ws-cell.ws-hint { background: #fff3c4; }
+  .ws-cell.ws-sel { background: #ffe0cc; box-shadow: 0 0 0 3px #d9723f; z-index: 1; }
+  .ws-slot { border: 2px solid #3a3d42; border-radius: 6px; background: #fff; padding: 0.15rem 0.5rem; font-size: 1.1rem; line-height: 1.5; }
+  .ws-slot.ws-found { background: #dbe8d6; border-color: #3c6b34; }
+</style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="ws.h1">Kana Word Search</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="ws.intro">Many words are hidden in a grid of kana, in straight lines. Tap the letters of a word one by one, then press Submit. Find enough words to clear the puzzle. Longer words score more.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-online.html" class="nav-key" data-i18n="tab.online">Online Learning</a>
+    <a href="kana-tap-practice.html" class="nav-key" data-i18n="tab.tap">Tap Practice</a>
+    <a href="kana-word-puzzle.html" class="nav-key" data-i18n="tab.words">Word Puzzle</a>
+    <a href="kana-word-search.html" class="nav-key nav-key-active" data-i18n="tab.search">Word Search</a>
+  </div>
+
+  <div class="max-w-5xl mx-auto">
+
+    <!-- OPTIONS -->
+    <div id="ws-options" class="card-soft card-soft-teal p-3 mb-4 flex flex-wrap items-end gap-x-5 gap-y-3">
+      <label class="block text-xs"><span data-i18n="ws.opt.size">Letters in the grid</span>
+        <select id="cfg-side" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="4">4 × 4 (16)</option><option value="5">5 × 5 (25)</option><option value="6">6 × 6 (36)</option><option value="7" selected>7 × 7 (49)</option><option value="8">8 × 8 (64)</option><option value="9">9 × 9 (81)</option><option value="10">10 × 10 (100)</option>
+        </select>
+      </label>
+      <label class="block text-xs"><span data-i18n="ws.opt.goal">Words to find (clear when you find this many)</span>
+        <select id="cfg-goal" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+        </select>
+      </label>
+      <label class="block text-xs"><span data-i18n="ws.opt.words">Hidden words</span>
+        <select id="cfg-words" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10" selected>10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+        </select>
+      </label>
+      <label class="block text-xs"><span data-i18n="ws.opt.dirs">Directions</span>
+        <select id="cfg-mode" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="easy" data-i18n="ws.dirs.easy" selected>Across and down</option>
+          <option value="normal" data-i18n="ws.dirs.normal">Plus diagonals</option>
+          <option value="hard" data-i18n="ws.dirs.hard">Every direction</option>
+        </select>
+      </label>
+      <button id="new-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm ml-auto" data-i18n="ws.new">New puzzle</button>
+    </div>
+
+    <!-- GAME -->
+    <section id="ws-game" aria-live="polite">
+      <div class="flex flex-col md:flex-row gap-4 items-start mb-4">
+        <div class="card-soft card-soft-gold p-4 w-full min-w-0 md:flex-1 overflow-x-auto">
+          <div id="ws-grid" class="jp-font"></div>
+        </div>
+        <div class="card-soft card-soft-sage p-3 w-full md:w-[16rem] md:shrink-0">
+          <p class="text-xs text-stone-600 mb-1" data-i18n="ws.picked">Your letters</p>
+          <p id="ws-picked" class="jp-font text-3xl min-h-[2.5rem] mb-2 break-all"></p>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button id="submit-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm" data-i18n="ws.submit">Submit</button>
+          </div>
+          <p class="text-xs font-bold text-stone-700 mb-1" data-i18n="ws.list.h">Found words</p>
+          <ul id="ws-list" class="jp-font flex flex-wrap gap-2"></ul>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <button id="hint-btn" type="button" class="btn-key btn-key-gold px-4 py-2 text-sm" data-i18n="ws.hint">Hint</button>
+        <p id="ws-stats" class="text-sm font-bold text-stone-700 ml-auto"></p>
+      </div>
+      <p id="ws-message" class="text-sm font-bold min-h-[1.5rem]"></p>
+
+      <div id="ws-win" class="card-soft card-soft-sage p-5 text-center mt-3 hidden">
+        <p class="text-2xl font-extrabold mb-1" data-i18n="ws.win.h">Cleared!</p>
+        <p id="ws-win-text" class="text-sm text-stone-700 mb-3"></p>
+        <button id="again-btn" type="button" class="btn-key btn-key-primary px-5 py-3 text-sm" data-i18n="ws.win.again">Next puzzle</button>
+      </div>
+    </section>
+
+    <!-- Below-game ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+    <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-6">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7285905093"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+  </div>
+
+  <article class="max-w-3xl mx-auto mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ws.how.h">How to play</h2>
+      <ol class="list-decimal pl-6 space-y-2">
+        <li data-i18n-html="ws.how.1"><strong>Look for words.</strong> Many words are hidden in the grid, more than you need. Every word runs in a straight line.</li>
+        <li data-i18n-html="ws.how.2"><strong>Tap the letters one by one.</strong> Tap the first letter, then the letter beside it in the same line, and keep going. Your letters appear above. Tap a picked letter again to take it, and the letters after it, back.</li>
+        <li data-i18n-html="ws.how.3"><strong>Press Submit.</strong> A word only counts when you press Submit, so まつり and つり are different answers even though one hides inside the other. Any word from the list counts, and a found word turns its letters green.</li>
+        <li data-i18n-html="ws.how.4"><strong>Clear the puzzle.</strong> You clear it when you have found as many words as <em>Words to find</em> says. Longer words are worth more points, so a long word is the smart pick when you can see one. Letters of a found word can be used again, but a word can only score once.</li>
+        <li data-i18n-html="ws.how.5"><strong>Stuck?</strong> <em>Hint</em> marks the first letter of a hidden word you have not found yet and costs 1 point.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ws.opts.h">Options</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="ws.opts.size"><strong>Letters in the grid:</strong> from 4 × 4 to 10 × 10. A bigger grid is harder to search.</li>
+        <li data-i18n-html="ws.opts.words"><strong>Hidden words:</strong> how many words are hidden on purpose, from 3 to 15 (10 to start). A small grid may have room for fewer. Other list words may turn up by chance, and they count too.</li>
+        <li data-i18n-html="ws.opts.dirs"><strong>Directions:</strong> <em>Across and down</em> reads left to right and top to bottom. <em>Plus diagonals</em> adds diagonal lines, and <em>Every direction</em> also allows words that run backwards.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ws.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ws.faq.q1">Where do the words come from?</h3>
+      <p class="mb-3" data-i18n="ws.faq.a1">The hidden words come from the same short list of everyday hiragana words as the other kana tools. Any other everyday word you find in the grid counts too, from a longer list of common words. The filler letters are checked so that they don't spell anything that doesn't belong in a classroom.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ws.faq.q2">Why are there more hidden words than I need to find?</h3>
+      <p class="mb-3" data-i18n="ws.faq.a2">So you can choose. Each word scores one point per letter, so finding the long words gets you to a high score with the same number of words. A word inside another word, such as りす inside きりぎりす, is its own answer.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ws.faq.q3">How are points worked out?</h3>
+      <p class="mb-3" data-i18n="ws.faq.a3">One point for each letter of a word you submit, so a longer word is worth more: りす is 2 points and きりぎりす is 5. Each hint takes away 1 point.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ws.faq.q4">Is anything saved or sent?</h3>
+      <p data-i18n="ws.faq.a4">No. The puzzle is made in your browser and nothing about your play is stored or uploaded.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n-ja-common.js?v=13"></script>
+<script src="js/i18n-zh-common.js?v=1"></script>
+<script src="js/i18n-ja-wordsearch.js?v=2"></script>
+<script src="js/i18n-zh-wordsearch.js?v=1"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-practice-generator.js?v=27"></script>
+<script src="js/kana-matching-generator.js?v=9"></script>
+<script src="js/kana-word-puzzle-generator.js?v=5"></script>
+<script src="js/kana-word-dictionary.js?v=1"></script>
+<script src="js/kana-word-search-generator.js?v=2"></script>
+<script src="js/kana-word-search-ui.js?v=2"></script>
+</body>
+</html>

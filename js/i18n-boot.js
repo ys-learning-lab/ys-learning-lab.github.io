@@ -5,8 +5,8 @@
 (function () {
   try {
     var lang = new URLSearchParams(location.search).get('lang');
-    if (lang !== 'en' && lang !== 'ja') lang = localStorage.getItem('ysll-lang');
-    if (lang === 'ja') {
+    if (lang !== 'en' && lang !== 'ja' && lang !== 'zh') lang = localStorage.getItem('ysll-lang');
+    if (lang === 'ja' || lang === 'zh') {
       var root = document.documentElement;
       root.lang = lang;
       root.classList.add('i18n-pending');

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="kana.page.title">Kana Conversion Quiz - Ys Learning Lab</title>
+<meta name="description" content="Free printable hiragana and katakana worksheet generator: conversion quizzes covering basic kana, dakuten, handakuten, and youon, with an answer key." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-quiz.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Conversion Quiz - Ys Learning Lab" />
+<meta property="og:description" content="Free printable hiragana and katakana worksheet generator: conversion quizzes covering basic kana, dakuten, handakuten, and youon, with an answer key." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-quiz.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 data-i18n="kana.h1" class="text-2xl font-extrabold">Kana Conversion Quiz</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <p data-i18n="kana.intro" class="text-sm text-stone-600 mb-2">Configure kana categories and direction below, watch the live preview update, then generate a combined worksheet + answer key PDF.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-study-plan.html" class="nav-key" data-i18n="tab.plan">Study Plan</a>
+    <a href="kana-chart.html" class="nav-key" data-i18n="tab.chart">Kana Chart</a>
+    <a href="kana-quiz.html" class="nav-key nav-key-active" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+    <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+    <a href="kana-word-builder.html" class="nav-key" data-i18n="tab.builder">Word Builder</a>
+    <a href="kana-online.html" class="nav-key" data-i18n="tab.online">Online Learning</a>
+  </div>
+
+  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
+
+    <!-- CONTROLS -->
+    <div id="controls" class="order-1 card-soft p-4 w-full space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.history.legend">Recent generations</legend>
+        <select id="history-select" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1.5 text-xs bg-white">
+          <option value="">Load a previous generation&hellip;</option>
+        </select>
+        <p class="text-[11px] text-stone-500 mt-1" data-i18n="kana.history.note">Keeps your last 5 generated worksheets' settings in this browser.</p>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-terracotta p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.tpl.legend">Quick templates</legend>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-template="basic-toggle" class="template-btn btn-key btn-key-sm btn-key-terracotta px-2 py-2" data-i18n="kana.tpl.basic">Basic Hiragana &#8646; Katakana</button>
+          <button type="button" data-template="all-toggle" class="template-btn btn-key btn-key-sm btn-key-teal px-2 py-2" data-i18n="kana.tpl.all">All Types Hiragana &#8646; Katakana</button>
+          <button type="button" data-template="all-mixed" class="template-btn btn-key btn-key-sm btn-key-gold px-2 py-2"><span data-i18n="kana.tpl.mixed">All Types Mixed (Anti-Cheat)</span><span class="help-tip" tabindex="0" role="img" aria-label="?" data-tip="Related kana (for example し, シ and ショ) always go the same direction on one sheet, so a prompt in one box never shows the answer to another. See &quot;How the anti-cheat setting works&quot; below." data-i18n-tip="kana.tip.anticheat">?</span></button>
+          <button type="button" data-template="dhy-toggle" class="template-btn btn-key btn-key-sm btn-key-sage px-2 py-2" data-i18n="kana.tpl.dhy">Dakuten + Handakuten + Youon &#8646;</button>
+        </div>
+        <p class="text-[11px] text-stone-500 mt-2" data-i18n="kana.tpl.note">Click a template again to cycle: sequential grouped (H&rarr;K, then K&rarr;H), then randomized (H&rarr;K, then K&rarr;H).</p>
+      </fieldset>
+
+      <fieldset class="card-soft p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.ini.legend">Settings file</legend>
+        <div class="flex gap-2">
+          <button id="export-ini-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1" data-i18n="kana.ini.export">Export (.ini)</button>
+          <button id="import-ini-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1" data-i18n="kana.ini.import">Import (.ini)</button>
+          <input id="import-ini-file" type="file" accept=".ini,text/plain" class="hidden" />
+        </div>
+      </fieldset>
+
+      <fieldset class="card-soft p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.header.legend">Worksheet header</legend>
+        <label class="block text-xs mb-2"><span data-i18n="kana.header.title">Worksheet title (printed on the sheet)</span>
+          <input id="cfg-title" type="text" value="Kana Practice Test" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+        <label class="block text-xs"><span data-i18n="kana.header.teacher">Teacher (leave blank for a fill-in line)</span>
+          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" data-i18n-placeholder="kana.header.teacherPlaceholder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.grid.legend">Grid layout &amp; pages</legend>
+        <div class="flex gap-3 text-xs items-center">
+          <label><span data-i18n="kana.grid.rows">Rows</span> <input id="cfg-rows" type="number" min="1" max="20" value="10" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+          <label><span data-i18n="kana.grid.cols">Cols</span> <input id="cfg-cols" type="number" min="1" max="10" value="5" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+          <label><span data-i18n="kana.grid.copies">Copies</span> <input id="cfg-pages" type="number" min="1" max="50" value="1" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+        </div>
+        <p id="sequential-pages-note" class="text-[11px] text-indigo-700 font-medium mt-2 hidden"></p>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-sage p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.cat.legend">Kana categories</legend>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cat-basic" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="kana.cat.basic">Basic (ア, イ, ウ...)</span></label>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cat-dakuten" type="checkbox" class="h-4 w-4" /> <span data-i18n="kana.cat.dakuten">Dakuten (ガ, ギ, グ...)</span></label>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cat-handakuten" type="checkbox" class="h-4 w-4" /> <span data-i18n="kana.cat.handakuten">Handakuten (パ, ピ, プ...)</span></label>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cat-youon" type="checkbox" class="h-4 w-4" /> <span data-i18n="kana.cat.youon">Youon (キャ, ギュ...)</span></label>
+        <label class="block text-xs"><span data-i18n="kana.cat.ratio">Basic kana ratio (%)</span> <input id="cfg-basicratio" type="number" min="0" max="100" value="70" class="w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="kana.opts.legend">Worksheet options</legend>
+        <p class="text-xs font-medium mb-1" data-i18n="kana.opts.direction">Direction</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input type="radio" name="cfg-direction" value="k2h" checked class="h-4 w-4" /> <span data-i18n="kana.opts.k2h">Katakana &rarr; Hiragana</span></label>
+        <label class="flex items-center gap-2 text-xs mb-1"><input type="radio" name="cfg-direction" value="h2k" class="h-4 w-4" /> <span data-i18n="kana.opts.h2k">Hiragana &rarr; Katakana</span></label>
+        <label class="flex items-center gap-2 text-xs mb-2"><input type="radio" name="cfg-direction" value="mixed" class="h-4 w-4" /> <span data-i18n="kana.opts.mixed">Mixed (anti-cheat)</span><span class="help-tip" tabindex="0" role="img" aria-label="?" data-tip="Related kana (for example し, シ and ショ) always go the same direction on one sheet, so a prompt in one box never shows the answer to another. See &quot;How the anti-cheat setting works&quot; below." data-i18n-tip="kana.tip.anticheat">?</span></label>
+        <label class="block text-xs mb-3 pl-5"><span data-i18n="kana.opts.mixedRatio">Katakana&rarr;Hiragana ratio (%)</span> <input id="cfg-mixedratio" type="number" min="0" max="100" value="50" class="w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+
+        <p class="text-xs font-medium mb-1" data-i18n="kana.opts.order">Output order</p>
+        <label class="flex items-center gap-2 text-xs mb-1"><input type="radio" name="cfg-ordered" value="0" checked class="h-4 w-4" /> <span data-i18n="kana.opts.random">Random</span></label>
+        <label class="flex items-center gap-2 text-xs mb-2"><input type="radio" name="cfg-ordered" value="1" class="h-4 w-4" /> <span data-i18n="kana.opts.seq">Sequential (a, i, u, e, o...)</span></label>
+
+        <label id="group-toggle-label" class="flex items-center gap-2 text-xs mb-1 opacity-40">
+          <input id="cfg-group" type="checkbox" class="h-4 w-4" disabled /> <span data-i18n="kana.opts.group">Group by row (5 cols, one consonant row per line)</span>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-2 pl-5" data-i18n="kana.opts.groupNote">Sequential only. Pads short rows (e.g. ya/yu/yo, wa/wo/n) with empty cells so every row lines up in a 5-wide table; forces columns to 5.</p>
+
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-duplicates" type="checkbox" class="h-4 w-4" /> <span data-i18n="kana.opts.dups">Allow duplicates</span></label>
+        <p class="text-[11px] text-stone-500 mb-2 pl-5" data-i18n="kana.opts.dupsNote">If unchecked and grid exceeds pool size, extra spaces stay empty.</p>
+
+        <label class="block text-xs mb-1" data-i18n="kana.opts.always">Always include (commas optional, romaji ok, e.g. あ, ピ, ギャ or あピギャ or a, pi, gya)</label>
+        <input id="cfg-always" type="text" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 text-xs mb-2" placeholder="あ, ピ, ギャ" />
+
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-footer" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="kana.opts.footer">Print settings footer on PDF</span></label>
+        <label class="flex items-center gap-2 text-xs mb-1"><input id="cfg-answerkey" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="kana.opts.answerKey">Include answer key page(s)</span></label>
+        <label class="flex items-center gap-2 text-xs"><input id="cfg-answerqr" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="kana.opts.answerQr">Add Answer-key QR code on each worksheet page</span></label>
+      </fieldset>
+
+      <fieldset class="border-2 border-stone-300 rounded-xl p-3">
+        <legend class="text-xs font-semibold px-1" data-i18n="roster.legend">Class roster (Excel)</legend>
+        <p class="text-[11px] text-stone-500 mb-2" data-i18n="roster.note">Make one test per student, with their name printed and the kana they missed forced in. Download the template, fill it in, then import it to preview the pages before creating the PDF. The file is read in your browser and is not uploaded. Uses the settings above.</p>
+        <div class="flex gap-2">
+          <button id="roster-template-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1" data-i18n="roster.template">Download template (.xlsx)</button>
+          <button id="roster-import-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1" data-i18n="roster.import">Import filled template</button>
+          <input id="roster-file" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+        </div>
+        <div id="roster-loaded" class="hidden flex items-center gap-2 mt-2">
+          <span id="roster-file-name" class="text-xs font-semibold w-40 shrink-0 truncate"></span>
+          <span id="roster-count" class="text-xs text-stone-500 shrink-0"></span>
+          <button id="roster-clear-btn" type="button" class="btn-key btn-key-sm btn-key-cream shrink-0 ml-auto" data-i18n="roster.clear">Clear</button>
+        </div>
+        <p id="roster-status" class="text-xs mt-2 text-stone-500"></p>
+        <ul id="roster-messages" class="text-[11px] text-amber-700 list-disc pl-5 mt-1"></ul>
+      </fieldset>
+
+      <button id="generate-btn" class="btn-key btn-key-primary w-full py-3 text-sm">
+        Generate PDF (Worksheet + Answer Key)
+      </button>
+      <label class="block text-xs text-center text-stone-600"><span data-i18n="pdf.lang">PDF language</span>
+        <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-xs">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
+      <p id="autosave-status" class="text-[11px] text-center text-stone-400"></p>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
+      <div class="flex items-center justify-between mb-2">
+        <h2 id="preview-heading" class="text-sm font-semibold text-stone-600" data-i18n="kana.preview.heading">Kana Selection Preview</h2>
+        <div id="preview-pager" class="flex items-center gap-2 text-xs">
+          <button id="preview-prev" type="button" aria-label="Previous page" data-i18n-aria="kana.preview.prev" class="btn-key btn-key-sm btn-key-cream">&larr;</button>
+          <span id="preview-pager-label" class="text-stone-500 tabular-nums">Page 1 of 1</span>
+          <button id="preview-next" type="button" aria-label="Next page" data-i18n-aria="kana.preview.next" class="btn-key btn-key-sm btn-key-cream">&rarr;</button>
+        </div>
+      </div>
+      <p id="preview-note" class="text-[11px] text-stone-400 mb-2" data-i18n="kana.preview.note">This is a sample of which kana your current settings would select, and how many fit per page, so you can check the mix before printing &mdash; it is not a mockup of the page design. The actual PDF has no colors or rounded corners: every box is a plain black square on white paper.</p>
+      <div id="roster-preview" class="hidden space-y-3"><div id="roster-cards" class="space-y-3"></div></div>
+      <div id="preview-grid-wrap" class="overflow-x-auto">
+        <div id="preview-grid" class="grid gap-2 jp-font" style="min-width:480px"></div>
+      </div>
+
+      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+      <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-4">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6130154285914649"
+             data-ad-slot="7285905093"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="kana.what.h">What this worksheet practices</h2>
+      <p class="mb-3" data-i18n-html="kana.what.p1">Japanese uses two phonetic scripts that stand for the same sounds. <strong>Hiragana</strong> (ひらがな) is used for native words and grammar. <strong>Katakana</strong> (カタカナ) is used mostly for words borrowed from other languages. Every sound has one character in each script, for example あ and ア for "a". This worksheet shows a character in one script, and the student writes the matching character in the other.</p>
+      <p data-i18n="kana.what.p2">Converting in both directions builds a stronger link between the two scripts than reading either one on its own. Many learners pick up hiragana first and then find katakana hard to remember, and this drill targets that gap.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="kana.cats.h">The kana categories</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="kana.cats.basic"><strong>Basic:</strong> the 46 core characters, from あいうえお through ん.</li>
+        <li data-i18n-html="kana.cats.dakuten"><strong>Dakuten (゛):</strong> two small marks that voice a sound, for example か (ka) becomes が (ga) and さ (sa) becomes ざ (za).</li>
+        <li data-i18n-html="kana.cats.handakuten"><strong>Handakuten (゜):</strong> a small circle that turns the は row into the p sounds, for example は (ha) becomes ぱ (pa).</li>
+        <li data-i18n-html="kana.cats.youon"><strong>Youon:</strong> combined sounds written with a small ゃ, ゅ, or ょ, for example き + ゃ = きゃ (kya).</li>
+      </ul>
+      <p class="mt-3" data-i18n="kana.cats.order">A common order is: basic hiragana, then basic katakana, then dakuten and handakuten, then youon. Add a category only when the previous one feels easy.</p>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="kana.tplguide.h">How to use the templates</h2>
+      <p class="mb-3" data-i18n="kana.tplguide.intro">Each Quick Template button changes its setup every time you press it again:</p>
+      <ol class="list-decimal pl-6 space-y-2 mb-3">
+        <li data-i18n-html="kana.tplguide.1"><strong>In order, grouped by row (H→K):</strong> characters appear in the familiar あいうえお, かきくけこ order. This is best for a first pass, when the pattern of each row helps memory.</li>
+        <li data-i18n-html="kana.tplguide.2"><strong>In order, the other direction (K→H).</strong></li>
+        <li data-i18n-html="kana.tplguide.3"><strong>Randomized (H→K):</strong> the same characters, shuffled. The student can no longer rely on row order, which shows whether each character is really known.</li>
+        <li data-i18n-html="kana.tplguide.4"><strong>Randomized, the other direction (K→H).</strong></li>
+      </ol>
+      <p class="mb-3" data-i18n-html="kana.tplguide.mixed"><strong>All Types Mixed (Anti-Cheat)</strong> mixes both directions on one page, so some boxes ask for hiragana and others ask for katakana. The student has to read every prompt carefully instead of filling in one script automatically.</p>
+      <p data-i18n-html="kana.tplguide.mixed2"><strong>How the anti-cheat setting works:</strong> the risk with a mixed sheet is that one box gives away another. Suppose one box shows ショ and asks for hiragana, while another box shows し and asks for katakana. The first prompt already contains the answer (シ) to the second. To prevent this, the generator groups related kana into families by their base sound: し, じ, シ, ジ, シャ, ショ and the other sa-row sounds are all one family, as are the ka row with が and キャ, and so on. A whole family always goes the same direction on a sheet, so a prompt in one script never shows the answer to a related box. In Mixed mode each family is given a random direction, which gives you hiragana and katakana prompts on one sheet without these giveaways. The same rule applies to the characters you list under Always include. The <em>Katakana&rarr;Hiragana ratio</em> is the share of boxes that should ask for hiragana. Because whole families are assigned together, the result is close to that ratio, not exact.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="kana.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="kana.faq.q1">Do I need a Japanese keyboard?</h3>
+      <p class="mb-3" data-i18n="kana.faq.a1">No. All settings are buttons and checkboxes, and the student writes the answers by hand on paper.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="kana.faq.q2">How do I check the answers?</h3>
+      <p class="mb-3" data-i18n="kana.faq.a2">The PDF ends with answer-key pages. Each box on the worksheet has a small number, and the answer key and the answer-key QR code list answers in the same order: left to right, top to bottom.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="kana.faq.q3">Can a random layout spell something inappropriate?</h3>
+      <p class="mb-3" data-i18n="kana.faq.a3">The generator checks every randomized grid for a short list of inappropriate words, read across or down. If it finds one, it moves the characters before the sheet is made.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="kana.faq.q4">Can I go back to a sheet I made earlier?</h3>
+      <p data-i18n="kana.faq.a4">Yes. The Recent generations list keeps the settings of your last five worksheets in this browser. Choose one to load its settings again.</p>
+    </section>
+
+    <p class="text-sm" data-i18n-html="kana.more">Want to practice writing the characters, not just recognizing them? Try <a href="japanese-practice.html" class="text-indigo-700 underline">Hiragana Writing Practice</a>.</p>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n-ja-common.js?v=13"></script>
+<script src="js/i18n-zh-common.js?v=1"></script>
+<script src="js/i18n-ja-kana.js?v=11"></script>
+<script src="js/i18n-zh-kana.js?v=1"></script>
+<script src="js/pdf-common.js?v=19"></script>
+<script src="js/pdf-lang.js?v=9"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-generator.js?v=26"></script>
+<script src="js/japanese-ui.js?v=22"></script>
+<script src="js/japanese-roster.js?v=5"></script>
+</body>
+</html>

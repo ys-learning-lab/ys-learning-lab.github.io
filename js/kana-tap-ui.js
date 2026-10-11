@@ -13,7 +13,7 @@ const TAP_QUICK_DELAY_MS = 150;
 
 const state = {
   config: null,
-  questions: [],   // { item, qs, cs, choices: {item, s}[], picked: choice|null }
+  questions: [],   // { item, qs, cs, choices: {item, s}[], picked: choice|null, soundUsed: times the sound was played before answering }
   index: 0,
   locked: false,   // an answer was picked and we're showing feedback
   timer: null,
@@ -46,7 +46,7 @@ function buildRowCheckboxes() {
 // ---------- saved settings (browser storage; every failure is ignored) ----------
 
 const TAP_SETTINGS_KEY = 'ysll-tap-settings';
-const TAP_SETTING_FIELDS = ['cfg-choices', 'cfg-questions', 'cfg-near', 'cfg-feedback'];
+const TAP_SETTING_FIELDS = ['cfg-choices', 'cfg-questions', 'cfg-near', 'cfg-feedback', 'cfg-sound'];
 
 function saveSettings() {
   try {
@@ -99,6 +99,7 @@ function readConfig() {
     questions: num('cfg-questions', 10, 1, TAP_MAX_QUESTIONS),
     nearOnly: $('cfg-near').checked,
     feedback: $('cfg-feedback').checked,
+    sound: $('cfg-sound').checked,
   };
 }
 
@@ -141,7 +142,7 @@ function buildQuestions(cfg, pool) {
     // ticked choice script, so with two ticked they are mixed and the script gives nothing away.
     const anyScript = () => cfg.cScripts[Math.floor(Math.random() * cfg.cScripts.length)];
     const wrong = [...near, ...rest].slice(0, cfg.choices - 1).map((i) => ({ item: i, s: anyScript() }));
-    return { item, qs, cs, choices: tapShuffle([{ item, s: cs }, ...wrong]), picked: null };
+    return { item, qs, cs, choices: tapShuffle([{ item, s: cs }, ...wrong]), picked: null, soundUsed: 0 };
   });
 }
 
@@ -185,6 +186,7 @@ function renderPlay() {
     ? I18N.t('tap.promptMixed', 'Tap the one with the same sound')
     : I18N.t('tap.prompt', 'Tap the matching {script}', { script: scriptName(q.cs) });
   $('play-question').textContent = glyph(q.item, q.qs);
+  setQuestionSound(state.config.sound && KanaSound.canPlay(q.item));
 
   const cols = q.choices.length <= 4 ? 2 : q.choices.length <= 6 ? 3 : 4;
   const box = $('play-choices');
@@ -207,6 +209,25 @@ function renderPlay() {
   // The clock starts when a question first appears (not again on a language re-render).
   if (q.shownAt === undefined) q.shownAt = performance.now();
   if (q.picked && state.config.feedback) paintFeedback(q);
+}
+
+// Tapping the question letter (or the Hear it button) plays its sound. Only plays made before the
+// student answers count as sound help; listening again after the answer is just review.
+function setQuestionSound(on) {
+  const el = $('play-question');
+  $('play-sound').classList.toggle('hidden', !on);
+  el.onclick = on ? playQuestionSound : null;
+  el.onkeydown = on ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playQuestionSound(); } } : null;
+  el.style.cursor = on ? 'pointer' : '';
+  if (on) { el.setAttribute('role', 'button'); el.tabIndex = 0; }
+  else { el.removeAttribute('role'); el.removeAttribute('tabindex'); }
+}
+
+function playQuestionSound() {
+  const q = state.questions[state.index];
+  if (!q) return;
+  KanaSound.play(q.item);
+  if (!q.picked) q.soundUsed++;
 }
 
 function pick(i) {
@@ -279,6 +300,12 @@ function renderResults() {
   $('result-time').textContent = I18N.t('tap.result.time', 'Total time {total} · average {avg} per question', {
     total: formatTime(totalMs), avg: formatTime(totalMs / qs.length),
   });
+  const helped = qs.filter((q) => q.soundUsed > 0).length;
+  const soundLine = $('result-sound');
+  soundLine.classList.toggle('hidden', !state.config.sound);
+  soundLine.textContent = helped
+    ? I18N.t('tap.result.soundSummary', 'Sound help used on {n} of {total} questions', { n: helped, total: qs.length })
+    : I18N.t('tap.result.soundNone', 'No sound help used');
   $('missed-btn').disabled = right === qs.length;
   $('missed-btn').classList.toggle('opacity-50', right === qs.length);
 
@@ -295,9 +322,24 @@ function renderResults() {
         <td class="py-2 pr-2 text-xl ${good ? '' : 'text-red-700'}">${glyph(q.picked.item, q.picked.s)}</td>
         <td class="py-2 pr-2 text-xl">${glyph(q.item, q.cs)}</td>
         <td class="py-2 font-bold ${good ? 'text-green-700' : 'text-red-700'}"><span aria-hidden="true">${good ? '✓' : '✗'}</span> ${good ? ok : bad}</td>
-        <td class="py-2 text-stone-600 whitespace-nowrap">${formatTime(q.ms)}</td>
+        <td class="py-2 pr-2 text-stone-600 whitespace-nowrap">${formatTime(q.ms)}</td>
+        <td class="py-2 whitespace-nowrap">${soundCell(q, n)}</td>
       </tr>`;
-    }).join('') || `<tr><td colspan="6" class="py-3 text-center text-stone-500">${I18N.t('tap.result.none', 'Nothing missed. Well done!')}</td></tr>`;
+    }).join('') || `<tr><td colspan="7" class="py-3 text-center text-stone-500">${I18N.t('tap.result.none', 'Nothing missed. Well done!')}</td></tr>`;
+}
+
+// A play button for the letter, plus a note when the student used the sound before answering.
+const SPEAKER_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:inline;vertical-align:-3px"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z"/></svg>';
+
+function soundCell(q, n) {
+  const label = I18N.t('tap.result.hear', 'Hear it');
+  const btn = KanaSound.canPlay(q.item)
+    ? `<button type="button" class="row-sound btn-key btn-key-sm btn-key-cream px-2 py-1" data-n="${n}" aria-label="${label}" title="${label}">${SPEAKER_ICON}</button>`
+    : '';
+  const used = q.soundUsed > 0
+    ? `<span class="ml-1 text-xs font-bold text-amber-700">${I18N.t('tap.result.soundUsed', 'Sound used ×{n}', { n: q.soundUsed })}</span>`
+    : '';
+  return btn + used;
 }
 
 // ---------- writing practice sheet ----------
@@ -399,6 +441,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (missed.length) startQuiz(state.config, missed);
   });
   $('only-missed').addEventListener('change', renderResults);
+  $('play-sound').addEventListener('click', playQuestionSound);
+  $('result-rows').addEventListener('click', (e) => {
+    const b = e.target.closest('.row-sound');
+    const q = b && state.questions[Number(b.dataset.n)];
+    if (q) KanaSound.play(q.item);
+  });
   document.querySelectorAll('#sheet-q, #sheet-wrong, #sheet-conv, #sheet-correct').forEach((el) => el.addEventListener('change', renderSheet));
   $('sheet-btn').addEventListener('click', generateSheet);
   $('sheet-more').addEventListener('click', (e) => { e.preventDefault(); openSheet(); });

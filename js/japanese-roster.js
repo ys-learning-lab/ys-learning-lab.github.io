@@ -1,4 +1,4 @@
-// Class roster import for japanese.html: download an Excel template, fill in each
+// Class roster import for kana-quiz.html: download an Excel template, fill in each
 // student's name and the kana they missed, import it, check the preview, and create
 // one test per student (name printed on the page, the missed kana forced in).
 
@@ -56,7 +56,7 @@ function parseRosterSettings(rows) {
     }
     else if (key === 'always_include') { cfg.always_include = val; found = true; }
     else if (key === 'title') { cfg.title = val; found = true; }
-    else if (key === 'pdf_lang') { if (val === 'ja' || val === 'en') { cfg.pdfLang = val; found = true; } }
+    else if (key === 'pdf_lang') { if (val === 'ja' || val === 'en' || val === 'zh') { cfg.pdfLang = val; found = true; } }
   }
   return found ? cfg : null;
 }
@@ -105,7 +105,7 @@ function rosterSettingsRows(cfg) {
     flag('roster.set.key', 'Answer key pages', 'include_answer_key', cfg.include_answer_key),
     flag('roster.set.qr', 'Answer QR code', 'include_answer_qr', cfg.include_answer_qr),
     row('roster.set.title', 'Title', 'title', cfg.title),
-    row('roster.set.pdflang', 'PDF language (en or ja)', 'pdf_lang', cfg.pdfLang),
+    row('roster.set.pdflang', 'PDF language (en, ja or zh)', 'pdf_lang', cfg.pdfLang),
     [],
     [RT('roster.set.note1', 'When you import, the Value column decides the quiz settings, whatever the page currently shows.')],
     [RT('roster.set.note2', 'Change a value to change the test. Keep column C as it is. Without this sheet (for example a CSV file), the settings on the page are used.')],
@@ -322,7 +322,7 @@ async function createRosterPdf() {
     const { bytes, missingGlyphs } = await PDFWorksheetRenderer.renderBatch(rosterPending.sheets);
     const w = [...rosterPending.shownWarnings, ...missingGlyphs.map((name) => ({ key: 'glyph', vars: { name } }))];
     showRosterMessages(w.map(rosterWarningText));
-    await openPdfResults(bytes, `japanese_class_worksheets_${timestamp()}.pdf`, 'japanese.html', 'Kana Conversion Quiz', resultTab);
+    await openPdfResults(bytes, `japanese_class_worksheets_${timestamp()}.pdf`, 'kana-quiz.html', 'Kana Conversion Quiz', resultTab);
     status.textContent = RT('roster.status.done', 'Made {n} tests and opened them in a new tab.', { n: rosterPending.sheets.length });
   } catch (e) {
     console.error(e);

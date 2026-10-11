@@ -152,7 +152,7 @@ class HiraganaPracticeRenderer {
 
   async render() {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    this.fonts = await getFonts(pdfDoc);
+    this.fonts = await getFonts(pdfDoc, this.config.pdfLang);
 
     const ROWS = 5;
     const GAP = 8;

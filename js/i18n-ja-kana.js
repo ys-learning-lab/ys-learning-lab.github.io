@@ -1,4 +1,4 @@
-// Japanese strings for japanese.html (Kana Conversion Quiz).
+// Japanese strings for kana-quiz.html (Kana Conversion Quiz).
 I18N.register('ja', {
   'kana.page.title': 'かな変換クイズ - Ys Learning Lab',
   'kana.h1': 'かな変換クイズ',

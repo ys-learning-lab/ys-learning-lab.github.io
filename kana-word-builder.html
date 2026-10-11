@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="words.page.title">Kana Word Builder - Ys Learning Lab</title>
+<meta name="description" content="Free printable hiragana word-building sheets: a set of kana, and the student writes words in columns of square boxes and adds up the points. Includes an answer key." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-word-builder.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Word Builder - Ys Learning Lab" />
+<meta property="og:description" content="Free printable hiragana word-building sheets: a set of kana, and the student writes words in columns of square boxes and adds up the points. Includes an answer key." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-word-builder.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="words.h1">Kana Word Builder</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="words.intro">Each puzzle is a set of hiragana. The student writes the words they can make in columns of boxes, scores one point for every letter, and adds up the points. Good practice once the letters are known.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-study-plan.html" class="nav-key" data-i18n="tab.plan">Study Plan</a>
+    <a href="kana-chart.html" class="nav-key" data-i18n="tab.chart">Kana Chart</a>
+    <a href="kana-quiz.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+    <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+    <a href="kana-word-builder.html" class="nav-key nav-key-active" data-i18n="tab.builder">Word Builder</a>
+    <a href="kana-online.html" class="nav-key" data-i18n="tab.online">Online Learning</a>
+  </div>
+
+  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
+
+    <!-- CONTROLS -->
+    <div id="controls" class="order-1 card-soft p-4 w-full space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="words.header.legend">Worksheet header</legend>
+        <label class="block text-xs mb-2"><span data-i18n="words.header.title">Worksheet title (printed on the sheet)</span>
+          <input id="cfg-title" type="text" value="Kana Word Builder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+        <label class="block text-xs"><span data-i18n="words.header.teacher">Teacher (leave blank for a fill-in line)</span>
+          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" data-i18n-placeholder="words.header.teacherPlaceholder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="words.opts.legend">Sheet options</legend>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="words.opts.fixed">Every sheet has two puzzles. Each puzzle has ten different kana and asks for four words, written in five boxes each. The two puzzles are matched so that neither has fewer words to find.</p>
+        <label class="flex items-center gap-2 text-xs"><input id="cfg-key" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="words.opts.key">Include an answer key page (words from the list that each set of kana can make)</span></label>
+      </fieldset>
+
+      <button id="generate-btn" class="btn-key btn-key-primary w-full py-3 text-sm" data-i18n="words.generate">Generate PDF</button>
+      <label class="block text-xs text-center text-stone-600"><span data-i18n="pdf.lang">PDF language</span>
+        <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-xs">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-semibold text-stone-600" data-i18n="words.preview.heading">What will be generated</h2>
+        <button id="reshuffle-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="words.reshuffle">Shuffle</button>
+      </div>
+      <p class="text-[11px] text-stone-400 mb-2" data-i18n="words.preview.note">The kana of your worksheet. The PDF uses exactly these kana.</p>
+      <div id="preview-summary" class="text-sm space-y-1 mb-3"></div>
+      <div id="preview-sets" class="space-y-4 jp-font"></div>
+
+      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+      <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-4">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6130154285914649"
+             data-ad-slot="7285905093"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="words.how.h">How the word sheets work</h2>
+      <p class="mb-3" data-i18n="words.how.p1">Each puzzle shows a row of hiragana. The student makes words from them, using each kana at most once in a word. Each word is written in its own column of square boxes, one letter to a box, from top to bottom, with the columns filling from the right, the way Japanese is written. A word scores one point for every letter, so はし is 2 points and はしら is 3. The points go in the small box under the word, and the student adds them all up at the bottom.</p>
+      <p data-i18n="words.how.p2">Every set of kana is built around a real 5-kana word from the site's word list, so there is always a long word to find. The two puzzles on a sheet are matched, so each one can make about the same number of words from the list, and the four best words are worth about the same. Each puzzle asks for four words, written in five boxes each, which fits the longest words in the list. Other real words count too, which is why the answer key shows examples rather than a complete list.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="words.use.h">Using the sheets</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="words.use.when"><strong>When to use it.</strong> After the student knows a good part of the hiragana. The kana come from everyday words, so the sheets work best once most rows are learned.</li>
+        <li data-i18n-html="words.use.points"><strong>About the points.</strong> Every letter is worth one point, so longer words win. Finding a long word is worth more than finding two short ones.</li>
+        <li data-i18n-html="words.use.screen"><strong>Prefer the screen?</strong> The <a href="kana-word-puzzle.html" class="text-indigo-700 underline">Kana Word Puzzle</a> in Online Learning is a crossword you play by dragging kana.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="words.rules.h">Easy-going rules</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="words.rules.once"><strong>Each kana once.</strong> The kana in a set are all different, and each one can be used once in a word.</li>
+        <li data-i18n-html="words.rules.free"><strong>Small kana can also be used.</strong> ゃ, ゅ, ょ, っ and the other small kana, and the long-vowel mark ー, can also be used to create words. For example, しゅくだい only needs し, く, だ and い.</li>
+        <li data-i18n-html="words.rules.dots"><strong>Dakuon can also be used.</strong> The kana in a set are plain, with no dakuon. If the set has か, you can also use が. If it has は, you can also use ば or ぱ. For example, with た, ま and こ in the set you can make たまご.</li>
+        <li data-i18n-html="words.rules.kata"><strong>Katakana is fine.</strong> A kana can be written in hiragana or in katakana, so ケーキ only needs け and き. The answer key lists words like these too.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="words.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="words.faq.q1">Is there an answer key?</h3>
+      <p class="mb-3" data-i18n="words.faq.a1">Yes. With "Include an answer key page" on, the PDF ends with a key page. For each puzzle it lists the words from the word list that the kana can make, with their points. Students may find other real words, and those count too.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="words.faq.q2">Does it include katakana?</h3>
+      <p class="mb-3" data-i18n="words.faq.a2">Not yet. The word list is hiragana only, so the kana are hiragana.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="words.faq.q3">Do I have to type in words?</h3>
+      <p data-i18n="words.faq.a3">No. The kana are made for you from the built-in word list. Press Shuffle to get a new set.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n-ja-common.js?v=13"></script>
+<script src="js/i18n-zh-common.js?v=1"></script>
+<script src="js/i18n-ja-words.js?v=8"></script>
+<script src="js/i18n-zh-words.js?v=1"></script>
+<script src="js/pdf-common.js?v=19"></script>
+<script src="js/pdf-lang.js?v=9"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-practice-generator.js?v=27"></script>
+<script src="js/kana-word-puzzle-generator.js?v=4"></script>
+<script src="js/kana-word-builder-generator.js?v=7"></script>
+<script src="js/kana-word-builder-ui.js?v=5"></script>
+</body>
+</html>

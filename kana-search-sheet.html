@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="ss.page.title">Kana Word Search Worksheet - Ys Learning Lab</title>
+<meta name="description" content="Free printable hiragana word search: words hidden in a grid of kana in straight lines. The student circles and writes the words they find, and longer words score more. With an answer key." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-search-sheet.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Word Search Worksheet - Ys Learning Lab" />
+<meta property="og:description" content="Free printable hiragana word search: words hidden in a grid of kana in straight lines. The student circles and writes the words they find, and longer words score more. With an answer key." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-search-sheet.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="ss.h1">Kana Word Search Worksheet</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="ps.intro">A printable word search. Many hiragana words are hidden in a grid of kana, in straight lines. The student circles the words they find and writes each one on a line. Each letter is worth one point, so longer words score more.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-study-plan.html" class="nav-key" data-i18n="tab.plan">Study Plan</a>
+    <a href="kana-chart.html" class="nav-key" data-i18n="tab.chart">Kana Chart</a>
+    <a href="kana-quiz.html" class="nav-key" data-i18n="tab.quiz">Kana Conversion Quiz</a>
+    <a href="kana-matching.html" class="nav-key" data-i18n="tab.matching">Kana Matching</a>
+    <a href="japanese-practice.html" class="nav-key" data-i18n="tab.practice">Writing Practice</a>
+    <a href="kana-word-builder.html" class="nav-key" data-i18n="tab.builder">Word Builder</a>
+    <a href="kana-puzzle-sheet.html" class="nav-key" data-i18n="tab.puzzlesheet">Puzzle Sheet</a>
+    <a href="kana-search-sheet.html" class="nav-key nav-key-active" data-i18n="tab.searchsheet">Word Search Sheet</a>
+    <a href="kana-online.html" class="nav-key" data-i18n="tab.online">Online Learning</a>
+  </div>
+
+  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
+
+    <!-- CONTROLS -->
+    <div id="controls" class="order-1 card-soft p-4 w-full space-y-4">
+
+      <fieldset class="card-soft card-soft-gold p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="ps.header.legend">Worksheet header</legend>
+        <label class="block text-xs mb-2"><span data-i18n="ps.header.title">Worksheet title (printed on the sheet)</span>
+          <input id="cfg-title" type="text" value="Kana Word Search" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+        <label class="block text-xs"><span data-i18n="ps.header.teacher">Teacher (leave blank for a fill-in line)</span>
+          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" data-i18n-placeholder="ps.header.teacherPlaceholder" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
+        </label>
+      </fieldset>
+
+      <fieldset class="card-soft card-soft-teal p-3">
+        <legend class="text-sm font-bold px-1" data-i18n="ps.opts.legend">Puzzle options</legend>
+        <label class="block text-xs mb-1"><span data-i18n="ss.opts.side">Letters in the grid</span>
+          <select id="cfg-side" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm bg-white">
+            <option value="6">6 × 6 (36)</option><option value="7">7 × 7 (49)</option><option value="8" selected>8 × 8 (64)</option><option value="9">9 × 9 (81)</option><option value="10">10 × 10 (100)</option><option value="12">12 × 12 (144)</option>
+          </select>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="ss.opts.sideNote">A bigger grid is harder to search, and the letters get smaller on the page.</p>
+        <label class="block text-xs mb-1"><span data-i18n="ss.opts.words">Hidden words</span>
+          <select id="cfg-words" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm bg-white">
+            <option value="5">5</option><option value="6">6</option><option value="8">8</option><option value="10" selected>10</option><option value="12">12</option><option value="15">15</option>
+          </select>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="ss.opts.wordsNote">How many words are hidden on purpose. A small grid may have room for fewer. Other real words can turn up by chance, and they count too.</p>
+        <label class="block text-xs mb-1"><span data-i18n="ss.opts.goal">Words to find</span>
+          <select id="cfg-goal" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm bg-white">
+            <option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="8">8</option><option value="10">10</option>
+          </select>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="ss.opts.goalNote">The sheet asks the student to find at least this many. There are more hidden than this, so they can choose, and longer words score more.</p>
+        <label class="block text-xs mb-1"><span data-i18n="ss.opts.dirs">Directions</span>
+          <select id="cfg-mode" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm bg-white">
+            <option value="easy" data-i18n="ss.dirs.easy" selected>Across and down</option>
+            <option value="normal" data-i18n="ss.dirs.normal">Plus diagonals</option>
+            <option value="hard" data-i18n="ss.dirs.hard">Every direction</option>
+          </select>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="ss.opts.dirsNote">Every direction also hides words that run backwards or upwards, which is much harder on paper.</p>
+        <label class="block text-xs mb-1"><span data-i18n="ps.opts.count">Puzzles (one on each page)</span>
+          <select id="cfg-count" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 text-sm bg-white">
+            <option value="1" selected>1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </label>
+        <p class="text-[11px] text-stone-500 mb-3" data-i18n="ps.opts.countNote">Each puzzle gets a whole page, so the boxes are as large as they can be.</p>
+        <label class="flex items-center gap-2 text-xs"><input id="cfg-key" type="checkbox" checked class="h-4 w-4" /> <span data-i18n="ss.opts.key">Include example answer pages (each hidden word ringed)</span></label>
+      </fieldset>
+
+      <button id="generate-btn" class="btn-key btn-key-primary w-full py-3 text-sm" data-i18n="ps.generate">Generate PDF</button>
+      <label class="block text-xs text-center text-stone-600"><span data-i18n="pdf.lang">PDF language</span>
+        <select id="pdf-lang" class="border-2 border-stone-300 rounded-lg px-2 py-1 ml-1 bg-white text-xs">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-semibold text-stone-600" data-i18n="ps.preview.heading">What will be generated</h2>
+        <button id="reshuffle-btn" type="button" class="btn-key btn-key-sm btn-key-cream" data-i18n="ps.reshuffle">Shuffle</button>
+      </div>
+      <p class="text-[11px] text-stone-400 mb-2" data-i18n="ss.preview.note">Your puzzles. The PDF uses exactly these grids.</p>
+      <div id="preview-summary" class="text-sm space-y-1 mb-3"></div>
+      <div id="preview-puzzles" class="space-y-4 jp-font"></div>
+
+      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+      <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-4">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6130154285914649"
+             data-ad-slot="7285905093"
+             data-ad-format="horizontal"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ss.how.h">How the word search sheet works</h2>
+      <p class="mb-3" data-i18n="ss.how.p1">Each page is a grid of hiragana with words hidden in straight lines. The student circles the words they find, writes each one on a line under the grid, and scores one point for every letter. The sheet asks for a number of words, but more are hidden than that, so the student chooses, and finding the long words is the way to a high score.</p>
+      <p data-i18n="ss.how.p2">The hidden words are simple everyday words, and a longer word or two is always hidden when the grid is big enough. Any other real word the student finds in the grid is fine too. The filler letters are checked so that they don't spell anything that doesn't belong in a classroom.</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ss.use.h">Using the sheets</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="ss.use.when"><strong>When to use it.</strong> After the student can read most of the hiragana. It is good practice for scanning for kana and for reading short words.</li>
+        <li data-i18n-html="ss.use.size"><strong>How hard.</strong> Start with a 6 × 6 or 7 × 7 grid and "Across and down". A bigger grid, diagonals and backwards words make it harder.</li>
+        <li data-i18n-html="ss.use.score"><strong>Scoring.</strong> The student adds up the points at the bottom of the page: one for each letter of every word they wrote.</li>
+        <li data-i18n-html="ss.use.screen"><strong>Prefer the screen?</strong> The <a href="kana-word-search.html" class="text-indigo-700 underline">Kana Word Search</a> in Online Learning is the same game, played by tapping the letters.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="ss.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ss.faq.q1">Is there an answer key?</h3>
+      <p class="mb-3" data-i18n="ss.faq.a1">Yes, as example answers. With "Include example answer pages" on, the PDF ends with one page for each puzzle that rings the hidden words and lists them. Other real words in the grid count too, so a student's list can be different and still right.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ss.faq.q2">Does it include katakana?</h3>
+      <p class="mb-3" data-i18n="ss.faq.a2">Not yet. The word list is hiragana only, so the puzzle is hiragana.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="ss.faq.q3">Is anything saved or sent?</h3>
+      <p data-i18n="ss.faq.a3">No. The puzzles and the PDF are made in your browser, and nothing about them is stored or uploaded.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n-ja-common.js?v=13"></script>
+<script src="js/i18n-zh-common.js?v=1"></script>
+<script src="js/i18n-ja-puzzlesheet.js?v=2"></script>
+<script src="js/i18n-zh-puzzlesheet.js?v=1"></script>
+<script src="js/i18n-ja-searchsheet.js?v=2"></script>
+<script src="js/i18n-zh-searchsheet.js?v=1"></script>
+<script src="js/pdf-common.js?v=20"></script>
+<script src="js/pdf-lang.js?v=9"></script>
+<script src="js/pdf-lang-puzzlesheet.js?v=2"></script>
+<script src="js/pdf-lang-searchsheet.js?v=2"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-practice-generator.js?v=27"></script>
+<script src="js/kana-word-puzzle-generator.js?v=6"></script>
+<script src="js/kana-word-dictionary.js?v=1"></script>
+<script src="js/kana-word-search-generator.js?v=2"></script>
+<script src="js/kana-puzzle-sheet-generator.js?v=2"></script>
+<script src="js/kana-search-sheet-generator.js?v=1"></script>
+<script src="js/kana-search-sheet-ui.js?v=1"></script>
+</body>
+</html>

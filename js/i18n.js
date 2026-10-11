@@ -17,8 +17,8 @@
 
 (function () {
   const STORAGE_KEY = 'ysll-lang';
-  const SUPPORTED = ['en', 'ja'];
-  const dictionaries = { ja: {} };
+  const SUPPORTED = ['en', 'ja', 'zh'];
+  const dictionaries = { ja: {}, zh: {} };
   let current = 'en';
 
   function register(lang, entries) {

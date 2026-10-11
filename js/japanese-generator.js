@@ -646,7 +646,7 @@ class PDFWorksheetRenderer {
 
   async renderCombined() {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    this.fonts = await getFonts(pdfDoc);
+    this.fonts = await getFonts(pdfDoc, this.config.pdfLang);
     const baseCode = getWorksheetBatchCode();
     this._renderInto(pdfDoc, false, baseCode);
     if (this.config.include_answer_key !== false) this._renderInto(pdfDoc, true, baseCode);
@@ -660,7 +660,7 @@ class PDFWorksheetRenderer {
   // Japanese font does not have (they would print as blank boxes).
   static async renderBatch(sheets) {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    const fonts = await getFonts(pdfDoc);
+    const fonts = await getFonts(pdfDoc, sheets.length ? sheets[0].cfg.pdfLang : 'en');
     const baseCode = getWorksheetBatchCode();
     const renderers = sheets.map((s) => {
       const r = new PDFWorksheetRenderer(s.cfg, s.pagesData);
@@ -688,7 +688,7 @@ class PDFWorksheetRenderer {
 
   async render(isAnswerKey = false) {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    this.fonts = await getFonts(pdfDoc);
+    this.fonts = await getFonts(pdfDoc, this.config.pdfLang);
     const baseCode = getWorksheetBatchCode();
     this._renderInto(pdfDoc, isAnswerKey, baseCode);
     return pdfDoc.save();

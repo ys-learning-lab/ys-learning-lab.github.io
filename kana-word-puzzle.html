@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-title="wp.page.title">Kana Word Puzzle - Ys Learning Lab</title>
+<meta name="description" content="A free online hiragana word puzzle: a small crossword with some letters shown. Drag the kana into the empty squares to spell the words. Works on a phone, tablet or computer, by touch or mouse." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/kana-word-puzzle.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Kana Word Puzzle - Ys Learning Lab" />
+<meta property="og:description" content="A free online hiragana word puzzle: a small crossword with some letters shown. Drag the kana into the empty squares to spell the words. Works on a phone, tablet or computer, by touch or mouse." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/kana-word-puzzle.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<script src="js/i18n-boot.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/site.css?v=9" />
+<style>
+  /* Cell size shrinks with the grid so up to 10 columns fit a phone screen. */
+  #wp-game { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #wp-grid { display: grid; gap: 4px; justify-content: center; --cs: min(3.5rem, calc((100vw - 5rem) / var(--cols))); grid-template-columns: repeat(var(--cols), var(--cs)); }
+  @media (min-width: 768px) { #wp-grid { --cs: min(3.5rem, calc((min(100vw, 64rem) - 21rem) / var(--cols))); } }
+  .wp-cell { position: relative; width: var(--cs); height: var(--cs); border: 2px solid #3a3d42; border-radius: 6px; background: #fff; font-size: calc(var(--cs) * 0.56); line-height: 1; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  .wp-cell.wp-empty { border: 0; background: transparent; pointer-events: none; }
+  .wp-cell.wp-sel { box-shadow: 0 0 0 3px #d9723f; z-index: 1; }
+  .wp-cell.wp-given, .wp-cell.wp-hinted { background: #e9eaec; color: #4a4d52; }
+  .wp-cell.wp-done { background: #dbe8d6; border-color: #3c6b34; }
+  .wp-cell.wp-over { background: #fff3c4; box-shadow: 0 0 0 3px #d9723f; }
+  .wp-cell.wp-lifted { opacity: 0.35; }
+  .wp-tile { position: relative; width: 3.25rem; height: 3.25rem; border: 2px solid #3a3d42; border-radius: 8px; background: #fff; font-size: 1.75rem; line-height: 1; box-shadow: 0 3px 0 #3a3d42; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+  .wp-tile:disabled { opacity: 0.25; box-shadow: none; cursor: default; }
+  .wp-tile.wp-lifted { opacity: 0.4; }
+  .wp-ghost { position: fixed; z-index: 50; pointer-events: none; transform: translate(-50%, -60%) scale(1.15); box-shadow: 0 8px 14px rgba(0,0,0,0.3); cursor: grabbing; }
+</style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key" data-i18n="nav.math">Math</a>
+      <a href="japanese.html" class="nav-key nav-key-active" data-i18n="nav.japanese">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <div class="flex items-start justify-between gap-3 mb-1">
+    <h1 class="text-2xl font-extrabold" data-i18n="wp.h1">Kana Word Puzzle</h1>
+    <select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <p class="text-sm text-stone-600 mb-2" data-i18n="wp.intro">A small crossword. Some letters are shown; drag the kana into the empty squares so that every word in the grid is a word from the list.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="kana-online.html" class="nav-key" data-i18n="tab.online">Online Learning</a>
+    <a href="kana-tap-practice.html" class="nav-key" data-i18n="tab.tap">Tap Practice</a>
+    <a href="kana-word-puzzle.html" class="nav-key nav-key-active" data-i18n="tab.words">Word Puzzle</a>
+    <a href="kana-word-search.html" class="nav-key" data-i18n="tab.search">Word Search</a>
+  </div>
+
+  <div class="max-w-5xl mx-auto">
+
+    <!-- OPTIONS -->
+    <div id="wp-options" class="card-soft card-soft-teal p-3 mb-4 flex flex-wrap items-end gap-x-5 gap-y-3">
+      <label class="block text-xs"><span data-i18n="wp.opt.words">Words</span>
+        <select id="cfg-words" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="5">5</option><option value="6">6</option><option value="7" selected>7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+        </select>
+      </label>
+      <label class="block text-xs"><span data-i18n="wp.opt.level">Letters shown</span>
+        <select id="cfg-level" class="block border-2 border-stone-300 rounded-lg px-2 py-1 mt-1 text-sm bg-white">
+          <option value="few" data-i18n="wp.level.few">Few</option>
+          <option value="some" data-i18n="wp.level.some" selected>Some</option>
+          <option value="many" data-i18n="wp.level.many">Many</option>
+        </select>
+      </label>
+      <label class="flex items-center gap-2 text-sm"><input id="cfg-sound" type="checkbox" class="h-5 w-5" /> <span data-i18n="wp.opt.sound">Sound</span></label>
+      <button id="new-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm ml-auto" data-i18n="wp.new">New puzzle</button>
+    </div>
+
+    <!-- GAME -->
+    <section id="wp-game" aria-live="polite">
+      <!-- The kana to place sit to the left of the grid (above it on a narrow screen), so they stay in view. -->
+      <div class="flex flex-col md:flex-row md:items-stretch gap-4 mb-4">
+        <div id="wp-tray" class="card-soft card-soft-sage p-3 w-full md:w-[13.5rem] md:shrink-0">
+          <p class="text-xs text-stone-600 mb-2" data-i18n="wp.tiles">Kana: drag them into the empty squares</p>
+          <div id="wp-tiles" class="flex flex-wrap gap-2 jp-font"></div>
+        </div>
+        <div class="card-soft card-soft-gold p-4 w-full min-w-0 md:flex-1 overflow-x-auto">
+          <div id="wp-grid" class="jp-font"></div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <button id="back-btn" type="button" class="btn-key btn-key-cream px-4 py-2 text-sm" data-i18n="wp.back">Take back</button>
+        <button id="hint-btn" type="button" class="btn-key btn-key-gold px-4 py-2 text-sm" data-i18n="wp.hint">Hint</button>
+        <p id="wp-stats" class="text-sm font-bold text-stone-700 ml-auto"></p>
+      </div>
+      <p id="wp-message" class="text-sm font-bold min-h-[1.5rem]"></p>
+
+      <div id="wp-win" class="card-soft card-soft-sage p-5 text-center mt-3 hidden">
+        <p class="text-2xl font-extrabold mb-1" data-i18n="wp.win.h">Solved!</p>
+        <p id="wp-win-text" class="text-sm text-stone-700 mb-3"></p>
+        <button id="again-btn" type="button" class="btn-key btn-key-primary px-5 py-3 text-sm" data-i18n="wp.win.again">Next puzzle</button>
+      </div>
+    </section>
+
+    <!-- Below-game ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
+    <div id="ad-slot-below-preview" class="w-full max-h-[90px] overflow-hidden mt-6">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7285905093"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+  </div>
+
+  <article class="max-w-3xl mx-auto mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="wp.how.h">How to play</h2>
+      <ol class="list-decimal pl-6 space-y-2">
+        <li data-i18n-html="wp.how.1"><strong>Look at the grid.</strong> Grey squares already hold a letter. The white squares are empty, and the kana below are exactly the letters they need.</li>
+        <li data-i18n-html="wp.how.2"><strong>Drag a kana into a square.</strong> Press a kana with your finger or the mouse, move it over an empty square and let go. You can drag a kana from one square to another, or back down to the other kana. If you prefer, tap a square and then tap a kana.</li>
+        <li data-i18n-html="wp.how.3"><strong>Spell words from the list.</strong> Every across and down run in the grid must be a word from the site's word list. A word turns green when it is full and on the list.</li>
+        <li data-i18n-html="wp.how.4"><strong>Stuck?</strong> <em>Hint</em> fills one square with the right letter and costs 1 point. The number of hints used is shown with your score.</li>
+        <li data-i18n-html="wp.how.5"><strong>Want it on paper?</strong> The <a href="kana-puzzle-sheet.html" class="text-indigo-700 underline">Kana Word Puzzle Sheet</a> prints the same kind of crossword with large boxes and an answer key.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="wp.opts.h">Options</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li data-i18n-html="wp.opts.words"><strong>Words:</strong> 5 to 10 words in a puzzle (7 to start). More words make a bigger grid.</li>
+        <li data-i18n-html="wp.opts.level"><strong>Letters shown:</strong> how many letters of each word start filled in. Few is the hardest, Many the easiest.</li>
+        <li data-i18n-html="wp.opts.sound"><strong>Sound:</strong> a kana says its sound when you pick it up. It starts off; tick the box to hear the kana.</li>
+      </ul>
+    </section>
+
+    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
+    <div id="ad-slot-in-article" class="w-full max-h-[120px] overflow-hidden">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-6130154285914649"
+           data-ad-slot="7199305456"
+           data-ad-format="rectangle"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="wp.faq.h">Frequently asked questions</h2>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="wp.faq.q1">Where do the words come from?</h3>
+      <p class="mb-3" data-i18n="wp.faq.a1">From a short list of everyday hiragana words: the example words Writing Practice uses, plus some longer ones.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="wp.faq.q2">Why are there points?</h3>
+      <p class="mb-3" data-i18n="wp.faq.a2">Just for fun. A word that is on the list scores one point for each of its letters, so a longer word is worth more: はし is 2 points and はしら is 3. Each hint you use takes away 1 point.</p>
+      <h3 class="text-lg font-bold text-stone-900 mb-1" data-i18n="wp.faq.q3">Is anything saved or sent?</h3>
+      <p data-i18n="wp.faq.a3">No. The puzzle is made in your browser and nothing about your play is stored or uploaded.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
+      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
+      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
+      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+    </nav>
+    <span data-i18n="footer.note">Ys Learning Lab worksheet generators. PDFs are generated entirely client-side in your browser.</span>
+  </div>
+</footer>
+
+<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n-ja-common.js?v=13"></script>
+<script src="js/i18n-zh-common.js?v=1"></script>
+<script src="js/i18n-ja-wordpuzzle.js?v=5"></script>
+<script src="js/i18n-zh-wordpuzzle.js?v=1"></script>
+<script src="js/kana-safety.js?v=1"></script>
+<script src="js/japanese-practice-generator.js?v=27"></script>
+<script src="js/kana-matching-generator.js?v=9"></script>
+<script src="js/kana-word-puzzle-generator.js?v=6"></script>
+<script src="js/kana-word-puzzle-ui.js?v=4"></script>
+</body>
+</html>

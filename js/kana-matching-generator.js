@@ -166,7 +166,7 @@ class KanaMatchingRenderer {
 
   async render() {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    this.fonts = await getFonts(pdfDoc);
+    this.fonts = await getFonts(pdfDoc, this.config.pdfLang);
     this.code = `${getWorksheetBatchCode()}-A-1`; // same print-code format as the other tools
     this.qr = this._buildAnswerQr();
 

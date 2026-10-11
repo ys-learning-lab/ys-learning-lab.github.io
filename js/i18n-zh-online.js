@@ -1,0 +1,9 @@
+// Simplified Chinese strings for kana-online.html (the shared idx.* cards come from i18n-zh-index.js).
+I18N.register('zh', {
+  'online.page.title': '在线学习：在浏览器中练习假名 - Ys Learning Lab',
+  'online.h1': '在线学习',
+  'online.lead': '直接在手机、平板或电脑的浏览器中进行的假名练习：无需打印，无需安装。每次只需短短一轮，每天几分钟也能积少成多。',
+  'online.why.h': '这里放什么，哪些留在纸上',
+  'online.why.p1': '这个板块收录适合在屏幕上完成的练习：认字，以及通过点选来拼词。书写则不同。手指或鼠标远不如铅笔精准，所以书写练习仍然使用打印的练习页。',
+  'online.why.p2': '可打印的工具、字表和学习计划，请前往<a href="japanese.html" class="text-indigo-700 underline">日语</a>板块。',
+});
