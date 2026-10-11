@@ -179,8 +179,19 @@ function wpTapTile(tileId) {
   wpPlaceInCell(wp.sel, tileId, null);
 }
 
+// A second tap on the same filled square within this many ms takes its tile back out.
+const WP_DOUBLE_TAP_MS = 450;
+let wpLastTap = { key: null, at: 0 };
+
 function wpTapCell(key) {
   if (wp.finished) return;
+  const now = Date.now();
+  if (wpLastTap.key === key && now - wpLastTap.at < WP_DOUBLE_TAP_MS && wp.placed.has(key) && !wpLocked(wp.cellByKey.get(key))) {
+    wpLastTap = { key: null, at: 0 };
+    wpReturnToBank(key);
+    return;
+  }
+  wpLastTap = { key, at: now };
   wp.sel = key;
   wpRender();
 }
@@ -312,6 +323,7 @@ function wpDragMove(e) {
     document.body.appendChild(ghost);
     d.ghost = ghost;
     d.source.classList.add('wp-lifted');
+    wpEl('wp-game').classList.add('wp-dragging');
   }
   e.preventDefault();
   d.ghost.style.left = `${e.clientX}px`;
@@ -330,6 +342,7 @@ function wpDragCleanup() {
   window.removeEventListener('pointerup', wpDragEnd);
   window.removeEventListener('pointercancel', wpDragCancel);
   document.querySelectorAll('.wp-over').forEach((el) => el.classList.remove('wp-over'));
+  wpEl('wp-game').classList.remove('wp-dragging');
   if (wpDrag && wpDrag.ghost) wpDrag.ghost.remove();
   if (wpDrag && wpDrag.source) wpDrag.source.classList.remove('wp-lifted');
 }

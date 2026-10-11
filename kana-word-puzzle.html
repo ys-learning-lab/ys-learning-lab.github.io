@@ -28,7 +28,9 @@
   .wp-cell.wp-sel { box-shadow: 0 0 0 3px #d9723f; z-index: 1; }
   .wp-cell.wp-given, .wp-cell.wp-hinted { background: #e9eaec; color: #4a4d52; }
   .wp-cell.wp-done { background: #dbe8d6; border-color: #3c6b34; }
-  .wp-cell.wp-over { background: #fff3c4; box-shadow: 0 0 0 3px #d9723f; }
+  /* The square a dragged tile will land in: clearly stronger than the chosen-square ring, which is hidden while dragging. */
+  .wp-dragging .wp-cell.wp-sel { box-shadow: none; }
+  .wp-cell.wp-over { background: #ffd9a8; border-color: #d9723f; box-shadow: 0 0 0 4px #d9723f; transform: scale(1.15); z-index: 2; }
   .wp-cell.wp-lifted { opacity: 0.35; }
   .wp-tile { position: relative; width: 3.25rem; height: 3.25rem; border: 2px solid #3a3d42; border-radius: 8px; background: #fff; font-size: 1.75rem; line-height: 1; box-shadow: 0 3px 0 #3a3d42; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
   .wp-tile:disabled { opacity: 0.25; box-shadow: none; cursor: default; }
@@ -132,7 +134,7 @@
       <h2 class="text-2xl font-extrabold text-stone-900 mb-3" data-i18n="wp.how.h">How to play</h2>
       <ol class="list-decimal pl-6 space-y-2">
         <li data-i18n-html="wp.how.1"><strong>Look at the grid.</strong> Grey squares already hold a letter. The white squares are empty, and the kana below are exactly the letters they need.</li>
-        <li data-i18n-html="wp.how.2"><strong>Drag a kana into a square.</strong> Press a kana with your finger or the mouse, move it over an empty square and let go. You can drag a kana from one square to another, or back down to the other kana. If you prefer, tap a square and then tap a kana.</li>
+        <li data-i18n-html="wp.how.2"><strong>Drag a kana into a square.</strong> Press a kana with your finger or the mouse, move it over an empty square and let go. You can drag a kana from one square to another, or back down to the other kana. The square a kana will land in lights up as you move over it. Double tap (or double click) a kana in the grid to take it back out. If you prefer, tap a square and then tap a kana.</li>
         <li data-i18n-html="wp.how.3"><strong>Spell words from the list.</strong> Every across and down run in the grid must be a word from the site's word list. A word turns green when it is full and on the list.</li>
         <li data-i18n-html="wp.how.4"><strong>Stuck?</strong> <em>Hint</em> fills one square with the right letter and costs 1 point. The number of hints used is shown with your score.</li>
         <li data-i18n-html="wp.how.5"><strong>Want it on paper?</strong> The <a href="kana-puzzle-sheet.html" class="text-indigo-700 underline">Kana Word Puzzle Sheet</a> prints the same kind of crossword with large boxes and an answer key.</li>
@@ -187,11 +189,11 @@
 <script src="js/i18n-ja-common.js?v=14"></script>
 <script src="js/i18n-zh-common.js?v=2"></script>
 <script src="js/i18n-ja-wordpuzzle.js?v=5"></script>
-<script src="js/i18n-zh-wordpuzzle.js?v=1"></script>
+<script src="js/i18n-zh-wordpuzzle.js?v=2"></script>
 <script src="js/kana-safety.js?v=1"></script>
 <script src="js/japanese-practice-generator.js?v=27"></script>
 <script src="js/kana-matching-generator.js?v=9"></script>
 <script src="js/kana-word-puzzle-generator.js?v=6"></script>
-<script src="js/kana-word-puzzle-ui.js?v=4"></script>
+<script src="js/kana-word-puzzle-ui.js?v=5"></script>
 </body>
 </html>
