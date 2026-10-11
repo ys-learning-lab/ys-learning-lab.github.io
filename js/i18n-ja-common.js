@@ -14,6 +14,7 @@ I18N.register('ja', {
   'nav.japanese': '日本語',
   'nav.support': '応援',
   'lang.label': '言語',
+  'lang.display': '表示言語:',
   'math.soon': '算数ページの日本語版は準備中です。今のところ、このページは英語で表示されます。',
   'pdf.lang': 'PDFの言語',
   'footer.about': 'このサイトについて',

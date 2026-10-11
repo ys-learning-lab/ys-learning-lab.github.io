@@ -279,3 +279,8 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 }
 .help-tip:hover::after,
 .help-tip:focus::after { opacity: 1; }
+
+/* Phones: hold the page back until mobile-nav.js has rearranged the top bar. */
+@media (max-width: 639px) {
+  html.mnav-pending body { visibility: hidden; }
+}

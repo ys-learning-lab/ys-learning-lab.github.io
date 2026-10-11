@@ -14,6 +14,7 @@ I18N.register('zh', {
   'nav.japanese': '日语',
   'nav.support': '支持',
   'lang.label': '语言',
+  'lang.display': '显示语言:',
   'math.soon': '数学页面的中文版正在准备中，目前此页面以英文显示。',
   'pdf.lang': 'PDF 语言',
   'footer.about': '关于本站',
