@@ -3,358 +3,79 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Math Worksheet Generator - Ys Learning Lab</title>
-<meta name="description" content="Free printable math worksheet generator: addition, subtraction, multiplication, division, decimals, negative numbers, and equations, with an answer key." />
+<title>Math - Ys Learning Lab</title>
+<meta name="description" content="Math learning pages from Ys Learning Lab: online matching practice, printable worksheet generation, and local high scores." />
 <link rel="canonical" href="https://ys-learning-lab.github.io/math.html" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Ys Learning Lab" />
-<meta property="og:title" content="Math Worksheet Generator - Ys Learning Lab" />
-<meta property="og:description" content="Free printable math worksheet generator: addition, subtraction, multiplication, division, decimals, negative numbers, and equations, with an answer key." />
+<meta property="og:title" content="Math - Ys Learning Lab" />
+<meta property="og:description" content="Choose online math matching practice or make printable math worksheets." />
 <meta property="og:url" content="https://ys-learning-lab.github.io/math.html" />
 <meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="js/mobile-nav.js?v=5"></script>
-<script src="js/i18n-boot.js?v=3"></script>
+<script src="js/mobile-nav.js?v=6"></script>
 <link rel="icon" type="image/png" href="assets/YsSchool.png" />
 <link rel="stylesheet" href="assets/css/site.css?v=13" />
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
-
 <header class="site-header sticky top-0 z-10">
   <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
     <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
       <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
     </a>
     <div class="flex items-center gap-2 text-sm">
-      <a href="math.html" class="nav-key nav-key-active" data-i18n="nav.math">Math</a>
-      <a href="japanese.html" class="nav-key" data-i18n="nav.japanese">Japanese</a>
-      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support" data-i18n-aria="nav.support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span data-i18n="nav.support">Support</span></a>
+      <a href="math.html" class="nav-key nav-key-active">Math</a>
+      <a href="japanese.html" class="nav-key">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support"><span aria-hidden="true">&#9829;</span><span>Support</span></a>
     </div>
   </nav>
 </header>
 
-<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
-  <div class="flex items-start justify-between gap-3 mb-1">
-    <h1 class="text-2xl font-extrabold">Advanced Math Worksheet Generator</h1>
-    <label data-lang-wrap class="shrink-0 inline-flex items-center gap-1.5 text-sm text-stone-600"><span data-i18n="lang.display">Language:</span><select data-lang-select aria-label="Language" data-i18n-aria="lang.label" class="shrink-0 border-2 border-stone-300 rounded-lg px-2 py-1 bg-white text-sm">
-      <option value="en">English</option>
-      <option value="ja">日本語</option>
-      <option value="zh">中文</option>
-    </select></label>
-  </div>
-  <p id="ja-soon" class="hidden text-sm font-semibold text-amber-800 bg-amber-50 border-2 border-amber-300 rounded-lg px-3 py-2 mb-2" data-i18n="math.soon">The Japanese version of this page is coming soon. For now it is shown in English.</p>
-  <p class="text-sm text-stone-600 mb-4">Configure problems below, watch the live preview update, then generate a combined worksheet + answer key PDF.</p>
-  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
-    <a href="math.html" class="nav-key nav-key-active">Math Worksheets</a>
-    <a href="math-matching.html" class="nav-key">Math Matching</a>
-  </div>
+<main class="flex-1">
+  <section class="max-w-4xl mx-auto text-center px-4 pt-10 pb-10">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-stone-900 mb-4">Math</h1>
+    <p class="text-lg text-stone-600 max-w-2xl mx-auto">Choose online number matching, printable worksheets, or view local game scores.</p>
+  </section>
 
-  <div class="flex flex-col md:grid md:grid-cols-[360px_1fr] gap-6 items-start">
-
-    <!-- CONTROLS -->
-    <div id="controls" class="order-1 card-soft p-4 w-full">
-
-      <fieldset class="card-soft card-soft-terracotta p-3 mb-4">
-        <legend class="text-sm font-bold px-1">Quick templates (by level)</legend>
-        <div class="grid grid-cols-3 gap-2">
-          <button type="button" data-level-template="level1" class="level-template-btn btn-key btn-key-sm btn-key-terracotta px-2 py-2">Level 1</button>
-          <button type="button" data-level-template="level2" class="level-template-btn btn-key btn-key-sm btn-key-gold px-2 py-2">Level 2</button>
-          <button type="button" data-level-template="level3" class="level-template-btn btn-key btn-key-sm btn-key-sage px-2 py-2">Level 3</button>
-          <button type="button" data-level-template="level4" class="level-template-btn btn-key btn-key-sm btn-key-teal px-2 py-2">Level 4</button>
-          <button type="button" data-level-template="level5" class="level-template-btn btn-key btn-key-sm btn-key-plum px-2 py-2">Level 5</button>
-          <button type="button" data-level-template="level6" class="level-template-btn btn-key btn-key-sm btn-key-terracotta px-2 py-2">Level 6</button>
-        </div>
-        <p class="text-[11px] text-stone-500 mt-2">Levels 3-6 cycle through two variants on repeat clicks (e.g. Level 3: multiplication/division fluency &rarr; multi-step problems). Covers arithmetic, mixed expressions, and simple equations only &mdash; this tool doesn't generate fractions, geometry, money, or ratio problems.</p>
-      </fieldset>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium mb-1">Worksheet title (printed on the sheet)
-          <input id="cfg-title" type="text" value="Math Practice Test" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
-        </label>
-        <label class="block text-sm font-medium">Teacher (leave blank for a fill-in line)
-          <input id="cfg-teacher" type="text" value="" placeholder="e.g. Mrs. Smith" class="w-full border-2 border-stone-300 rounded-lg px-2 py-1 mt-1" />
-        </label>
-      </div>
-      <div class="flex items-center gap-2 mb-4">
-        <label class="text-sm font-medium">Rows
-          <input id="cfg-rows" type="number" min="1" max="25" value="4" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
-        </label>
-        <label class="text-sm font-medium">Cols
-          <input id="cfg-cols" type="number" min="1" max="15" value="2" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
-        </label>
-        <label class="text-sm font-medium">Pages
-          <input id="cfg-pages" type="number" min="1" max="50" value="1" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
-        </label>
-      </div>
-      <label class="flex items-center gap-2 text-sm mb-2">
-        <input id="cfg-randorder" type="checkbox" checked class="h-4 w-4" /> Randomize problem order
-      </label>
-      <label class="flex items-center gap-2 text-sm mb-2">
-        <input id="cfg-answerkey" type="checkbox" checked class="h-4 w-4" /> Include answer key page(s)
-      </label>
-      <label class="flex items-center gap-2 text-sm mb-2">
-        <input id="cfg-footer" type="checkbox" checked class="h-4 w-4" /> Print settings footer on PDF
-      </label>
-      <label class="flex items-center gap-2 text-sm mb-4">
-        <input id="cfg-answerqr" type="checkbox" checked class="h-4 w-4" /> Add Answer-key QR code on each worksheet page
-      </label>
-
-      <div class="flex gap-2 mb-4">
-        <button id="export-ini-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1">Export (.ini)</button>
-        <button id="import-ini-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1">Import (.ini)</button>
-        <input id="import-ini-file" type="file" accept=".ini,text/plain" class="hidden" />
-      </div>
-
-      <div id="density-warning" class="hidden text-xs bg-amber-50 border-2 border-amber-300 text-amber-800 rounded-xl p-2 mb-4"></div>
-
-      <!-- Mode tabs -->
-      <div class="flex gap-2 mb-4 text-sm font-medium">
-        <button data-mode="standard" class="mode-tab btn-key btn-key-sm btn-key-primary">Standard</button>
-        <button data-mode="mixed_ops" class="mode-tab btn-key btn-key-sm btn-key-cream">Mixed Continuous</button>
-        <button data-mode="simultaneous" class="mode-tab btn-key btn-key-sm btn-key-cream">Simultaneous</button>
-      </div>
-
-      <!-- STANDARD PANEL -->
-      <div id="panel-standard" class="mode-panel space-y-4">
-        <div id="weight-warning" class="hidden text-xs bg-red-50 border-2 border-red-300 text-red-700 rounded-xl p-2"></div>
-
-        <template id="op-panel-template"></template>
-
-        <!-- + -->
-        <fieldset class="card-soft card-soft-sage p-3" data-op="+">
-          <legend class="text-sm font-bold px-1">Addition (+)</legend>
-          <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" class="op-enabled h-4 w-4" checked /> Include</label>
-          <label class="block text-xs mb-2">Mix % <select class="op-weight border-2 border-stone-300 rounded-lg px-1 py-0.5 ml-1"></select></label>
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
-          <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
-          <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-regroup h-4 w-4" /> Allow regrouping</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
-          <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
-            <select class="op-cryptopct border-2 border-stone-300 rounded-lg px-1 py-0.5"></select>
-          </label>
-        </fieldset>
-
-        <!-- - -->
-        <fieldset class="card-soft card-soft-teal p-3" data-op="-">
-          <legend class="text-sm font-bold px-1">Subtraction (-)</legend>
-          <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" class="op-enabled h-4 w-4" checked /> Include</label>
-          <label class="block text-xs mb-2">Mix % <select class="op-weight border-2 border-stone-300 rounded-lg px-1 py-0.5 ml-1"></select></label>
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
-          <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
-          <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-regroup h-4 w-4" /> Allow regrouping</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
-          <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
-            <select class="op-cryptopct border-2 border-stone-300 rounded-lg px-1 py-0.5"></select>
-          </label>
-        </fieldset>
-
-        <!-- × -->
-        <fieldset class="card-soft card-soft-gold p-3" data-op="×">
-          <legend class="text-sm font-bold px-1">Multiplication (×)</legend>
-          <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" class="op-enabled h-4 w-4" /> Include</label>
-          <label class="block text-xs mb-2">Mix % <select class="op-weight border-2 border-stone-300 rounded-lg px-1 py-0.5 ml-1"></select></label>
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
-          <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
-          <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
-          <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
-            <select class="op-cryptopct border-2 border-stone-300 rounded-lg px-1 py-0.5"></select>
-          </label>
-        </fieldset>
-
-        <!-- ÷ -->
-        <fieldset class="card-soft card-soft-plum p-3" data-op="÷">
-          <legend class="text-sm font-bold px-1">Division (÷)</legend>
-          <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" class="op-enabled h-4 w-4" /> Include</label>
-          <label class="block text-xs mb-2">Mix % <select class="op-weight border-2 border-stone-300 rounded-lg px-1 py-0.5 ml-1"></select></label>
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
-          <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical (long division) form</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-remainder h-4 w-4" /> Allow remainder</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
-          <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
-            <select class="op-cryptopct border-2 border-stone-300 rounded-lg px-1 py-0.5"></select>
-          </label>
-        </fieldset>
-      </div>
-
-      <!-- MIXED PANEL -->
-      <div id="panel-mixed_ops" class="mode-panel space-y-3 hidden">
-        <p class="text-sm font-semibold">Operations included</p>
-        <div class="flex flex-wrap gap-3 text-xs">
-          <label class="flex items-center gap-1"><input id="mixed-add" type="checkbox" checked class="h-4 w-4" /> +</label>
-          <label class="flex items-center gap-1"><input id="mixed-sub" type="checkbox" checked class="h-4 w-4" /> -</label>
-          <label class="flex items-center gap-1"><input id="mixed-mul" type="checkbox" checked class="h-4 w-4" /> ×</label>
-          <label class="flex items-center gap-1"><input id="mixed-div" type="checkbox" checked class="h-4 w-4" /> ÷</label>
-        </div>
-        <label class="block text-xs">Max digits per number
-          <input id="mixed-maxdigits" type="number" min="1" max="4" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
-        </label>
-        <label class="block text-xs">Number of operations (up to 3)
-          <input id="mixed-numops" type="number" min="1" max="3" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
-        </label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-parens" type="checkbox" checked class="h-4 w-4" /> Randomized parentheses (e.g. 3 × (4 + 3))</label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-negatives" type="checkbox" class="h-4 w-4" /> Allow negative results</label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-allowzero" type="checkbox" class="h-4 w-4" /> Allow 0</label>
-        <label class="block text-xs">Decimal digits <input id="mixed-decimals" type="number" min="0" max="3" value="0" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
-      </div>
-
-      <!-- SIMULTANEOUS PANEL -->
-      <div id="panel-simultaneous" class="mode-panel space-y-3 hidden">
-        <p class="text-sm font-semibold">Problem type</p>
-        <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="standard" checked class="h-4 w-4" /> Standard (x = / y = boxes)</label>
-        <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="substitution_simple" class="h-4 w-4" /> Simple substitution (2nd eq. like y = 6)</label>
-        <label class="block text-xs">Max coefficient <input id="sim-maxcoef" type="number" min="2" max="10" value="5" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
-        <label class="flex items-center gap-2 text-xs"><input id="sim-negatives" type="checkbox" class="h-4 w-4" /> Allow negative values/solutions</label>
-        <p class="text-[11px] italic text-stone-500">Uses only variables x and y.</p>
-      </div>
-
-      <button id="generate-btn" class="btn-key btn-key-primary mt-6 w-full py-3 text-sm">
-        Generate PDF (Worksheet + Answer Key)
-      </button>
-      <p id="generate-status" class="text-xs text-center mt-2 text-stone-500"></p>
-
+  <section class="max-w-5xl mx-auto px-4 pb-12">
+    <h2 class="mb-5"><span class="btn-key key-static btn-key-teal px-5 py-2 text-xl md:text-2xl font-extrabold">Online learning</span></h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <a href="math-matching.html" class="group card-soft card-soft-teal hover:-translate-y-1 transition-transform p-6 flex flex-col">
+        <div class="text-3xl mb-3" aria-hidden="true">&#8596;</div>
+        <h3 class="text-xl font-bold mb-2 text-stone-800">Math Matching</h3>
+        <p class="text-sm text-stone-600 flex-1">Match numbers with addition, subtraction, multiplication, division, or a mixed-operation challenge. Tap or draw lines with a mouse or finger.</p>
+        <span class="mt-4 inline-block pill-tag bg-white">Open matching &rarr;</span>
+      </a>
+      <a href="high-scores.html" class="group card-soft card-soft-plum hover:-translate-y-1 transition-transform p-6 flex flex-col">
+        <div class="text-3xl mb-3" aria-hidden="true">&#9733;</div>
+        <h3 class="text-xl font-bold mb-2 text-stone-800">High Scores</h3>
+        <p class="text-sm text-stone-600 flex-1">See the top ten Math Matching scores stored in this browser, including games that are still in progress.</p>
+        <span class="mt-4 inline-block pill-tag bg-white">View high scores &rarr;</span>
+      </a>
     </div>
+  </section>
 
-    <!-- PREVIEW -->
-    <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
-      <h2 class="text-sm font-semibold text-stone-600">Problem Selection Preview</h2>
-      <p class="text-[11px] text-stone-400 mb-2">This is a sample of the problems your current settings would generate, so you can check the mix of operators and difficulty before printing &mdash; it is not a mockup of the page design. The actual PDF has no colors or rounded corners: every box is a plain black rectangle on white paper.</p>
-      <div class="overflow-x-auto">
-        <div id="preview-grid" class="grid gap-2" style="min-width:480px"></div>
-      </div>
-
-      <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
-      <div id="ad-slot-below-preview" class="w-full mt-4">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-6130154285914649"
-             data-ad-slot="7285905093"
-             data-ad-format="horizontal"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      </div>
+  <section class="max-w-5xl mx-auto px-4 pb-12">
+    <h2 class="mb-5"><span class="btn-key key-static btn-key-gold px-5 py-2 text-xl md:text-2xl font-extrabold">Worksheets</span></h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <a href="math-worksheets.html" class="group card-soft card-soft-gold hover:-translate-y-1 transition-transform p-6 flex flex-col">
+        <div class="text-3xl mb-3" aria-hidden="true">&#9997;</div>
+        <h3 class="text-xl font-bold mb-2 text-stone-800">Math Worksheets</h3>
+        <p class="text-sm text-stone-600 flex-1">Create printable arithmetic and simple equation worksheets with a live preview, answer key, and optional QR answer pages.</p>
+        <span class="mt-4 inline-block pill-tag bg-white">Open worksheet generator &rarr;</span>
+      </a>
     </div>
-
-  </div>
-
-  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
-    <section>
-      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">How to use the Math Worksheet Generator</h2>
-      <ol class="list-decimal pl-6 space-y-2">
-        <li><strong>Pick a starting level.</strong> The six Quick Template buttons set every option at once. Start with the level that matches what your child is learning now. You can adjust anything afterward.</li>
-        <li><strong>Check the preview.</strong> The Problem Selection Preview shows a sample of the problems your settings will produce, so you can check the difficulty before you print.</li>
-        <li><strong>Set the layout.</strong> Rows and Cols set how many problems fit on a page. Fewer, larger problems suit younger children and vertical (column-form) arithmetic. More problems suit quick fact drills.</li>
-        <li><strong>Generate and print.</strong> You get one PDF with the worksheet pages followed by the answer-key pages. Print only the pages you need.</li>
-      </ol>
-    </section>
-
-    <section>
-      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">What each level practices</h2>
-      <p class="mb-3">Pressing Levels 3 to 6 again switches to a second variant of that level, so each level covers two related skills.</p>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm border-2 border-stone-300">
-          <thead class="bg-stone-100"><tr><th class="text-left p-2 border-b-2 border-stone-300">Level</th><th class="text-left p-2 border-b-2 border-stone-300">First click</th><th class="text-left p-2 border-b-2 border-stone-300">Second click</th></tr></thead>
-          <tbody>
-            <tr><td class="p-2 border-b border-stone-200 font-semibold">1</td><td class="p-2 border-b border-stone-200">Single-digit addition and subtraction, including zero</td><td class="p-2 border-b border-stone-200">-</td></tr>
-            <tr><td class="p-2 border-b border-stone-200 font-semibold">2</td><td class="p-2 border-b border-stone-200">Two-digit addition and subtraction with regrouping, plus first multiplication and division facts</td><td class="p-2 border-b border-stone-200">-</td></tr>
-            <tr><td class="p-2 border-b border-stone-200 font-semibold">3</td><td class="p-2 border-b border-stone-200">Times-table fluency: single-digit multiplication and division, written in column form</td><td class="p-2 border-b border-stone-200">Multi-step expressions with parentheses, such as 3 × (4 + 3)</td></tr>
-            <tr><td class="p-2 border-b border-stone-200 font-semibold">4</td><td class="p-2 border-b border-stone-200">Up to four-digit addition and subtraction, two-digit multiplication, long division with remainders</td><td class="p-2 border-b border-stone-200">Arithmetic with one decimal place</td></tr>
-            <tr><td class="p-2 border-b border-stone-200 font-semibold">5</td><td class="p-2 border-b border-stone-200">Decimal operations to two places</td><td class="p-2 border-b border-stone-200">Introduction to algebra: solving for one unknown by substitution</td></tr>
-            <tr><td class="p-2 font-semibold">6</td><td class="p-2">Arithmetic with negative numbers</td><td class="p-2">Two-variable simultaneous equations (x and y)</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- In-content ad slot (AdSense unit: Below_Generate_button), placed between guide sections, away from buttons. -->
-    <div id="ad-slot-in-article" class="w-full">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-6130154285914649"
-           data-ad-slot="7199305456"
-           data-ad-format="rectangle"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
-    <section>
-      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">Teaching tips</h2>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">Regrouping (carrying and borrowing)</h3>
-      <p class="mb-3">Regrouping is where many children first get stuck with multi-digit arithmetic. Start with <em>Allow regrouping</em> turned off, so every column can be solved on its own, and turn on <em>Vertical form</em> so digits line up by place value. When those sheets feel easy, turn regrouping on. Seeing both kinds of problems on one sheet helps a child learn to check each column before starting.</p>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">Short, frequent practice</h3>
-      <p class="mb-3">A sheet of 8 to 20 problems a day usually does more than one long sheet a week. Since every sheet is new, children can't memorize the answers. They have to actually work each problem.</p>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">Missing-number problems for reasoning</h3>
-      <p>The <em>Cryptarithms %</em> setting hides one number in a problem, for example 7 + ☐ = 12, and the child works out what's missing. It makes a child think about how addition and subtraction (or multiplication and division) undo each other, which is the start of algebraic thinking. Mix in a few at 10 to 20% to break up a routine sheet.</p>
-    </section>
-
-    <section>
-      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">Frequently asked questions</h2>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">How do I check answers quickly?</h3>
-      <p class="mb-3">Every PDF includes answer-key pages. With <em>Add Answer-key QR code</em> turned on, each worksheet page also gets a QR code. Scan it with a phone camera to see that page's answers without finding the printout.</p>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">What is the code at the top of each page?</h3>
-      <p class="mb-3">It's a worksheet-matching code. The same code is printed on the worksheet and on its answer-key page, so you can match a stack of finished sheets to the right keys. The code includes the date, so sheets printed on different days never share a code.</p>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">Can I save my settings?</h3>
-      <p class="mb-3">Yes. Export (.ini) saves your current settings to a small file. Import it later to make the same kind of sheet again, with new problems.</p>
-      <h3 class="text-lg font-bold text-stone-900 mb-1">What does this tool not cover?</h3>
-      <p>It focuses on arithmetic, expressions, and simple equations. It doesn't make fractions, geometry, money, or word problems.</p>
-    </section>
-  </article>
+  </section>
 </main>
 
 <footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
   <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
     <nav class="flex justify-center gap-4 mb-2 text-stone-600">
-      <a href="about.html" class="hover:underline" data-i18n="footer.about">About</a>
-      <a href="privacy.html" class="hover:underline" data-i18n="footer.privacy">Privacy Policy</a>
-      <a href="contact.html" class="hover:underline" data-i18n="footer.contact">Contact</a>
-      <a href="support.html" class="hover:underline" data-i18n="footer.support">Support</a>
+      <a href="about.html" class="hover:underline">About</a><a href="privacy.html" class="hover:underline">Privacy Policy</a><a href="contact.html" class="hover:underline">Contact</a><a href="support.html" class="hover:underline">Support</a>
     </nav>
-    Ys Learning Lab worksheet maker and web learning. PDFs are generated entirely client-side in your browser.
+    Ys Learning Lab: printable worksheets and browser-based learning.
   </div>
 </footer>
-
-<script src="js/i18n.js?v=11"></script>
-<script src="js/i18n-ja-common.js?v=15"></script>
-<script src="js/i18n-zh-common.js?v=3"></script>
-<script>
-// Only the page frame is translated for now; the tool itself stays English.
-document.addEventListener('DOMContentLoaded', () => {
-  document.addEventListener('i18n:change', () => {
-    document.getElementById('ja-soon').classList.toggle('hidden', I18N.getLang() === 'en');
-  });
-  I18N.init();
-});
-</script>
-<script src="js/pdf-common.js?v=18"></script>
-<script src="js/math-generator.js?v=18"></script>
-<script src="js/math-ui.js?v=18"></script>
 </body>
 </html>
