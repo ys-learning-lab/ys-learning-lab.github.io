@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Math Matching - Ys Learning Lab</title>
+<meta name="description" content="Free online math matching practice for addition, subtraction, multiplication and operation choices. Draw lines with a finger or mouse, with fresh random choices every round." />
+<link rel="canonical" href="https://ys-learning-lab.github.io/math-matching.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Ys Learning Lab" />
+<meta property="og:title" content="Math Matching - Ys Learning Lab" />
+<meta property="og:description" content="Match numbers online with addition, subtraction, multiplication and operation lines." />
+<meta property="og:url" content="https://ys-learning-lab.github.io/math-matching.html" />
+<meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/mobile-nav.js?v=6"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<link rel="stylesheet" href="assets/css/site.css?v=13" />
+<style>
+  .math-match-board { --anchor-space: 2.1rem; position: relative; touch-action: none; }
+  .math-match-grid { display: grid; grid-template-columns: minmax(0, 1fr) clamp(3rem, 7vw, 6.5rem) minmax(0, 1fr) clamp(3rem, 7vw, 6.5rem) minmax(0, 1fr); column-gap: 0; }
+  .math-match-grid.match-fixed-target .answer-column { display: block; }
+  .math-match-list { display: flex; flex-direction: column; gap: 1.35rem; }
+  .math-match-row { min-height: 4.75rem; display: flex; align-items: center; position: relative; }
+  .math-match-row-top { justify-content: flex-end; }
+  .math-match-row-bottom { justify-content: flex-start; }
+  .math-match-item { width: clamp(5.25rem, 15vw, 10rem); min-height: 4.75rem; border: 2px solid #35404a; border-radius: .55rem; background: #fffdf8; color: #20272d; font-size: clamp(1.55rem, 4vw, 2.1rem); font-weight: 800; line-height: 1; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -3px 4px rgba(0,0,0,.14), 0 4px 0 #5c5f64; transition: background-color .15s, border-color .15s, color .15s, transform .08s, box-shadow .08s; }
+  .math-match-item:hover:not(:disabled) { background: #f1ead9; transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -3px 4px rgba(0,0,0,.14), 0 5px 0 #5c5f64; }
+  .math-match-item.is-selected { border-color: #c85f30; background: #fff1e9; box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -3px 4px rgba(0,0,0,.14), 0 4px 0 #5c5f64, 0 0 0 3px rgba(217, 114, 63, .22); }
+  .math-match-item:disabled { background: #edf3e9; border-color: #71906e; color: #3c653d; cursor: default; }
+  .answer-column .math-match-item { background: #e8f1d9; border-color: #5c7a50; }
+  .answer-column .math-match-item:hover:not(:disabled) { background: #d9e8c5; }
+  .answer-column .math-match-item.is-selected { border-color: #c85f30; background: #fff1e9; }
+  .answer-column h2 { color: #42623c; }
+  .target-static { display: inline-grid; place-items: center; width: clamp(5.25rem, 15vw, 10rem); min-height: 4.75rem; border: 2px solid #5c7a50; border-radius: .55rem; background: #e8f1d9; color: #31512d; font-size: clamp(1.55rem, 4vw, 2.1rem); font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -3px 4px rgba(0,0,0,.14), 0 4px 0 #5c5f64; }
+  .target-equals { margin-right: .65rem; color: #42623c; font-size: 2rem; font-weight: 800; }
+  .match-anchor { width: .7rem; height: .7rem; margin: 0 .7rem; border-radius: 999px; background: #24262a; flex: 0 0 auto; pointer-events: none; position: relative; z-index: 2; }
+  .operation-symbol { display: inline-grid; place-items: center; min-width: 2.5rem; height: 2.5rem; color: #244f4d; font-size: 2rem; font-weight: 800; line-height: 1; }
+  .operation-symbol.is-word { min-width: 0; height: auto; color: #57534e; font-size: .875rem; }
+  .life-icons { display: inline-flex; align-items: center; gap: .18rem; min-height: 2.4rem; }
+  .life-icon { width: 2.25rem; height: 2.25rem; object-fit: contain; image-rendering: pixelated; }
+  .mode-tabs { display: flex; align-items: flex-end; gap: 0; margin: 0 0 -3px 1.5rem; padding-top: .55rem; position: relative; z-index: 2; }
+  .folder-tab + .folder-tab { margin-left: -3px; }
+  .folder-tab { --tab-bg: #b9d7d9; position: relative; width: 12.5rem; height: 2.85rem; padding: 0; border: 3px solid #24262a; border-bottom: 0; border-radius: .85rem .85rem 0 0; background: var(--tab-bg); color: #20272d; font-size: 1.05rem; font-weight: 800; white-space: nowrap; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.65); }
+  .folder-tab > div { display: grid; place-items: center; height: 100%; padding-bottom: .05rem; }
+  .folder-tab span { display: inline-block; }
+  #open-game-mode-btn { --tab-bg: #c9d8c1; }
+  .folder-tab:not(.active) { z-index: 1; }
+  .folder-tab.active { z-index: 3; margin-bottom: -3px; height: 3rem; border-bottom: 3px solid var(--tab-bg); }
+  .mode-tabs:not(.game-folder) #start-casual-btn.active { --tab-bg: #e3f0f1; }
+  .mode-tabs.game-folder #open-game-mode-btn.active { --tab-bg: #e8f0e3; }
+  #mode-folder { --folder-bg: #e3f0f1; position: relative; z-index: 1; max-width: 64rem; border: 3px solid #24262a; border-radius: 1rem; background: var(--folder-bg); box-shadow: 0 5px 0 rgba(36,38,42,.18); padding: 1.25rem; }
+  #mode-folder.game-folder { --folder-bg: #e8f0e3; }
+  .operation-lane, .equals-lane { display: flex; flex-direction: column; align-items: center; }
+  .lane-heading, .first-heading, .answer-heading { height: 2.5rem; display: flex; align-items: center; margin-bottom: 1rem; }
+  .lane-heading { width: 100%; justify-content: center; }
+  .first-heading { justify-content: flex-end; padding-right: var(--anchor-space); }
+  .answer-heading { justify-content: flex-start; padding-left: var(--anchor-space); }
+  .first-heading h2, .answer-heading h2 { width: clamp(5.25rem, 15vw, 10rem); text-align: center; }
+  .equals-list { width: 100%; display: flex; flex-direction: column; gap: 1.35rem; }
+  .equals-row { min-height: 4.75rem; display: grid; place-items: center; color: #42623c; font-size: 2rem; font-weight: 800; }
+  #match-svg { pointer-events: none; overflow: visible; }
+  @media (max-width: 640px) { .math-match-board { --anchor-space: 1.06rem; padding-left: .5rem; padding-right: .5rem; } .math-match-grid { grid-template-columns: minmax(0, 1fr) 1.65rem minmax(0, 1fr) 1.65rem minmax(0, 1fr); } .math-match-list, .equals-list { gap: .8rem; } .math-match-row, .equals-row { min-height: 3.8rem; } .math-match-item { min-height: 3.8rem; } .match-anchor { width: .5rem; height: .5rem; margin: 0 .28rem; } .operation-symbol { min-width: 1.55rem; height: 1.55rem; font-size: 1.3rem; } .operation-symbol.is-word { min-width: 0; height: auto; font-size: .75rem; } .mode-tabs { margin-left: .5rem; } .folder-tab { width: 9.2rem; height: 2.6rem; font-size: .9rem; } .folder-tab.active { height: 2.75rem; } }
+</style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800">
+      <img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab
+    </a>
+    <div class="flex items-center gap-2 text-sm">
+      <a href="math.html" class="nav-key nav-key-active">Math</a>
+      <a href="japanese.html" class="nav-key">Japanese</a>
+      <a href="https://ko-fi.com/yslab" target="_blank" rel="noopener" class="btn-key btn-key-sm ml-1 inline-flex items-center gap-1.5 text-white font-bold" style="background-color:#72a4f2" aria-label="Support"><svg viewBox="0 0 28 22" width="18" height="14" aria-hidden="true" class="shrink-0"><path d="M3 5h18v8a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6z" fill="#fff" stroke="#24262a" stroke-width="2" stroke-linejoin="round"/><path d="M21 7h2a3 3 0 0 1 0 6h-2" fill="none" stroke="#24262a" stroke-width="2"/><path d="M12 15.5s-4-2.4-4-5a2.2 2.2 0 0 1 4-1.2 2.2 2.2 0 0 1 4 1.2c0 2.6-4 5-4 5z" fill="#ff5e5b"/></svg><span>Support</span></a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
+  <h1 class="text-2xl font-extrabold">Math Matching</h1>
+  <p class="text-sm text-stone-600 mb-2">Practice in the browser: tap choices or drag between dots to draw lines. It works with a finger or mouse.</p>
+  <div class="flex flex-wrap items-center gap-2 text-xs mb-4">
+    <a href="math.html" class="nav-key">Math Worksheets</a>
+    <a href="math-matching.html" class="nav-key nav-key-active">Math Matching</a>
+  </div>
+
+  <div class="mode-tabs" role="tablist" aria-label="Practice mode">
+    <button id="start-casual-btn" type="button" class="folder-tab active" role="tab" aria-selected="true"><div><span>Casual Mode</span></div></button>
+    <button id="open-game-mode-btn" type="button" class="folder-tab" role="tab" aria-selected="false"><div><span>Game Mode</span></div></button>
+  </div>
+
+  <div id="mode-folder">
+
+  <section id="save-slots" class="w-full card-soft card-soft-plum p-5 mb-6 hidden">
+    <h2 class="text-lg font-extrabold">Game saves</h2>
+    <p class="text-sm text-stone-600 mt-1 mb-4">Saved only in this browser. Choose one to continue a game, or use the regular matching settings below.</p>
+    <div id="save-slot-list" class="grid sm:grid-cols-3 gap-3"></div>
+    <details class="mt-4 text-sm">
+      <summary class="cursor-pointer font-bold">Deleted saves (<span id="archived-save-count">0</span>)</summary>
+      <div id="archived-save-list" class="mt-3 space-y-2"></div>
+    </details>
+    <a href="high-scores.html" class="inline-block text-sm font-bold underline mt-3">View high scores</a>
+  </section>
+
+  <section id="game-settings" class="w-full card-soft p-4 hidden">
+    <div class="grid sm:grid-cols-2 gap-4">
+      <label class="block text-sm font-bold">Practice type
+        <select id="cfg-mode" class="w-full border-2 border-stone-300 rounded-lg px-2 py-2 mt-1 bg-white font-normal">
+          <option value="addition">Addition</option>
+          <option value="subtraction">Subtraction</option>
+          <option value="multiplication">Multiplication</option>
+          <option value="division">Division</option>
+          <option value="operators">Mix</option>
+        </select>
+      </label>
+      <label id="target-label" class="block text-sm font-bold"><span id="target-caption">Answer threshold</span>
+        <span class="flex items-center gap-2 mt-1"><input id="cfg-target" type="number" min="4" max="100" value="10" inputmode="numeric" class="min-w-0 flex-1 border-2 border-stone-300 rounded-lg px-2 py-2 bg-white font-normal" /><span class="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-normal"><input id="cfg-random-target" type="checkbox" checked class="h-5 w-5" /> Random targets</span></span>
+      </label>
+      <label class="block text-sm font-bold">Matches in this round
+        <input id="cfg-count" type="number" min="1" max="10" value="4" inputmode="numeric" class="w-full border-2 border-stone-300 rounded-lg px-2 py-2 mt-1 bg-white font-normal" />
+      </label>
+      <label class="block text-sm font-bold">Starting lives
+        <input id="cfg-lives" type="number" min="1" max="9" value="5" inputmode="numeric" class="w-full border-2 border-stone-300 rounded-lg px-2 py-2 mt-1 bg-white font-normal" />
+      </label>
+      <div class="flex items-end">
+        <button id="new-btn" type="button" class="btn-key btn-key-primary w-full py-3 justify-center text-base">New random round</button>
+      </div>
+    </div>
+    <fieldset id="mix-operation-settings" class="hidden card-soft card-soft-plum p-3 mt-4">
+      <legend class="text-sm font-bold px-1">Mixed-operation focus</legend>
+      <p class="text-xs text-stone-600 mb-2">Include only the operations you want students to practise.</p>
+      <div class="flex flex-wrap gap-x-5 gap-y-2">
+        <label class="flex items-center gap-2 text-sm"><input class="cfg-mix-op h-5 w-5" type="checkbox" value="+" checked /> + Addition</label>
+        <label class="flex items-center gap-2 text-sm"><input class="cfg-mix-op h-5 w-5" type="checkbox" value="−" checked /> − Subtraction</label>
+        <label class="flex items-center gap-2 text-sm"><input class="cfg-mix-op h-5 w-5" type="checkbox" value="×" checked /> × Multiplication</label>
+        <label class="flex items-center gap-2 text-sm"><input class="cfg-mix-op h-5 w-5" type="checkbox" value="÷" checked /> ÷ Division</label>
+      </div>
+    </fieldset>
+    <p id="config-note" class="text-xs text-stone-600 mt-3"></p>
+    <p id="config-warning" class="hidden text-xs font-bold text-red-800 mt-2" role="status"></p>
+  </section>
+  </div>
+
+  <section id="game-work" class="max-w-5xl hidden" aria-live="polite">
+    <div class="mb-3">
+      <p id="round-title" class="font-extrabold text-lg"></p>
+    </div>
+    <div id="operator-palette" class="hidden mb-4">
+      <p class="text-xs font-bold text-stone-600 mb-2">First choose the operation for your line:</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-op="+" class="op-choice btn-key btn-key-sage px-4 py-2 text-xl" aria-pressed="false">+</button>
+        <button type="button" data-op="−" class="op-choice btn-key btn-key-teal px-4 py-2 text-xl" aria-pressed="false">−</button>
+        <button type="button" data-op="×" class="op-choice btn-key btn-key-gold px-4 py-2 text-xl" aria-pressed="false">×</button>
+        <button type="button" data-op="÷" class="op-choice btn-key btn-key-plum px-4 py-2 text-xl" aria-pressed="false">÷</button>
+      </div>
+    </div>
+    <div id="match-board" class="math-match-board card-soft card-soft-gold p-4 sm:p-6 overflow-hidden">
+      <svg id="match-svg" class="absolute inset-0 w-full h-full" aria-hidden="true"></svg>
+      <div id="game-mode-bar" class="relative z-10 hidden flex flex-wrap items-center gap-x-3 gap-y-2 -mx-4 -mt-4 mb-4 px-4 py-3 border-b-2 border-[#b8aa83] bg-transparent">
+        <span class="font-bold">Game Mode:</span><span id="game-player-name" class="font-extrabold"></span>
+        <button id="rename-active-save" type="button" class="text-sm font-bold underline" aria-label="Rename game save">✎</button>
+        <button id="delete-active-save" type="button" class="w-6 h-6 text-sm leading-none text-stone-600 hover:text-red-800" aria-label="Archive this game save">🗑</button>
+        <span id="game-round-title" class="font-extrabold text-lg"></span>
+        <div id="game-status" class="hidden flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-stone-600 sm:ml-auto">
+          <span>Score <span id="game-score">0</span></span>
+          <span>Streak <span id="game-streak">0</span></span>
+          <span class="inline-flex items-center gap-2">life <span id="game-lives" class="life-icons" aria-label="5 life"></span></span>
+        </div>
+      </div>
+      <div id="match-grid" class="math-match-grid relative">
+        <div class="first-column"><div class="first-heading"><h2 id="top-heading" class="text-sm font-bold text-stone-600">First number</h2></div><div id="top-list" class="math-match-list"></div></div>
+        <div class="operation-lane"><div class="lane-heading"><span id="operation-symbol" class="operation-symbol" aria-hidden="true">+</span></div></div>
+        <div><div class="lane-heading"><h2 id="bottom-heading" class="text-sm font-bold text-stone-600 text-center">Second number</h2></div><div id="bottom-list" class="math-match-list"></div></div>
+        <div class="equals-lane"><div class="lane-heading"><span id="equals-symbol" class="operation-symbol" aria-hidden="true"></span></div><div id="equals-list" class="equals-list"></div></div>
+        <div class="answer-column"><div class="answer-heading"><h2 id="answer-heading" class="text-sm font-bold text-stone-600">Answer</h2></div><div id="answer-list" class="math-match-list"></div></div>
+      </div>
+    </div>
+    <p id="round-score" class="text-right text-sm font-bold text-stone-600 mt-2"></p>
+    <p id="round-feedback" class="text-center min-h-[1.75rem] mt-4 font-bold" role="status"></p>
+    <div class="flex flex-wrap gap-2 mt-2">
+      <button id="reset-btn" type="button" class="btn-key btn-key-cream px-4 py-2 text-sm">Reset this round</button>
+      <button id="again-btn" type="button" class="btn-key btn-key-primary px-4 py-2 text-sm hidden">Play another round</button>
+    </div>
+  </section>
+
+  <article class="max-w-3xl mt-12 space-y-8 text-stone-700 leading-relaxed">
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">Five ways to match</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li><strong>Make a total:</strong> connect two numbers that add to the target. Set the target to 10 for number bonds, or use another value.</li>
+        <li><strong>Take away:</strong> connect a starting number to the amount to take away, so the answer is the target.</li>
+        <li><strong>Make a product:</strong> connect factor pairs. Each factor pair is shown only once, so 2 × 5 and 5 × 2 are not separate answers.</li>
+        <li><strong>Make a quotient:</strong> connect a dividend to a divisor so their division makes the target.</li>
+        <li><strong>Choose an operation:</strong> select +, −, × or ÷, then draw a line from the top number to the bottom number to make the target. The operation appears on the line when it is right.</li>
+      </ul>
+    </section>
+    <section>
+      <h2 class="text-2xl font-extrabold text-stone-900 mb-3">Helpful for touch screens</h2>
+      <p>Tap a first number, then its second number. In three-way mode, tap the answer as the final step. You can also drag from one dot to the next. Any practice line stays on the board, while only a full correct path is counted as solved.</p>
+    </section>
+  </article>
+</main>
+
+<footer class="border-t-2 border-stone-800 bg-[#eef0f3] mt-8">
+  <div class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-stone-500">
+    <nav class="flex justify-center gap-4 mb-2 text-stone-600">
+      <a href="about.html" class="hover:underline">About</a><a href="privacy.html" class="hover:underline">Privacy Policy</a><a href="contact.html" class="hover:underline">Contact</a><a href="support.html" class="hover:underline">Support</a>
+    </nav>
+    Ys Learning Lab worksheet maker and web learning. This activity runs entirely in your browser.
+  </div>
+</footer>
+
+<script src="js/math-matching-ui.js?v=43"></script>
+</body>
+</html>

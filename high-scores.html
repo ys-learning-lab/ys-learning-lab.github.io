@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Math Matching High Scores - Ys Learning Lab</title>
+<meta name="description" content="Browser-only high scores for Math Matching on Ys Learning Lab." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/mobile-nav.js?v=6"></script>
+<link rel="icon" type="image/png" href="assets/YsSchool.png" />
+<link rel="stylesheet" href="assets/css/site.css?v=13" />
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+<header class="site-header sticky top-0 z-10">
+  <nav class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-stone-800"><img src="assets/YsSchool.png" alt="Ys Learning Lab logo" class="w-9 h-9 object-contain" /> Learning Lab</a>
+    <div class="flex items-center gap-2 text-sm"><a href="math.html" class="nav-key nav-key-active">Math</a><a href="japanese.html" class="nav-key">Japanese</a></div>
+  </nav>
+</header>
+<main class="max-w-3xl mx-auto w-full px-4 py-8 flex-1">
+  <a href="math-matching.html" class="text-sm font-bold underline">← Back to Math Matching</a>
+  <h1 class="text-2xl font-extrabold mt-4">High scores</h1>
+  <p class="text-sm text-stone-600 mt-1 mb-5">Top 10 Game Mode scores saved only in this browser.</p>
+  <ol id="high-score-list" class="card-soft card-soft-gold p-5 space-y-3"></ol>
+</main>
+<footer class="site-footer text-center py-4 text-xs text-stone-600">© 2025 Ys Learning Lab</footer>
+<script>
+(() => {
+  const list = document.getElementById('high-score-list');
+  let scores = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem('ys-learning-lab-math-match-saves-v1'));
+    const finished = stored && Array.isArray(stored.highScores) ? stored.highScores.map((entry) => ({ ...entry, ongoing: false })) : [];
+    const ongoing = stored && Array.isArray(stored.slots) ? stored.slots.filter((entry) => entry && Number.isFinite(entry.score)).map((entry) => ({ name: entry.name || 'Player', score: entry.score, ongoing: true })) : [];
+    scores = finished.concat(ongoing);
+  } catch (error) { scores = []; }
+  scores.sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 10).forEach((entry, index) => {
+    const item = document.createElement('li'); item.className = 'flex justify-between gap-4 font-bold';
+    const name = document.createElement('span'); name.textContent = `${index + 1}. ${entry.name || 'Player'}`;
+    const score = document.createElement('span'); score.textContent = `${entry.score} points${entry.ongoing ? ' · ongoing' : ''}`;
+    item.append(name, score); list.appendChild(item);
+  });
+  if (!list.children.length) list.innerHTML = '<li class="text-stone-600">No Game Mode scores yet.</li>';
+})();
+</script>
+</body>
+</html>
