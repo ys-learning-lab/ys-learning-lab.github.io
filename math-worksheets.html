@@ -4,12 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Math Worksheets - Ys Learning Lab</title>
-<meta name="description" content="Free printable math worksheet generator: addition, subtraction, multiplication, division, decimals, negative numbers, and equations, with an answer key." />
+<meta name="description" content="Free printable math worksheet generator for arithmetic, fractions, decimals, and equations, with an answer key." />
 <link rel="canonical" href="https://ys-learning-lab.github.io/math-worksheets.html" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Ys Learning Lab" />
 <meta property="og:title" content="Math Worksheets - Ys Learning Lab" />
-<meta property="og:description" content="Free printable math worksheet generator: addition, subtraction, multiplication, division, decimals, negative numbers, and equations, with an answer key." />
+<meta property="og:description" content="Free printable math worksheet generator for arithmetic, fractions, decimals, and equations, with an answer key." />
 <meta property="og:url" content="https://ys-learning-lab.github.io/math-worksheets.html" />
 <meta property="og:image" content="https://ys-learning-lab.github.io/assets/YsSchool.png" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6130154285914649" crossorigin="anonymous"></script>
@@ -20,7 +20,7 @@
 <script src="js/i18n-boot.js?v=3"></script>
 <link rel="icon" type="image/png" href="assets/YsSchool.png" />
 <link rel="stylesheet" href="assets/css/site.css?v=14" />
-<link rel="stylesheet" href="assets/css/math-worksheets.css?v=20" />
+<link rel="stylesheet" href="assets/css/math-worksheets.css?v=32" />
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
 
@@ -75,7 +75,7 @@
           <button type="button" data-level-template="level5" class="level-template-btn btn-key btn-key-sm btn-key-plum px-2 py-2">Level 5</button>
           <button type="button" data-level-template="level6" class="level-template-btn btn-key btn-key-sm btn-key-terracotta px-2 py-2">Level 6</button>
         </div>
-        <p class="text-[11px] text-stone-500 mt-2">Levels 3, 5, and 6 cycle through variants on repeat clicks. The pressed button shows the active variant; choosing a different level starts with A. Each preset makes 20 questions. Covers arithmetic, mixed expressions, and simple equations only &mdash; this tool doesn't generate fractions, geometry, money, or ratio problems.</p>
+        <p class="text-[11px] text-stone-500 mt-2">Levels 3, 5, and 6 cycle through variants on repeat clicks. The pressed button shows the active variant; choosing a different level starts with A. Each preset makes 20 arithmetic or equation questions. Use the Fractions tab for fraction practice.</p>
       </fieldset>
 
       <div class="mb-4">
@@ -231,8 +231,11 @@
     <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
       <div class="worksheet-mode-tabs" role="tablist" aria-label="Worksheet type">
         <button id="mode-tab-standard" type="button" data-mode="standard" class="mode-tab worksheet-mode-tab is-active" role="tab" aria-selected="true" aria-controls="operation-mixer">Standard</button>
-        <button id="mode-tab-mixed" type="button" data-mode="mixed_ops" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-mixed_ops">Mixed Continuous</button>
-        <button id="mode-tab-equations" type="button" data-mode="simultaneous" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-simultaneous">Linear Equations</button>
+        <button id="mode-tab-digits" type="button" data-mode="digits" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-digits">Digits</button>
+        <button id="mode-tab-decimals" type="button" data-mode="decimals" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-decimals">Decimals</button>
+        <button id="mode-tab-mixed" type="button" data-mode="mixed_ops" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-mixed_ops">Continuous</button>
+        <button id="mode-tab-equations" type="button" data-mode="simultaneous" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-simultaneous">Linear</button>
+        <button id="mode-tab-fractions" type="button" data-mode="fractions" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-fractions">Fraction</button>
         <button id="refresh-preview-btn" type="button" class="btn-key btn-key-sm btn-key-cream preview-refresh-btn" title="Reroll the worksheet preview" aria-label="Reroll worksheet preview">↻</button>
       </div>
 
@@ -252,6 +255,88 @@
           <div id="operation-distribution" class="operation-distribution" aria-live="polite"></div>
           <p id="operation-distribution-help" class="text-[11px] text-stone-600 mt-2">Select at least one operation. Click a colored operation to jump to its settings. Click a divider to enter an exact percentage.</p>
         </section>
+
+        <div id="panel-digits" class="mode-panel mode-folder-panel compact-mode-settings hidden" role="tabpanel" aria-labelledby="mode-tab-digits">
+          <fieldset class="mode-setting-wide compact-direction-setting">
+            <legend class="text-sm font-semibold mb-1">Practice</legend>
+            <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+              <label class="flex items-center gap-2"><input type="radio" name="digits-direction" value="parts_to_number" checked class="h-4 w-4" /> Build the number</label>
+              <label class="flex items-center gap-2"><input type="radio" name="digits-direction" value="number_to_parts" class="h-4 w-4" /> Expand the number</label>
+            </div>
+          </fieldset>
+          <label class="compact-mode-field digits-size-field text-xs"><span>Min digits</span>
+            <select id="digits-min-digits" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="2">2 digits</option>
+              <option value="3">3 digits</option>
+              <option value="4" selected>4 digits</option>
+              <option value="5">5 digits</option>
+              <option value="6">6 digits</option>
+            </select>
+          </label>
+          <label class="compact-mode-field digits-size-field text-xs"><span>Max digits</span>
+            <select id="digits-max-digits" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="2">2 digits</option>
+              <option value="3">3 digits</option>
+              <option value="4">4 digits</option>
+              <option value="5" selected>5 digits</option>
+              <option value="6">6 digits</option>
+            </select>
+          </label>
+          <label id="digits-multiplication-label" class="compact-mode-field worksheet-checkbox-field digits-option-field text-xs flex items-center gap-2">
+            <input id="digits-multiplication" type="checkbox" class="h-4 w-4" /> Use × form
+          </label>
+          <label class="compact-mode-field digits-decimal-field-wide text-xs"><span>Decimal places</span>
+            <select id="digits-decimal-places" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="0" selected>Whole numbers</option>
+              <option value="1">Tenths</option>
+              <option value="2">Hundredths</option>
+              <option value="3">Thousandths</option>
+            </select>
+          </label>
+          <label class="compact-mode-field worksheet-checkbox-field digits-example-field text-xs flex items-center gap-2">
+            <input id="digits-show-example" type="checkbox" checked class="h-4 w-4" /> Print example
+          </label>
+        </div>
+
+        <div id="panel-decimals" class="mode-panel mode-folder-panel compact-mode-settings hidden" role="tabpanel" aria-labelledby="mode-tab-decimals">
+          <label class="compact-mode-field decimal-type-field text-xs"><span>Type</span>
+            <select id="decimal-question-type" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="multiplication" selected>Power-of-ten multiplication</option>
+              <option value="percent">Decimal to percentage</option>
+              <option value="bar">Tenths bar to decimal</option>
+              <option value="mixed">Mix</option>
+            </select>
+          </label>
+          <label class="compact-mode-field decimal-direction-field text-xs" data-decimal-setting="multiplication"><span>Direction</span>
+            <select id="decimal-shift-direction" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="mixed" selected>Both directions</option>
+              <option value="right">Right (× 10, 100, …)</option>
+              <option value="left">Left (× 0.1, 0.01, …)</option>
+            </select>
+          </label>
+          <label class="compact-mode-field decimal-shift-field text-xs" data-decimal-setting="multiplication"><span>Max shift</span>
+            <select id="decimal-max-shift" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="1">1 place</option>
+              <option value="2" selected>2 places</option>
+              <option value="3">3 places</option>
+            </select>
+          </label>
+          <label class="compact-mode-field decimal-digits-field text-xs" data-decimal-setting="multiplication"><span>Left digits</span>
+            <select id="decimal-left-max-digits" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="2">2 digits</option>
+              <option value="3">3 digits</option>
+              <option value="4" selected>4 digits</option>
+              <option value="5">5 digits</option>
+              <option value="6">6 digits</option>
+            </select>
+          </label>
+          <label class="compact-mode-field worksheet-checkbox-field decimal-option-field text-xs flex items-center gap-2" data-decimal-setting="multiplication">
+            <input id="decimal-whole-left" type="checkbox" checked class="h-4 w-4" /> Whole-number start
+          </label>
+          <label class="compact-mode-field worksheet-checkbox-field decimal-example-field text-xs flex items-center gap-2">
+            <input id="decimal-show-example" type="checkbox" checked class="h-4 w-4" /> Print example
+          </label>
+        </div>
 
         <div id="panel-mixed_ops" class="mode-panel mode-folder-panel compact-mode-settings hidden" role="tabpanel" aria-labelledby="mode-tab-mixed">
           <div class="mode-setting-operations">
@@ -286,6 +371,103 @@
           <label class="compact-mode-field text-xs">Max coefficient <input id="sim-maxcoef" type="number" min="2" max="10" value="5" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
           <label class="compact-mode-field mode-setting-wide text-xs"><input id="sim-negatives" type="checkbox" class="h-4 w-4" /> Allow negative values/solutions</label>
           <p class="compact-mode-field text-[11px] italic text-stone-600">Uses only variables x and y.</p>
+        </div>
+
+        <div id="panel-fractions" class="mode-panel mode-folder-panel fraction-settings hidden" role="tabpanel" aria-labelledby="mode-tab-fractions">
+          <label class="compact-mode-field fraction-type-control text-xs">Worksheet type
+            <select id="fraction-type" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="identify" selected>Write</option>
+              <option value="visual_choice">Multiple-choice</option>
+              <option value="comparison">Comparison</option>
+              <option value="operations">Equation</option>
+              <option value="simplify">Simplify</option>
+              <option value="decimal">Decimal conversion</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </label>
+          <div class="fraction-denominator-range" role="group" aria-label="Denominator range">
+            <span class="text-xs font-semibold">Denominators</span>
+            <label class="compact-mode-field text-xs">Min
+              <input id="fraction-min-denominator" type="number" min="2" max="12" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1" />
+            </label>
+            <label class="compact-mode-field text-xs">Max
+              <input id="fraction-max-denominator" type="number" min="2" max="16" value="10" class="w-14 border-2 border-stone-300 rounded-lg px-1" />
+            </label>
+          </div>
+          <div id="fraction-numerator-controls" class="mode-setting-wide fraction-numerator-controls" data-fraction-types="comparison operations simplify decimal mixed">
+            <label class="compact-mode-field text-xs">Numerators
+              <select id="fraction-numerator-mode" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+                <option value="proper">Lower than denominator</option>
+                <option value="limit">Up to a number limit</option>
+              </select>
+            </label>
+            <label id="fraction-numerator-limit-field" class="compact-mode-field text-xs hidden">Maximum numerator
+              <input id="fraction-max-numerator" type="number" min="2" max="100" value="20" class="w-16 border-2 border-stone-300 rounded-lg px-1" />
+            </label>
+          </div>
+          <p id="fraction-numerator-lock-note" class="mode-setting-wide text-[11px] text-stone-600 hidden"></p>
+          <label class="compact-mode-field mode-setting-wide text-xs" data-fraction-types="comparison operations">Denominators
+            <select id="fraction-denominator-mode" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="mixed">Mixed denominators</option>
+              <option value="same">Same denominators in each problem</option>
+            </select>
+          </label>
+          <label class="compact-mode-field text-xs" data-fraction-types="comparison">Comparison format
+            <select id="fraction-comparison-format" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="fractions">Fractions</option>
+              <option value="shapes">Shapes</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </label>
+          <p id="fraction-comparison-shape-note" class="fraction-panel-note text-[11px] text-stone-600 hidden">Shape comparisons use one pie and one square, with numerators lower than denominators.</p>
+          <div id="fraction-operation-mixer" class="mode-setting-wide fraction-operation-mixer" data-fraction-types="operations">
+            <div class="flex items-baseline justify-between gap-3">
+              <p class="text-xs font-semibold">Equation mix</p>
+              <p class="text-[11px] text-stone-600">Drag a divider to change the ratio.</p>
+            </div>
+            <div class="operation-picker" role="group" aria-label="Fraction equation operations">
+              <label class="operation-picker-option operation-picker-option--add"><input id="fraction-add" type="checkbox" class="fraction-operation-toggle" data-op="+" checked /> Addition (+)</label>
+              <label class="operation-picker-option operation-picker-option--sub"><input id="fraction-sub" type="checkbox" class="fraction-operation-toggle" data-op="-" checked /> Subtraction (-)</label>
+              <label class="operation-picker-option operation-picker-option--mul"><input id="fraction-mul" type="checkbox" class="fraction-operation-toggle" data-op="x" checked /> Multiplication (&times;)</label>
+              <label class="operation-picker-option operation-picker-option--div"><input id="fraction-div" type="checkbox" class="fraction-operation-toggle" data-op="/" checked /> Division (&divide;)</label>
+            </div>
+            <input type="hidden" class="fraction-op-weight" data-op="+" value="25" />
+            <input type="hidden" class="fraction-op-weight" data-op="-" value="25" />
+            <input type="hidden" class="fraction-op-weight" data-op="x" value="25" />
+            <input type="hidden" class="fraction-op-weight" data-op="/" value="25" />
+            <div id="fraction-operation-distribution" class="operation-distribution" aria-live="polite"></div>
+          </div>
+          <label class="compact-mode-field text-xs" data-fraction-types="visual_choice">Multiple-choice answers
+            <select id="fraction-choice-count" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="3">3 choices</option>
+              <option value="4" selected>4 choices</option>
+            </select>
+          </label>
+          <label class="compact-mode-field mode-setting-wide text-xs" data-fraction-types="identify visual_choice">
+            <input id="fraction-include-simplification" type="checkbox" class="h-4 w-4" /> Include shapes that must be simplified (for example, show 6/8 and expect 3/4)
+          </label>
+          <label class="compact-mode-field text-xs" data-fraction-types="simplify">Simplify result
+            <select id="fraction-simplify-result" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="fraction">Fraction</option>
+              <option value="whole">Whole number</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </label>
+          <label class="compact-mode-field text-xs" data-fraction-types="decimal">Conversion direction
+            <select id="fraction-decimal-direction" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="mixed">Both directions</option>
+              <option value="fraction_to_decimal">Fraction to decimal</option>
+              <option value="decimal_to_fraction">Decimal to fraction</option>
+            </select>
+          </label>
+          <label class="compact-mode-field text-xs" data-fraction-types="decimal">Decimal precision
+            <select id="fraction-decimal-places" class="border-2 border-stone-300 rounded-lg px-2 py-1">
+              <option value="1">Tenths (0.1)</option>
+              <option value="2">Hundredths (0.01)</option>
+              <option value="3">Thousandths (0.001)</option>
+            </select>
+          </label>
+          <p class="fraction-panel-note text-[11px] text-stone-600" data-fraction-types="identify visual_choice">Visual questions vary between pie diagrams and equal-part grids.</p>
         </div>
       </section>
 
@@ -375,7 +557,7 @@
       <h3 class="text-lg font-bold text-stone-900 mb-1">Can I save my settings?</h3>
       <p class="mb-3">Yes. Export (.ini) saves your current settings to a small file. Import it later to make the same kind of sheet again, with new problems.</p>
       <h3 class="text-lg font-bold text-stone-900 mb-1">What does this tool not cover?</h3>
-      <p>It focuses on arithmetic, expressions, and simple equations. It doesn't make fractions, geometry, money, or word problems.</p>
+      <p>It makes arithmetic, fraction, decimal-conversion, expression, and simple-equation worksheets. It doesn't make geometry, money, or word problems.</p>
     </section>
   </article>
 </main>
@@ -405,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script src="js/pdf-common.js?v=22"></script>
-<script src="js/math-generator.js?v=34"></script>
-<script src="js/math-ui.js?v=37"></script>
+<script src="js/math-generator.js?v=47"></script>
+<script src="js/math-ui.js?v=52"></script>
 </body>
 </html>

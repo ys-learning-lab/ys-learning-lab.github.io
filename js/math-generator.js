@@ -16,6 +16,23 @@ function randShuffle(arr) {
   return arr;
 }
 
+function greatestCommonDivisor(a, b) {
+  let x = Math.abs(Math.trunc(a));
+  let y = Math.abs(Math.trunc(b));
+  while (y) [x, y] = [y, x % y];
+  return x || 1;
+}
+
+function simplifyFraction(numerator, denominator) {
+  const sign = denominator < 0 ? -1 : 1;
+  const divisor = greatestCommonDivisor(numerator, denominator);
+  return { numerator: sign * numerator / divisor, denominator: Math.abs(denominator) / divisor };
+}
+
+function fractionText(fraction) {
+  return `${fraction.numerator}/${fraction.denominator}`;
+}
+
 // ---------- safe tokenized arithmetic evaluator (NO eval/Function) ----------
 // Operates on an already-tokenized array like [2, '+', 3, '(', 4, '-', 1, ')'].
 // Standard precedence: () > * / > + -. Returns a number or null on failure.
@@ -92,6 +109,14 @@ function calculateMathProblemFontSize({ rows, columns, mode, has_vertical = fals
     maximum = 24;
     widthDivisor = 11.5;
     heightDivisor = 4.45;
+  } else if (mode === 'fractions') {
+    maximum = 20;
+    widthDivisor = 12.5;
+    heightDivisor = 4.4;
+  } else if (mode === 'digits' || mode === 'decimals') {
+    maximum = 18;
+    widthDivisor = 20;
+    heightDivisor = 3.4;
   } else if (mode === 'mixed_ops') {
     widthDivisor = 15.5;
   } else if (has_vertical) {
@@ -394,20 +419,462 @@ class MathGenerator {
     return [['2x + y = 5', 'x - y = 1'], 'x = 2, y = 1', 2, 1, 'standard'];
   }
 
+  _fractionBounds() {
+    const fc = this.config.fraction_config || {};
+    const minimum = Math.max(2, Math.min(16, Number(fc.min_denominator) || 2));
+    const maximum = Math.max(minimum, Math.min(16, Number(fc.max_denominator) || 10));
+    return { minimum, maximum };
+  }
+
+  _properFraction(denominator = null, forceProper = false) {
+    const bounds = this._fractionBounds();
+    const den = denominator || randInt(bounds.minimum, bounds.maximum);
+    const fc = this.config.fraction_config || {};
+    const useLimit = !forceProper && fc.numerator_mode === 'limit';
+    const maximumNumerator = useLimit
+      ? Math.max(1, Math.min(100, Number(fc.max_numerator) || 20))
+      : Math.max(1, den - 1);
+    return { numerator: randInt(1, maximumNumerator), denominator: den };
+  }
+
+  _fractionModelShape(denominator) {
+    const hasGrid = Array.from({ length: Math.floor(Math.sqrt(denominator)) - 1 }, (_, index) => index + 2)
+      .some((factor) => denominator % factor === 0);
+    return hasGrid && Math.random() < 0.5 ? 'grid' : 'pie';
+  }
+
+  _generateFractionComparison(forceProper = false) {
+    const fc = this.config.fraction_config || {};
+    const first = this._properFraction(null, forceProper);
+    let second;
+    if (fc.denominator_mode === 'same') {
+      second = this._properFraction(first.denominator, forceProper);
+    } else if (Math.random() < 0.2) {
+      const multiplier = randInt(2, 4);
+      second = { numerator: first.numerator * multiplier, denominator: first.denominator * multiplier };
+      const bounds = this._fractionBounds();
+      const maximumNumerator = !forceProper && fc.numerator_mode === 'limit'
+        ? Math.max(1, Math.min(100, Number(fc.max_numerator) || 20))
+        : second.denominator - 1;
+      if (second.denominator > bounds.maximum || second.numerator > maximumNumerator) second = this._properFraction(null, forceProper);
+    } else {
+      second = this._properFraction(null, forceProper);
+    }
+    const leftValue = first.numerator * second.denominator;
+    const rightValue = second.numerator * first.denominator;
+    const answer = leftValue === rightValue ? '=' : leftValue < rightValue ? '<' : '>';
+    return { operator: 'fraction', fraction_type: 'comparison', first, second, answer };
+  }
+
+  _generateFractionShapeComparison() {
+    const problem = this._generateFractionComparison(true);
+    const pieFirst = Math.random() < 0.5;
+    return {
+      ...problem,
+      comparison_visual: true,
+      first_shape: pieFirst ? 'pie' : 'grid',
+      second_shape: pieFirst ? 'grid' : 'pie',
+    };
+  }
+
+  _generateFractionIdentify(multipleChoice = false) {
+    const fc = this.config.fraction_config || {};
+    let model = this._properFraction(null, true);
+    if (!fc.include_simplification) {
+      const bounds = this._fractionBounds();
+      const simplestModels = [];
+      for (let denominator = bounds.minimum; denominator <= bounds.maximum; denominator++) {
+        for (let numerator = 1; numerator < denominator; numerator++) {
+          if (greatestCommonDivisor(numerator, denominator) === 1) simplestModels.push({ numerator, denominator });
+        }
+      }
+      model = randChoice(simplestModels);
+    }
+    const modelShape = this._fractionModelShape(model.denominator);
+    const reduced = simplifyFraction(model.numerator, model.denominator);
+    const answer = fractionText(reduced);
+    if (!multipleChoice) {
+      return { operator: 'fraction', fraction_type: 'identify', model, model_shape: modelShape, answer };
+    }
+
+    const choiceCount = Math.max(3, Math.min(4, Number(fc.choice_count) || 4));
+    const answers = new Set([answer]);
+    const candidates = [
+      { numerator: model.denominator - model.numerator, denominator: model.denominator },
+      { numerator: model.numerator + 1, denominator: model.denominator },
+      { numerator: Math.max(1, model.numerator - 1), denominator: model.denominator },
+      { numerator: model.numerator, denominator: model.denominator + 1 },
+      { numerator: model.numerator, denominator: model.denominator + 2 },
+    ];
+    randShuffle(candidates);
+    for (const candidate of candidates) {
+      if (candidate.numerator <= 0 || candidate.numerator >= candidate.denominator) continue;
+      const displayed = fc.include_simplification ? simplifyFraction(candidate.numerator, candidate.denominator) : candidate;
+      answers.add(fractionText(displayed));
+      if (answers.size >= choiceCount) break;
+    }
+    for (let denominator = 3; answers.size < choiceCount && denominator <= 12; denominator++) {
+      for (let numerator = 1; answers.size < choiceCount && numerator < denominator; numerator++) {
+        const displayed = fc.include_simplification ? simplifyFraction(numerator, denominator) : { numerator, denominator };
+        answers.add(fractionText(displayed));
+      }
+    }
+    const choices = randShuffle([...answers]).slice(0, choiceCount);
+    return { operator: 'fraction', fraction_type: 'visual_choice', model, model_shape: modelShape, choices, answer };
+  }
+
+  _generateFractionSimplify() {
+    const fc = this.config.fraction_config || {};
+    const bounds = this._fractionBounds();
+    const configuredResult = fc.simplify_result || 'fraction';
+    const resultType = configuredResult === 'mixed' ? randChoice(['fraction', 'whole']) : configuredResult;
+    const numeratorLimit = Math.max(2, Math.min(100, Number(fc.max_numerator) || 20));
+    const candidates = [];
+    for (let denominator = bounds.minimum; denominator <= bounds.maximum; denominator++) {
+      const maximumNumerator = fc.numerator_mode === 'limit' ? numeratorLimit : denominator - 1;
+      for (let numerator = 2; numerator <= maximumNumerator; numerator++) {
+        if (numerator === denominator) continue;
+        const divisor = greatestCommonDivisor(numerator, denominator);
+        if (divisor <= 1) continue;
+        const simplified = simplifyFraction(numerator, denominator);
+        if (resultType === 'whole' ? simplified.denominator === 1 : simplified.denominator > 1) {
+          candidates.push({ numerator, denominator });
+        }
+      }
+    }
+    const fallback = resultType === 'whole'
+      ? { numerator: 4, denominator: 2 }
+      : { numerator: 2, denominator: 4 };
+    const fraction = randChoice(candidates.length ? candidates : [fallback]);
+    const result = simplifyFraction(fraction.numerator, fraction.denominator);
+    return {
+      operator: 'fraction', fraction_type: 'simplify', first: fraction, result,
+      answer: result.denominator === 1 ? String(result.numerator) : fractionText(result),
+    };
+  }
+
+  _generateFractionOperation(forcedOperation = null) {
+    const fc = this.config.fraction_config || {};
+    const enabled = Object.entries(fc.operations || {}).filter(([, value]) => value).map(([key]) => key);
+    let operation = forcedOperation;
+    if (!operation) {
+      const available = enabled.length ? enabled : ['+'];
+      const weights = fc.operation_weights || {};
+      const totalWeight = available.reduce((sum, op) => sum + Math.max(0, Number(weights[op]) || 0), 0);
+      if (totalWeight > 0) {
+        let roll = Math.random() * totalWeight;
+        operation = available.find((op) => {
+          roll -= Math.max(0, Number(weights[op]) || 0);
+          return roll <= 0;
+        }) || available[available.length - 1];
+      } else {
+        operation = randChoice(available);
+      }
+    }
+    let first = this._properFraction();
+    let second = fc.denominator_mode === 'same' ? this._properFraction(first.denominator) : this._properFraction();
+
+    if (operation === '-' && first.numerator * second.denominator < second.numerator * first.denominator) {
+      [first, second] = [second, first];
+    }
+
+    let numerator;
+    let denominator;
+    if (operation === '+') {
+      numerator = first.numerator * second.denominator + second.numerator * first.denominator;
+      denominator = first.denominator * second.denominator;
+    } else if (operation === '-') {
+      numerator = first.numerator * second.denominator - second.numerator * first.denominator;
+      denominator = first.denominator * second.denominator;
+    } else if (operation === 'x') {
+      numerator = first.numerator * second.numerator;
+      denominator = first.denominator * second.denominator;
+    } else {
+      numerator = first.numerator * second.denominator;
+      denominator = first.denominator * second.numerator;
+    }
+    const result = simplifyFraction(numerator, denominator);
+    return { operator: 'fraction', fraction_type: 'operations', operation, first, second, result, answer: fractionText(result) };
+  }
+
+  _generateFractionDecimal() {
+    const fc = this.config.fraction_config || {};
+    const bounds = this._fractionBounds();
+    const decimalPlaces = Math.max(1, Math.min(3, Number(fc.decimal_places) || 1));
+    const decimalScale = Math.pow(10, decimalPlaces);
+    const candidates = [];
+    for (let denominator = bounds.minimum; denominator <= bounds.maximum; denominator++) {
+      const maximumNumerator = fc.numerator_mode === 'limit'
+        ? Math.max(1, Math.min(100, Number(fc.max_numerator) || 20))
+        : denominator - 1;
+      for (let numerator = 1; numerator <= maximumNumerator; numerator++) {
+        const fraction = simplifyFraction(numerator, denominator);
+        if (fraction.denominator === 1) continue;
+        if (decimalScale % fraction.denominator !== 0) continue;
+        candidates.push({ raw: { numerator, denominator }, fraction });
+      }
+    }
+    const selected = randChoice(candidates.length ? candidates : [{
+      raw: { numerator: 1, denominator: 2 },
+      fraction: { numerator: 1, denominator: 2 },
+    }]);
+    const fraction = selected.fraction;
+    const decimal = Number((selected.raw.numerator / selected.raw.denominator).toFixed(decimalPlaces));
+    const direction = fc.decimal_direction === 'mixed'
+      ? randChoice(['fraction_to_decimal', 'decimal_to_fraction'])
+      : (fc.decimal_direction || 'fraction_to_decimal');
+    return {
+      operator: 'fraction', fraction_type: 'decimal', direction, fraction, decimal, decimal_places: decimalPlaces,
+      answer: direction === 'fraction_to_decimal' ? String(decimal) : fractionText(fraction),
+    };
+  }
+
+  _generateFractionProblem() {
+    const configuredType = this.config.fraction_config?.type || 'identify';
+    const type = configuredType === 'mixed'
+      ? randChoice(['comparison', 'identify', 'visual_choice', 'operations', 'simplify', 'decimal'])
+      : configuredType;
+    if (type === 'comparison') {
+      const format = this.config.fraction_config?.comparison_format || 'fractions';
+      const useShapes = format === 'shapes' || (format === 'mixed' && Math.random() < 0.5);
+      return useShapes ? this._generateFractionShapeComparison() : this._generateFractionComparison();
+    }
+    if (type === 'identify') return this._generateFractionIdentify(false);
+    if (type === 'visual_choice') return this._generateFractionIdentify(true);
+    if (type === 'operations') return this._generateFractionOperation();
+    if (type === 'simplify') return this._generateFractionSimplify();
+    return this._generateFractionDecimal();
+  }
+
+  _problemSignature(problem) {
+    if (problem.operator === 'fraction') {
+      if (problem.fraction_type === 'identify' || problem.fraction_type === 'visual_choice') {
+        return `fraction:${problem.fraction_type}:${fractionText(problem.model)}`;
+      }
+      if (problem.fraction_type === 'comparison') {
+        return `fraction:comparison:${fractionText(problem.first)}:${fractionText(problem.second)}`;
+      }
+      if (problem.fraction_type === 'operations') {
+        return `fraction:operations:${fractionText(problem.first)}:${problem.operation}:${fractionText(problem.second)}`;
+      }
+      if (problem.fraction_type === 'simplify') return `fraction:simplify:${fractionText(problem.first)}`;
+      if (problem.fraction_type === 'decimal') return `fraction:decimal:${problem.direction}:${fractionText(problem.fraction)}`;
+    }
+    if (problem.operator === 'simultaneous') return `simultaneous:${problem.sim_lines.join('|')}`;
+    if (problem.operator === 'mixed') return `mixed:${problem.expr_parts.join('|')}`;
+    if (problem.operator === 'digits_decimal') return `digits-decimal:${problem.expr_parts.join('|')}`;
+    if (problem.operator === 'digits_percent') return `digits-percent:${problem.decimal}`;
+    if (problem.operator === 'digits_bar') return `digits-bar:${problem.shaded}`;
+    if (problem.operator === 'digits') return `digits:${problem.direction}:${problem.multiplication_form}:${problem.number}`;
+    if (problem.expr_parts) return `standard:${problem.operator}:${problem.expr_parts.join('|')}:${problem.is_cryptarithm ? problem.missing_index : 'answer'}`;
+    return JSON.stringify(problem);
+  }
+
+  _generateUniqueProblem(factory, seen, maxAttempts = 100) {
+    let problem;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      problem = factory();
+      const signature = this._problemSignature(problem);
+      if (!seen.has(signature)) {
+        seen.add(signature);
+        return problem;
+      }
+    }
+    return problem;
+  }
+
+  _generateDigitProblem() {
+    const cfg = this.config.digits_config || {};
+    const minDigits = Math.max(2, Math.min(6, Number(cfg.min_digits) || 4));
+    const maxDigits = Math.max(minDigits, Math.min(6, Number(cfg.max_digits) || 5));
+    const decimalPlaces = Math.max(0, Math.min(3, Number(cfg.decimal_places) || 0));
+    const digitCount = randInt(minDigits, maxDigits);
+    const digits = [randInt(1, 9)];
+    while (digits.length < digitCount) digits.push(randInt(0, 9));
+    const decimalDigits = Array.from({ length: decimalPlaces }, () => randInt(0, 9));
+    if (decimalPlaces > 0 && decimalDigits.every((digit) => digit === 0)) {
+      decimalDigits[randInt(0, decimalDigits.length - 1)] = randInt(1, 9);
+    }
+    const wholeNumber = Number(digits.join(''));
+    const wholeTerms = digits.map((digit, index) => ({
+      digit,
+      place: 10 ** (digitCount - index - 1),
+    })).filter((term) => term.digit !== 0);
+    const decimalTerms = decimalDigits.map((digit, index) => ({
+      digit,
+      place_text: `0.${'0'.repeat(index)}1`,
+      value_text: `0.${'0'.repeat(index)}${digit}`,
+    })).filter((term) => term.digit !== 0);
+    const multiplicationForm = cfg.direction === 'number_to_parts' && cfg.multiplication_form === true;
+    const wholeExpanded = wholeTerms.map((term) => (
+      multiplicationForm
+        ? (term.place === 1 ? String(term.digit) : `${term.digit} × ${term.place.toLocaleString('en-US')}`)
+        : (term.digit * term.place).toLocaleString('en-US')
+    ));
+    const decimalExpanded = decimalTerms.map((term) => (
+      multiplicationForm ? `${term.digit} × ${term.place_text}` : term.value_text
+    ));
+    const expanded = [...wholeExpanded, ...decimalExpanded].join(' + ');
+    const numberText = `${wholeNumber.toLocaleString('en-US')}${decimalPlaces ? `.${decimalDigits.join('')}` : ''}`;
+    return {
+      operator: 'digits',
+      direction: cfg.direction === 'number_to_parts' ? 'number_to_parts' : 'parts_to_number',
+      multiplication_form: multiplicationForm,
+      number: numberText,
+      number_text: numberText,
+      expanded,
+      answer: cfg.direction === 'number_to_parts' ? expanded : numberText,
+      is_vertical: false,
+    };
+  }
+
+  _formatDecimalShiftValue(coefficient, scale) {
+    const digits = String(Math.abs(Math.trunc(coefficient)));
+    if (scale <= 0) return Number(`${digits}${'0'.repeat(-scale)}`).toLocaleString('en-US');
+    const padded = digits.padStart(scale + 1, '0');
+    const integer = padded.slice(0, -scale);
+    const fraction = padded.slice(-scale).replace(/0+$/, '');
+    const integerText = Number(integer).toLocaleString('en-US');
+    return fraction ? `${integerText}.${fraction}` : integerText;
+  }
+
+  _generateDecimalShiftProblem() {
+    const cfg = this.config.decimal_config || {};
+    const maxDigits = Math.max(2, Math.min(6, Number(cfg.left_max_digits) || 4));
+    const digitCount = randInt(1, maxDigits);
+    const minimum = digitCount === 1 ? 1 : 10 ** (digitCount - 1);
+    const maximum = 10 ** digitCount - 1;
+    let coefficient = randInt(minimum, maximum);
+    const operandScale = cfg.whole_left === false ? randInt(0, 3) : 0;
+    if (operandScale > 0 && coefficient % 10 === 0) coefficient += randInt(1, 9);
+
+    const maxShift = Math.max(1, Math.min(3, Number(cfg.max_shift) || 2));
+    const distance = randInt(1, maxShift);
+    const direction = cfg.shift_direction || 'mixed';
+    const exponent = direction === 'right' ? distance : direction === 'left' ? -distance : (Math.random() < 0.5 ? distance : -distance);
+    const multiplier = exponent > 0
+      ? (10 ** exponent).toLocaleString('en-US')
+      : `0.${'0'.repeat(Math.abs(exponent) - 1)}1`;
+    const operand = this._formatDecimalShiftValue(coefficient, operandScale);
+    const answer = this._formatDecimalShiftValue(coefficient, operandScale - exponent);
+    return {
+      expr_parts: [operand, '×', multiplier],
+      operator: 'digits_decimal',
+      answer,
+      is_vertical: false,
+      is_cryptarithm: false,
+      missing_index: -1,
+    };
+  }
+
+  _generateDecimalWorksheetProblem(requestedType = null) {
+    const configuredType = this.config.decimal_config?.type || 'multiplication';
+    const type = requestedType || (configuredType === 'mixed' ? randChoice(['multiplication', 'percent', 'bar']) : configuredType);
+    if (type === 'percent') return this._generateDecimalPercentProblem();
+    if (type === 'bar') return this._generateDecimalBarProblem();
+    return this._generateDecimalShiftProblem();
+  }
+
+  _generateDecimalPercentProblem() {
+    const percent = randInt(1, 99);
+    const decimal = (percent / 100).toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    return {
+      expr_parts: [decimal],
+      operator: 'digits_percent',
+      decimal,
+      answer: `${percent}%`,
+      is_vertical: false,
+      is_cryptarithm: false,
+      missing_index: -1,
+    };
+  }
+
+  _generateDecimalBarProblem() {
+    const shaded = randInt(1, 9);
+    return {
+      operator: 'digits_bar',
+      shaded,
+      answer: (shaded / 10).toFixed(1),
+      is_vertical: false,
+    };
+  }
+
   generatePages() {
     const totalItems = this.config.rows * this.config.columns;
     const pages = [];
+    const seenProblems = new Set();
+
+    if (this.config.mode === 'digits') {
+      for (let p = 0; p < this.config.num_pages; p++) {
+        const pageProblems = [];
+        for (let i = 0; i < totalItems; i++) {
+          pageProblems.push(this._generateUniqueProblem(() => this._generateDigitProblem(), seenProblems));
+        }
+        if (this.config.randomize_order) randShuffle(pageProblems);
+        pages.push(pageProblems);
+      }
+      return pages;
+    }
+
+    if (this.config.mode === 'decimals') {
+      const configuredType = this.config.decimal_config?.type || 'multiplication';
+      for (let p = 0; p < this.config.num_pages; p++) {
+        const pageProblems = [];
+        const typePool = configuredType === 'mixed'
+          ? Array.from({ length: totalItems }, (_, index) => ['multiplication', 'percent', 'bar'][index % 3])
+          : Array(totalItems).fill(configuredType);
+        if (this.config.randomize_order) randShuffle(typePool);
+        for (let i = 0; i < totalItems; i++) {
+          pageProblems.push(this._generateUniqueProblem(() => this._generateDecimalWorksheetProblem(typePool[i]), seenProblems));
+        }
+        if (this.config.randomize_order) randShuffle(pageProblems);
+        pages.push(pageProblems);
+      }
+      return pages;
+    }
+
+    if (this.config.mode === 'fractions') {
+      for (let p = 0; p < this.config.num_pages; p++) {
+        const pageProblems = [];
+        if (this.config.fraction_config?.type === 'operations') {
+          const fc = this.config.fraction_config;
+          const selected = Object.entries(fc.operations || {}).filter(([, value]) => value).map(([op]) => op);
+          const available = selected.length ? selected : ['+'];
+          const totalWeight = available.reduce((sum, op) => sum + Math.max(0, Number(fc.operation_weights?.[op]) || 0), 0) || available.length;
+          const pool = [];
+          available.forEach((op) => {
+            const weight = Math.max(0, Number(fc.operation_weights?.[op]) || (totalWeight === available.length ? 1 : 0));
+            const count = Math.floor(weight / totalWeight * totalItems);
+            for (let i = 0; i < count; i++) pool.push(op);
+          });
+          while (pool.length < totalItems) pool.push(available[pool.length % available.length]);
+          if (this.config.randomize_order) randShuffle(pool);
+          pool.slice(0, totalItems).forEach((op) => pageProblems.push(
+            this._generateUniqueProblem(() => this._generateFractionOperation(op), seenProblems),
+          ));
+        } else {
+          for (let i = 0; i < totalItems; i++) {
+            pageProblems.push(this._generateUniqueProblem(() => this._generateFractionProblem(), seenProblems));
+          }
+        }
+        if (this.config.randomize_order) randShuffle(pageProblems);
+        pages.push(pageProblems);
+      }
+      return pages;
+    }
 
     if (this.config.mode === 'simultaneous') {
       for (let p = 0; p < this.config.num_pages; p++) {
         const pageProblems = [];
         for (let i = 0; i < totalItems; i++) {
-          const [lines, ans, xV, yV, stype] = this._generateSimultaneousProblem();
-          pageProblems.push({
-            expr_parts: [], operator: 'simultaneous', answer: ans, is_vertical: false,
-            is_cryptarithm: false, missing_index: -1,
-            sim_lines: lines, sim_type: stype, sim_ans_x: xV, sim_ans_y: yV,
-          });
+          pageProblems.push(this._generateUniqueProblem(() => {
+            const [lines, ans, xV, yV, stype] = this._generateSimultaneousProblem();
+            return {
+              expr_parts: [], operator: 'simultaneous', answer: ans, is_vertical: false,
+              is_cryptarithm: false, missing_index: -1,
+              sim_lines: lines, sim_type: stype, sim_ans_x: xV, sim_ans_y: yV,
+            };
+          }, seenProblems));
         }
         pages.push(pageProblems);
       }
@@ -418,11 +885,13 @@ class MathGenerator {
       for (let p = 0; p < this.config.num_pages; p++) {
         const pageProblems = [];
         for (let i = 0; i < totalItems; i++) {
-          const [expr, ans] = this._generateCleanMixedProblem();
-          pageProblems.push({
-            expr_parts: expr, operator: 'mixed', answer: ans, is_vertical: false,
-            is_cryptarithm: false, missing_index: -1,
-          });
+          pageProblems.push(this._generateUniqueProblem(() => {
+            const [expr, ans] = this._generateCleanMixedProblem();
+            return {
+              expr_parts: expr, operator: 'mixed', answer: ans, is_vertical: false,
+              is_cryptarithm: false, missing_index: -1,
+            };
+          }, seenProblems));
         }
         pages.push(pageProblems);
       }
@@ -481,16 +950,15 @@ class MathGenerator {
           opCryptoPointers[operator]++;
         }
 
-        const [expr, ans] = this._generateStandardProblem(operator, opCfg);
-
-        let missingIndex = -1;
-        if (isCrypto) missingIndex = randInt(0, expr.length - 1);
-
-        pageProblems.push({
-          expr_parts: expr, operator, answer: ans,
-          is_vertical: opCfg.is_vertical && expr.length === 3,
-          is_cryptarithm: isCrypto, missing_index: missingIndex,
-        });
+        pageProblems.push(this._generateUniqueProblem(() => {
+          const [expr, ans] = this._generateStandardProblem(operator, opCfg);
+          const missingIndex = isCrypto ? randInt(0, expr.length - 1) : -1;
+          return {
+            expr_parts: expr, operator, answer: ans,
+            is_vertical: opCfg.is_vertical && expr.length === 3,
+            is_cryptarithm: isCrypto, missing_index: missingIndex,
+          };
+        }, seenProblems));
       }
       pages.push(pageProblems);
     }
@@ -656,6 +1124,101 @@ class MathPDFRenderer {
     else if (showAnswerBox) cx += advanceBox(ansStr);
   }
 
+  _drawDigitsProblem(page, prob, x, y, isAnswerKey, probNum) {
+    let cx = x + 4;
+    cx += this._drawProblemNumber(page, probNum, cx, y, this.fontSize * 0.9);
+    const rightEdge = x + this.cellWidth - 8;
+    const availableWidth = Math.max(40, rightEdge - cx);
+    const leftText = prob.direction === 'parts_to_number'
+      ? `${prob.expanded} =`
+      : `${prob.number_text} =`;
+    const answerText = prob.direction === 'parts_to_number' ? prob.number_text : prob.expanded;
+    const fullText = `${leftText} ${answerText}`;
+    const font = this.fonts.helvetica;
+    const baseSize = this.fontSize;
+    const targetText = isAnswerKey ? fullText : leftText;
+    const reservedBlank = isAnswerKey ? 0 : Math.min(70, availableWidth * 0.28);
+    const measured = font.widthOfTextAtSize(targetText, baseSize);
+    const fontSize = Math.max(7, Math.min(baseSize, baseSize * Math.max(1, availableWidth - reservedBlank) / Math.max(1, measured)));
+
+    if (font.widthOfTextAtSize(targetText, 7) > availableWidth - reservedBlank) {
+      const wrapText = (text, width) => {
+        const lines = [];
+        let line = '';
+        String(text).split(' ').forEach((word) => {
+          const candidate = line ? `${line} ${word}` : word;
+          if (line && font.widthOfTextAtSize(candidate, 7) > width) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = candidate;
+          }
+        });
+        if (line) lines.push(line);
+        return lines;
+      };
+      const lineGap = 9;
+      if (prob.direction === 'parts_to_number') {
+        const lines = wrapText(leftText, availableWidth);
+        lines.forEach((line, index) => this._drawText(page, line, cx, y - index * lineGap, { fontOverride: 7 }));
+        const responseY = y - lines.length * lineGap;
+        if (isAnswerKey) this._drawText(page, answerText, cx, responseY, { isRed: true, fontOverride: 7 });
+        else drawLineSeg(page, cx, responseY - 1.25, Math.min(rightEdge, cx + 80), responseY - 1.25, 1);
+      } else {
+        this._drawText(page, leftText, cx, y, { fontOverride: 7 });
+        if (isAnswerKey) {
+          wrapText(answerText, availableWidth).forEach((line, index) => (
+            this._drawText(page, line, cx, y - (index + 1) * lineGap, { isRed: true, fontOverride: 7 })
+          ));
+        } else {
+          const leftWidth = font.widthOfTextAtSize(leftText, 7);
+          drawLineSeg(page, cx + leftWidth + 3, y - 1.25, rightEdge, y - 1.25, 1);
+        }
+      }
+      return;
+    }
+
+    this._drawText(page, leftText, cx, y, { fontOverride: fontSize });
+    const leftWidth = font.widthOfTextAtSize(leftText, fontSize);
+    const answerX = cx + leftWidth + fontSize * 0.45;
+    if (isAnswerKey) {
+      this._drawText(page, answerText, answerX, y, { isRed: true, fontOverride: fontSize });
+    } else {
+      drawLineSeg(page, answerX, y - fontSize * 0.18, rightEdge, y - fontSize * 0.18, 1);
+    }
+  }
+
+  _drawDecimalPercentProblem(page, prob, x, y, isAnswerKey, probNum) {
+    let cx = x + 4;
+    cx += this._drawProblemNumber(page, probNum, cx, y, this.fontSize * 0.9);
+    const prompt = `${prob.decimal} =`;
+    this._drawText(page, prompt, cx, y);
+    cx += this.fonts.helvetica.widthOfTextAtSize(prompt, this.fontSize) + this.fontSize * 0.45;
+    const percentNumber = String(prob.answer).replace('%', '');
+    const boxWidth = this._drawBox(page, cx, y, Math.max(2, percentNumber.length));
+    if (isAnswerKey) this._drawText(page, percentNumber, cx + this.fontSize * 0.2, y + this.fontSize * 0.12, { isRed: true });
+    this._drawText(page, '%', cx + boxWidth + this.fontSize * 0.25, y);
+  }
+
+  _drawDecimalBarProblem(page, prob, x, y, isAnswerKey, probNum) {
+    const fs = this.fontSize;
+    let cx = x + 4;
+    cx += this._drawProblemNumber(page, probNum, cx, y, fs * 0.9);
+    const barHeight = Math.max(18, Math.min(26, this.cellHeight * 0.24));
+    const centerY = y + fs * 0.2;
+    const textBaseline = centerY - fs * 0.35;
+    const boxBaseline = centerY - fs * 0.425;
+    const model = this._drawShadedFractionModel(page, { numerator: prob.shaded, denominator: 10 }, cx, centerY + barHeight / 2, 150, 'bar');
+    cx += model.width + fs * 0.75;
+    this._drawText(page, '=', cx, textBaseline);
+    cx += fs * 1.25;
+    const boxWidth = this._drawBox(page, cx, boxBaseline, 3);
+    if (isAnswerKey) {
+      const answerWidth = this.fonts.helvetica.widthOfTextAtSize(prob.answer, fs);
+      this._drawText(page, prob.answer, cx + boxWidth / 2 - answerWidth / 2, boxBaseline + fs * 0.12, { isRed: true });
+    }
+  }
+
   _drawVerticalStandard(page, prob, x, y, isAnswerKey, probNum) {
     const xRight = x + this.cellWidth * 0.65;
     const lineSpacing = Math.max(this.fontSize * 0.82, Math.min(this.fontSize * 1.05, (this.cellHeight - this.fontSize * 0.55) / 3.2));
@@ -760,9 +1323,249 @@ class MathPDFRenderer {
     }
   }
 
+  _drawFraction(page, fraction, x, y, opts = {}) {
+    const fs = opts.fontSize || Math.max(10, this.fontSize * 0.9);
+    const numerator = String(fraction.numerator);
+    const denominator = String(fraction.denominator);
+    const width = Math.max(
+      this.fonts.helvetica.widthOfTextAtSize(numerator, fs),
+      this.fonts.helvetica.widthOfTextAtSize(denominator, fs),
+    ) + 8;
+    const color = opts.isRed ? PDFLib.rgb(0.9, 0.2, 0.2) : PDFLib.rgb(0, 0, 0);
+    page.drawText(numerator, {
+      x: x + (width - this.fonts.helvetica.widthOfTextAtSize(numerator, fs)) / 2,
+      y: y + 4,
+      size: fs,
+      font: this.fonts.helvetica,
+      color,
+    });
+    drawLineSeg(page, x, y + 1, x + width, y + 1, 1);
+    page.drawText(denominator, {
+      x: x + (width - this.fonts.helvetica.widthOfTextAtSize(denominator, fs)) / 2,
+      y: y - fs,
+      size: fs,
+      font: this.fonts.helvetica,
+      color,
+    });
+    return width;
+  }
+
+  _drawFractionBlank(page, x, y, isAnswerKey, answer) {
+    const fs = Math.max(10, this.fontSize * 0.86);
+    const width = fs * 2.2;
+    if (isAnswerKey) {
+      const [numerator, denominator] = String(answer).split('/');
+      this._drawFraction(page, { numerator, denominator }, x, y, { isRed: true, fontSize: fs });
+    } else {
+      drawBoxOutline(page, x, y + 3, width, fs * 1.05);
+      drawLineSeg(page, x, y, x + width, y, 1);
+      drawBoxOutline(page, x, y - fs * 1.2, width, fs * 1.05);
+    }
+    return width;
+  }
+
+  _drawShadedFractionModel(page, fraction, x, y, maxWidth = 86, shape = 'pie') {
+    const denominator = Math.max(2, fraction.denominator);
+    const fill = PDFLib.rgb(0.19, 0.66, 0.69);
+    const outline = PDFLib.rgb(0.15, 0.15, 0.15);
+
+    if (shape === 'bar') {
+      const width = Math.min(maxWidth, Math.max(100, Math.min(this.cellWidth * 0.55, 150)));
+      const height = Math.max(18, Math.min(26, this.cellHeight * 0.24));
+      const cellWidth = width / 10;
+      for (let index = 0; index < 10; index++) {
+        page.drawRectangle({
+          x: x + index * cellWidth,
+          y: y - height,
+          width: cellWidth,
+          height,
+          color: index < fraction.numerator ? fill : PDFLib.rgb(1, 1, 1),
+          borderColor: outline,
+          borderWidth: 0.8,
+        });
+      }
+      return { width, height };
+    }
+
+    if (shape === 'grid') {
+      let rows = Math.floor(Math.sqrt(denominator));
+      while (rows > 1 && denominator % rows !== 0) rows--;
+      const columns = denominator / rows;
+      const size = Math.min(maxWidth, Math.max(52, Math.min(this.cellWidth * 0.34, this.cellHeight * 0.42)));
+      const cellWidth = size / columns;
+      const cellHeight = size / rows;
+      for (let index = 0; index < denominator; index++) {
+        const row = Math.floor(index / columns);
+        const column = index % columns;
+        page.drawRectangle({
+          x: x + column * cellWidth,
+          y: y - (row + 1) * cellHeight,
+          width: cellWidth,
+          height: cellHeight,
+          color: index < fraction.numerator ? fill : PDFLib.rgb(1, 1, 1),
+          borderColor: outline,
+          borderWidth: 0.8,
+        });
+      }
+      return { width: size, height: size };
+    }
+
+    const diameter = Math.min(maxWidth, Math.max(52, Math.min(this.cellWidth * 0.34, this.cellHeight * 0.42)));
+    const radius = diameter / 2;
+    const centerX = x + radius;
+    const centerY = y - radius;
+    page.drawCircle({ x: centerX, y: centerY, size: radius, color: PDFLib.rgb(1, 1, 1) });
+
+    const sectorAngle = (Math.PI * 2) / denominator;
+    const startAngle = -Math.PI / 2;
+    const shadedAngle = fraction.numerator * sectorAngle;
+    const curveCount = Math.max(1, Math.ceil(shadedAngle / (Math.PI / 2)));
+    const curveAngle = shadedAngle / curveCount;
+    const startX = radius + Math.cos(startAngle) * radius;
+    const startY = radius + Math.sin(startAngle) * radius;
+    const path = [`M ${radius} ${radius}`, `L ${startX} ${startY}`];
+    for (let index = 0; index < curveCount; index++) {
+      const angleA = startAngle + index * curveAngle;
+      const angleB = angleA + curveAngle;
+      const tangent = 4 / 3 * Math.tan((angleB - angleA) / 4);
+      const endX = radius + Math.cos(angleB) * radius;
+      const endY = radius + Math.sin(angleB) * radius;
+      const control1X = radius + (Math.cos(angleA) - tangent * Math.sin(angleA)) * radius;
+      const control1Y = radius + (Math.sin(angleA) + tangent * Math.cos(angleA)) * radius;
+      const control2X = radius + (Math.cos(angleB) + tangent * Math.sin(angleB)) * radius;
+      const control2Y = radius + (Math.sin(angleB) - tangent * Math.cos(angleB)) * radius;
+      path.push(`C ${control1X} ${control1Y} ${control2X} ${control2Y} ${endX} ${endY}`);
+    }
+    path.push('Z');
+    page.drawSvgPath(path.join(' '), { x, y, color: fill });
+
+    for (let index = 0; index < denominator; index++) {
+      const angle = -Math.PI / 2 + index * sectorAngle;
+      drawLineSeg(
+        page,
+        centerX,
+        centerY,
+        centerX + Math.cos(angle) * radius,
+        centerY - Math.sin(angle) * radius,
+        0.8,
+      );
+    }
+    page.drawCircle({ x: centerX, y: centerY, size: radius, borderColor: outline, borderWidth: 1 });
+    return { width: diameter, height: diameter };
+  }
+
+  _drawFractionProblem(page, prob, x, y, isAnswerKey, probNum) {
+    const fs = Math.max(10, this.fontSize * 0.88);
+    const left = x + 5;
+    const numberWidth = this._drawProblemNumber(page, probNum, left, y, fs);
+    const contentX = left + Math.max(25, numberWidth);
+    const contentY = y - Math.max(18, fs * 1.15);
+
+    if (prob.fraction_type === 'comparison') {
+      if (prob.comparison_visual) {
+        const modelTop = contentY + fs * 1.65;
+        const firstModel = this._drawShadedFractionModel(page, prob.first, contentX, modelTop, 64, prob.first_shape);
+        const symbolSize = fs * 1.55;
+        const symbolX = contentX + firstModel.width + fs * 0.75;
+        const symbolY = modelTop - firstModel.height / 2 - symbolSize / 2;
+        if (isAnswerKey) {
+          this._drawText(page, prob.answer, symbolX + fs * 0.25, symbolY + fs * 0.25, { isRed: true, fontOverride: fs * 1.15 });
+        } else {
+          drawBoxOutline(page, symbolX, symbolY, symbolSize, symbolSize);
+        }
+        this._drawShadedFractionModel(page, prob.second, symbolX + fs * 2.35, modelTop, 64, prob.second_shape);
+        return;
+      }
+      const firstWidth = this._drawFraction(page, prob.first, contentX, contentY, { fontSize: fs });
+      const symbolX = contentX + firstWidth + fs * 0.75;
+      if (isAnswerKey) {
+        this._drawText(page, prob.answer, symbolX + fs * 0.25, contentY - fs * 0.12, { isRed: true, fontOverride: fs * 1.15 });
+      } else {
+        drawBoxOutline(page, symbolX, contentY - fs * 0.55, fs * 1.55, fs * 1.55);
+      }
+      this._drawFraction(page, prob.second, symbolX + fs * 2.35, contentY, { fontSize: fs });
+      return;
+    }
+
+    if (prob.fraction_type === 'identify') {
+      const model = this._drawShadedFractionModel(page, prob.model, contentX, contentY + fs * 0.8, 86, prob.model_shape);
+      this._drawFractionBlank(page, contentX + model.width + fs, contentY, isAnswerKey, prob.answer);
+      return;
+    }
+
+    if (prob.fraction_type === 'visual_choice') {
+      const modelTop = contentY + fs * 0.8;
+      const model = this._drawShadedFractionModel(page, prob.model, contentX, modelTop, 86, prob.model_shape);
+      const choicesY = modelTop - model.height - fs * 1.15;
+      const availableWidth = this.cellWidth - (contentX - x) - 8;
+      const choiceGap = availableWidth / prob.choices.length;
+      prob.choices.forEach((choice, index) => {
+        const choiceX = contentX + index * choiceGap;
+        const boxSize = Math.max(7, fs * 0.62);
+        drawBoxOutline(page, choiceX, choicesY - boxSize * 0.18, boxSize, boxSize);
+        const correct = choice === prob.answer && isAnswerKey;
+        if (correct) this._drawText(page, 'x', choiceX + boxSize * 0.2, choicesY, { isRed: true, fontOverride: boxSize * 0.85 });
+        this._drawText(page, choice, choiceX + boxSize + fs * 0.3, choicesY, {
+          isRed: correct,
+          fontOverride: Math.max(8, fs * 0.72),
+        });
+      });
+      return;
+    }
+
+    if (prob.fraction_type === 'operations') {
+      let cursor = contentX;
+      cursor += this._drawFraction(page, prob.first, cursor, contentY, { fontSize: fs }) + fs * 0.55;
+      const symbol = prob.operation === 'x' ? '\u00d7' : prob.operation === '/' ? '\u00f7' : prob.operation;
+      this._drawText(page, symbol, cursor, contentY - fs * 0.1, { fontOverride: fs * 1.05 });
+      cursor += fs * 1.25;
+      cursor += this._drawFraction(page, prob.second, cursor, contentY, { fontSize: fs }) + fs * 0.55;
+      this._drawText(page, '=', cursor, contentY - fs * 0.1, { fontOverride: fs });
+      this._drawFractionBlank(page, cursor + fs * 1.25, contentY, isAnswerKey, prob.answer);
+      return;
+    }
+
+    if (prob.fraction_type === 'simplify') {
+      const width = this._drawFraction(page, prob.first, contentX, contentY, { fontSize: fs });
+      this._drawText(page, '=', contentX + width + fs * 0.55, contentY - fs * 0.1, { fontOverride: fs });
+      const answerX = contentX + width + fs * 1.7;
+      if (prob.result.denominator === 1) {
+        if (isAnswerKey) this._drawText(page, prob.answer, answerX, contentY - fs * 0.1, { isRed: true, fontOverride: fs });
+        else this._drawBox(page, answerX, contentY - fs * 0.1, Math.max(2, String(prob.answer).length));
+      } else {
+        this._drawFractionBlank(page, answerX, contentY, isAnswerKey, prob.answer);
+      }
+      return;
+    }
+
+    if (prob.direction === 'fraction_to_decimal') {
+      const width = this._drawFraction(page, prob.fraction, contentX, contentY, { fontSize: fs });
+      this._drawText(page, '=', contentX + width + fs * 0.55, contentY - fs * 0.1, { fontOverride: fs });
+      const answerX = contentX + width + fs * 1.7;
+      if (isAnswerKey) this._drawText(page, prob.answer, answerX, contentY - fs * 0.1, { isRed: true, fontOverride: fs });
+      else drawLineSeg(page, answerX, contentY - fs * 0.3, answerX + fs * 3.3, contentY - fs * 0.3, 1);
+    } else {
+      this._drawText(page, `${prob.decimal} =`, contentX, contentY - fs * 0.1, { fontOverride: fs });
+      const textWidth = this.fonts.helvetica.widthOfTextAtSize(`${prob.decimal} =`, fs);
+      this._drawFractionBlank(page, contentX + textWidth + fs * 0.55, contentY, isAnswerKey, prob.answer);
+    }
+  }
+
   _settingsSummary() {
     const cfg = this.config;
     let opsStr = cfg.mode === 'simultaneous' ? 'linear equations' : cfg.mode;
+    if (cfg.mode === 'fractions') opsStr = `fractions (${cfg.fraction_config?.type || 'comparison'})`;
+    if (cfg.mode === 'digits') {
+      const dc = cfg.digits_config || {};
+      const form = dc.direction === 'parts_to_number' ? 'parts to number' : dc.multiplication_form ? 'multiplication expansion' : 'expanded form';
+      const decimals = Math.max(0, Number(dc.decimal_places) || 0);
+      opsStr = `digits (${form}, ${dc.min_digits || 4}-${dc.max_digits || 5} digits, ${decimals} decimal places)`;
+    }
+    if (cfg.mode === 'decimals') {
+      const dc = cfg.decimal_config || {};
+      const leftSide = dc.whole_left === false ? 'whole or decimal left side' : 'whole-number left side';
+      opsStr = `decimals (${dc.type || 'multiplication'}, ${leftSide}, max ${dc.left_max_digits || 4} digits)`;
+    }
     if (cfg.mode === 'standard' && cfg.ops) {
       const enabled = Object.entries(cfg.ops)
         .filter(([, op]) => op.enabled)
@@ -874,6 +1677,78 @@ class MathPDFRenderer {
       page.drawText('Class: _______________', { x: 320, y: PDF_PAGE.HEIGHT - 82, size: 12, font: helvetica });
     }
 
+    if (this.config.mode === 'digits') {
+      const dc = this.config.digits_config || {};
+      const instruction = dc.direction === 'parts_to_number'
+        ? 'Directions: Write each number in standard form.'
+        : dc.multiplication_form
+          ? 'Directions: Write each number as digit × place value.'
+          : 'Directions: Write each number in expanded form.';
+      page.drawText(instruction, {
+        x: PDF_PAGE.MARGIN,
+        y: PDF_PAGE.HEIGHT - 108,
+        size: 9,
+        font: this.fonts.timesBold,
+        color: PDFLib.rgb(0.18, 0.18, 0.18),
+      });
+      if (dc.show_example !== false) {
+        const decimals = Math.max(0, Math.min(3, Number(dc.decimal_places) || 0));
+        const fractionDigits = '476'.slice(0, decimals);
+        const number = `8,529${fractionDigits ? `.${fractionDigits}` : ''}`;
+        const additiveFraction = [...fractionDigits].map((digit, index) => `0.${'0'.repeat(index)}${digit}`);
+        const additive = ['8,000', '500', '20', '9', ...additiveFraction].join(' + ');
+        const multiplicationFraction = [...fractionDigits].map((digit, index) => `${digit} × 0.${'0'.repeat(index)}1`);
+        const multiplied = ['8 × 1,000', '5 × 100', '2 × 10', '9', ...multiplicationFraction].join(' + ');
+        const example = dc.direction === 'parts_to_number'
+          ? `${additive} = ${number}`
+          : dc.multiplication_form
+            ? `${number} = ${multiplied}`
+            : `${number} = ${additive}`;
+        page.drawText(`Example: ${example}`, {
+          x: PDF_PAGE.MARGIN,
+          y: PDF_PAGE.HEIGHT - 120,
+          size: 8,
+          font: helvetica,
+          color: PDFLib.rgb(0.3, 0.3, 0.3),
+        });
+      }
+    }
+
+    if (this.config.mode === 'decimals') {
+      const dc = this.config.decimal_config || {};
+      const type = dc.type || 'multiplication';
+      const instruction = type === 'multiplication'
+        ? 'Directions: Multiply by the power of ten. Track how each digit changes place value.'
+        : type === 'percent'
+          ? 'Directions: Convert each decimal to a percentage.'
+          : type === 'bar'
+            ? 'Directions: Write the decimal shown by each tenths bar.'
+            : 'Directions: Solve each decimal place-value problem.';
+      page.drawText(instruction, {
+        x: PDF_PAGE.MARGIN,
+        y: PDF_PAGE.HEIGHT - 108,
+        size: 9,
+        font: this.fonts.timesBold,
+        color: PDFLib.rgb(0.18, 0.18, 0.18),
+      });
+      if (dc.show_example !== false) {
+        const examples = type === 'multiplication'
+          ? ['0.01 × 100 = 1', '5,980 × 0.1 = 598']
+          : type === 'percent'
+            ? ['0.25 = 25%']
+            : type === 'bar'
+              ? ['7 shaded tenths = 0.7']
+              : ['0.01 × 100 = 1', '0.25 = 25%', '7 shaded tenths = 0.7'];
+        page.drawText(`Examples: ${examples.join('; ')}`, {
+          x: PDF_PAGE.MARGIN,
+          y: PDF_PAGE.HEIGHT - 120,
+          size: 8,
+          font: helvetica,
+          color: PDFLib.rgb(0.3, 0.3, 0.3),
+        });
+      }
+    }
+
     const startY = PDF_PAGE.HEIGHT - PDF_PAGE.HEADER_HEIGHT;
     problems.forEach((prob, i) => {
       const row = Math.floor(i / this.config.columns);
@@ -881,8 +1756,16 @@ class MathPDFRenderer {
       const x = PDF_PAGE.MARGIN + col * this.cellWidth;
       const y = startY - row * this.cellHeight;
 
-      if (prob.operator === 'simultaneous') {
+      if (prob.operator === 'fraction') {
+        this._drawFractionProblem(page, prob, x, y, isAnswerKey, i + 1);
+      } else if (prob.operator === 'simultaneous') {
         this._drawSimultaneous(page, prob, x, y, isAnswerKey, i + 1);
+      } else if (prob.operator === 'digits') {
+        this._drawDigitsProblem(page, prob, x, y, isAnswerKey, i + 1);
+      } else if (prob.operator === 'digits_percent') {
+        this._drawDecimalPercentProblem(page, prob, x, y, isAnswerKey, i + 1);
+      } else if (prob.operator === 'digits_bar') {
+        this._drawDecimalBarProblem(page, prob, x, y, isAnswerKey, i + 1);
       } else if (prob.is_vertical) {
         if (prob.operator === '÷') this._drawVerticalDivision(page, prob, x, y, isAnswerKey, i + 1);
         else this._drawVerticalStandard(page, prob, x, y, isAnswerKey, i + 1);

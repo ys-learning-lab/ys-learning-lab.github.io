@@ -10,9 +10,19 @@ const OP_MIX_INFO = {
   '×': { label: 'Multiplication (×)', symbol: '×', css: 'mul' },
   '÷': { label: 'Division (÷)', symbol: '÷', css: 'div' },
 };
+const FRACTION_OP_MIX_INFO = {
+  '+': { label: 'Addition (+)', symbol: '+', css: 'add' },
+  '-': { label: 'Subtraction (-)', symbol: '\u2212', css: 'sub' },
+  x: { label: 'Multiplication (\u00d7)', symbol: '\u00d7', css: 'mul' },
+  '/': { label: 'Division (\u00f7)', symbol: '\u00f7', css: 'div' },
+};
 const MAX_OPERAND_DIGITS = 3;
 const MIN_PROBLEM_FONT_SIZE = 8;
 const MAX_PROBLEM_FONT_SIZE = 26;
+const MATH_SETTINGS_STORAGE_KEY = 'ys-learning-lab-math-worksheet-settings-v1';
+let mathSettingsSaveTimer = null;
+let digitsLayoutInitialized = false;
+let decimalsLayoutInitialized = false;
 
 function populateSelect(sel, values, selected) {
   sel.innerHTML = values.map((v) => `<option value="${v}">${v}</option>`).join('');
@@ -363,6 +373,242 @@ function initOperationMixer() {
   syncOperationMixer();
 }
 
+function selectedFractionOps() {
+  return [...document.querySelectorAll('.fraction-operation-toggle:checked')].map((input) => input.dataset.op);
+}
+
+function getFractionOpWeight(op) {
+  return parseInt(document.querySelector(`.fraction-op-weight[data-op="${op}"]`)?.value, 10) || 0;
+}
+
+function setFractionOpWeights(weights) {
+  document.querySelectorAll('.fraction-op-weight').forEach((input) => {
+    if (weights[input.dataset.op] != null) input.value = weights[input.dataset.op];
+  });
+}
+
+function setFractionOperationWeight(op, requestedValue) {
+  const selected = selectedFractionOps();
+  const others = selected.filter((item) => item !== op);
+  if (!selected.includes(op)) return;
+  if (!others.length) {
+    setFractionOpWeights({ [op]: 100 });
+    return;
+  }
+  const target = Math.max(MIX_STEP, Math.min(100 - others.length * MIX_STEP, snapMix(requestedValue)));
+  const remainingUnits = (100 - target) / MIX_STEP;
+  const baseUnits = others.length;
+  const extras = remainingUnits - baseUnits;
+  const previousExtras = others.map((item) => Math.max(0, getFractionOpWeight(item) / MIX_STEP - 1));
+  const previousTotal = previousExtras.reduce((sum, value) => sum + value, 0);
+  const provisional = previousExtras.map((value) => previousTotal ? value / previousTotal * extras : extras / others.length);
+  const assigned = provisional.map(Math.floor);
+  let unassigned = extras - assigned.reduce((sum, value) => sum + value, 0);
+  provisional.map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction)
+    .forEach(({ index }) => { if (unassigned-- > 0) assigned[index] += 1; });
+  const weights = { [op]: target };
+  others.forEach((item, index) => { weights[item] = (1 + assigned[index]) * MIX_STEP; });
+  setFractionOpWeights(weights);
+}
+
+function adjustFractionBoundary(selected, boundaryIndex, requestedBoundary) {
+  const weights = Object.fromEntries(selected.map((op) => [op, getFractionOpWeight(op)]));
+  const before = selected.slice(0, boundaryIndex).reduce((sum, op) => sum + weights[op], 0);
+  const pairEnd = before + weights[selected[boundaryIndex]] + weights[selected[boundaryIndex + 1]];
+  const boundary = Math.max(before + MIX_STEP, Math.min(pairEnd - MIX_STEP, snapMix(requestedBoundary)));
+  weights[selected[boundaryIndex]] = boundary - before;
+  weights[selected[boundaryIndex + 1]] = pairEnd - boundary;
+  setFractionOpWeights(weights);
+}
+
+function fractionOperationSegmentLabel(op, weight) {
+  if (weight <= MIX_STEP) return `<span class="operation-segment-percent">${weight}%</span>`;
+  return `<span class="operation-segment-keycap" aria-hidden="true">${FRACTION_OP_MIX_INFO[op].symbol}</span><span class="operation-segment-percent">${weight}%</span>`;
+}
+
+function updateFractionOperationSegmentContent(segment, op, weight) {
+  const compact = weight <= MIX_STEP;
+  const wasCompact = segment.classList.contains('is-compact');
+  segment.classList.toggle('is-compact', compact);
+  segment.dataset.symbol = FRACTION_OP_MIX_INFO[op].symbol;
+  if (compact !== wasCompact) segment.innerHTML = fractionOperationSegmentLabel(op, weight);
+  else {
+    const percent = segment.querySelector('.operation-segment-percent');
+    if (percent) percent.textContent = `${weight}%`;
+  }
+}
+
+function updateFractionDistributionLayout(selected) {
+  const distribution = document.getElementById('fraction-operation-distribution');
+  if (!distribution) return;
+  const segments = [...distribution.querySelectorAll('.operation-segment')];
+  const handles = [...distribution.querySelectorAll('.operation-handle')];
+  let offset = 0;
+  selected.forEach((op, index) => {
+    const weight = getFractionOpWeight(op);
+    const segment = segments[index];
+    if (segment) {
+      segment.style.left = `${offset}%`;
+      segment.style.width = `${weight}%`;
+      updateFractionOperationSegmentContent(segment, op, weight);
+      segment.setAttribute('aria-label', `${FRACTION_OP_MIX_INFO[op].label}, ${weight}% of equations`);
+    }
+    offset += weight;
+    if (handles[index]) handles[index].style.left = `${offset}%`;
+  });
+}
+
+function openFractionOperationValueEditor(op, handle) {
+  closeOperationValueEditor();
+  const selected = selectedFractionOps();
+  const info = FRACTION_OP_MIX_INFO[op];
+  const editor = document.createElement('form');
+  editor.className = 'operation-value-editor';
+  editor.innerHTML = `<label>${info.label}: <input type="number" min="${MIX_STEP}" max="${100 - (selected.length - 1) * MIX_STEP}" step="${MIX_STEP}" value="${getFractionOpWeight(op)}" aria-label="${info.label} percentage" />%</label><button type="submit">Apply</button>`;
+  editor.style.left = `${Math.min(Number.parseFloat(handle.style.left) || 0, 78)}%`;
+  document.getElementById('fraction-operation-distribution').appendChild(editor);
+  const input = editor.querySelector('input');
+  input.focus();
+  input.select();
+  editor.addEventListener('submit', (event) => {
+    event.preventDefault();
+    setFractionOperationWeight(op, Number(input.value));
+    closeOperationValueEditor();
+    renderFractionOperationDistribution();
+    updateAll();
+  });
+}
+
+function renderFractionOperationDistribution() {
+  const distribution = document.getElementById('fraction-operation-distribution');
+  if (!distribution) return;
+  closeOperationValueEditor();
+  distribution.innerHTML = '';
+  const selected = selectedFractionOps();
+  if (!selected.length) return;
+  const total = selected.reduce((sum, op) => sum + getFractionOpWeight(op), 0);
+  if (total !== 100) setFractionOpWeights(evenlyDistributedWeights(selected));
+  let offset = 0;
+  selected.forEach((op, index) => {
+    const info = FRACTION_OP_MIX_INFO[op];
+    const weight = getFractionOpWeight(op);
+    const segment = document.createElement('button');
+    segment.type = 'button';
+    segment.className = `operation-segment operation-segment--${info.css}${index === 0 ? ' is-first' : ''}${index === selected.length - 1 ? ' is-last' : ''}`;
+    segment.style.left = `${offset}%`;
+    segment.style.width = `${weight}%`;
+    segment.dataset.symbol = info.symbol;
+    if (weight <= MIX_STEP) segment.classList.add('is-compact');
+    segment.innerHTML = fractionOperationSegmentLabel(op, weight);
+    segment.setAttribute('aria-label', `${info.label}, ${weight}% of equations`);
+    distribution.appendChild(segment);
+    offset += weight;
+    if (index >= selected.length - 1) return;
+    const handle = document.createElement('button');
+    handle.type = 'button';
+    handle.className = 'operation-handle';
+    handle.style.left = `${offset}%`;
+    handle.setAttribute('aria-label', `Adjust ${info.label}, currently ${weight}%`);
+    handle.addEventListener('click', (event) => {
+      if (handle.dataset.dragged === 'true') {
+        event.preventDefault();
+        handle.dataset.dragged = 'false';
+      } else {
+        openFractionOperationValueEditor(op, handle);
+      }
+    });
+    handle.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const boundary = selected.slice(0, index + 1).reduce((sum, item) => sum + getFractionOpWeight(item), 0);
+      adjustFractionBoundary(selected, index, boundary + (event.key === 'ArrowLeft' ? -MIX_STEP : MIX_STEP));
+      updateFractionDistributionLayout(selected);
+      updateAll();
+    });
+    handle.addEventListener('pointerdown', (startEvent) => {
+      startEvent.stopPropagation();
+      const startX = startEvent.clientX;
+      let moved = false;
+      const move = (event) => {
+        const rect = distribution.getBoundingClientRect();
+        if (!rect.width) return;
+        if (Math.abs(event.clientX - startX) > 3) moved = true;
+        handle.dataset.dragged = moved ? 'true' : 'false';
+        adjustFractionBoundary(selected, index, (event.clientX - rect.left) / rect.width * 100);
+        updateFractionDistributionLayout(selected);
+      };
+      const end = () => {
+        document.removeEventListener('pointermove', move);
+        if (moved) updateAll();
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', end, { once: true });
+    });
+    distribution.appendChild(handle);
+  });
+}
+
+function syncFractionControls() {
+  const type = document.getElementById('fraction-type')?.value || 'comparison';
+  document.querySelectorAll('[data-fraction-types]').forEach((element) => {
+    const visibleTypes = element.dataset.fractionTypes.split(/\s+/);
+    element.classList.toggle('hidden', !visibleTypes.includes(type));
+  });
+  const numeratorMode = document.getElementById('fraction-numerator-mode');
+  const numeratorLimitField = document.getElementById('fraction-numerator-limit-field');
+  const maxNumerator = document.getElementById('fraction-max-numerator');
+  const numeratorLockNote = document.getElementById('fraction-numerator-lock-note');
+  const comparisonFormat = document.getElementById('fraction-comparison-format')?.value || 'fractions';
+  const shapeOnlyComparison = type === 'comparison' && comparisonFormat === 'shapes';
+  const comparisonShapeNote = document.getElementById('fraction-comparison-shape-note');
+  const simplifyResult = document.getElementById('fraction-simplify-result')?.value || 'fraction';
+  const requiresUnlockedNumerator = type === 'simplify' && simplifyResult !== 'fraction';
+  if (requiresUnlockedNumerator) {
+    if (!numeratorMode.disabled) numeratorMode.dataset.preferredMode = numeratorMode.value || 'proper';
+    numeratorMode.value = 'limit';
+    const minimumForWhole = Math.min(100, Math.max(4, 2 * (parseInt(document.getElementById('fraction-min-denominator').value, 10) || 2)));
+    maxNumerator.min = String(minimumForWhole);
+    if ((parseInt(maxNumerator.value, 10) || 0) < minimumForWhole) maxNumerator.value = String(minimumForWhole);
+  } else {
+    if (numeratorMode.disabled) numeratorMode.value = numeratorMode.dataset.preferredMode || 'proper';
+    maxNumerator.min = '2';
+  }
+  numeratorMode.disabled = requiresUnlockedNumerator;
+  document.getElementById('fraction-numerator-controls').classList.toggle(
+    'hidden',
+    !['comparison', 'operations', 'simplify', 'decimal', 'mixed'].includes(type) || shapeOnlyComparison,
+  );
+  numeratorLimitField.classList.toggle('hidden', numeratorMode.value !== 'limit');
+  numeratorLockNote.classList.toggle('hidden', !requiresUnlockedNumerator);
+  comparisonShapeNote.classList.toggle(
+    'hidden',
+    type !== 'comparison' || !['shapes', 'mixed'].includes(comparisonFormat),
+  );
+  if (requiresUnlockedNumerator) numeratorLockNote.textContent = 'Whole-number simplification needs numerators that can be equal to or greater than denominators.';
+  if (type === 'operations') renderFractionOperationDistribution();
+}
+
+function initFractionOperationMixer() {
+  const numeratorMode = document.getElementById('fraction-numerator-mode');
+  numeratorMode.dataset.preferredMode ||= numeratorMode.value || 'proper';
+  numeratorMode.addEventListener('change', () => {
+    if (!numeratorMode.disabled) numeratorMode.dataset.preferredMode = numeratorMode.value;
+  });
+  document.querySelectorAll('.fraction-operation-toggle').forEach((toggle) => {
+    toggle.addEventListener('change', () => {
+      const previousSelection = selectedFractionOps();
+      if (!toggle.checked && previousSelection.length === 0) {
+        toggle.checked = true;
+        return;
+      }
+      setFractionOpWeights(evenlyDistributedWeights(selectedFractionOps()));
+      renderFractionOperationDistribution();
+    });
+  });
+  syncFractionControls();
+}
+
 function readOpConfig(fs) {
   const g = (sel) => fs.querySelector(sel);
   const negativeMode = g('.op-negatives')?.value || 'never';
@@ -429,6 +675,47 @@ function buildConfig() {
     max_coef: parseInt(document.getElementById('sim-maxcoef').value, 10) || 5,
   };
 
+  const fraction_config = {
+    type: document.getElementById('fraction-type').value,
+    min_denominator: parseInt(document.getElementById('fraction-min-denominator').value, 10) || 2,
+    max_denominator: parseInt(document.getElementById('fraction-max-denominator').value, 10) || 10,
+    numerator_mode: document.getElementById('fraction-numerator-mode').value,
+    numerator_preference: document.getElementById('fraction-numerator-mode').dataset.preferredMode || document.getElementById('fraction-numerator-mode').value,
+    max_numerator: parseInt(document.getElementById('fraction-max-numerator').value, 10) || 20,
+    denominator_mode: document.getElementById('fraction-denominator-mode').value,
+    comparison_format: document.getElementById('fraction-comparison-format').value,
+    operations: {
+      '+': document.getElementById('fraction-add').checked,
+      '-': document.getElementById('fraction-sub').checked,
+      x: document.getElementById('fraction-mul').checked,
+      '/': document.getElementById('fraction-div').checked,
+    },
+    operation_weights: Object.fromEntries(['+', '-', 'x', '/'].map((op) => [op, getFractionOpWeight(op)])),
+    choice_count: parseInt(document.getElementById('fraction-choice-count').value, 10) || 4,
+    include_simplification: document.getElementById('fraction-include-simplification').checked,
+    simplify_result: document.getElementById('fraction-simplify-result').value,
+    decimal_direction: document.getElementById('fraction-decimal-direction').value,
+    decimal_places: parseInt(document.getElementById('fraction-decimal-places').value, 10) || 1,
+  };
+
+  const digits_config = {
+    direction: document.querySelector('input[name="digits-direction"]:checked')?.value || 'parts_to_number',
+    min_digits: parseInt(document.getElementById('digits-min-digits').value, 10) || 4,
+    max_digits: parseInt(document.getElementById('digits-max-digits').value, 10) || 5,
+    multiplication_form: document.getElementById('digits-multiplication').checked,
+    decimal_places: parseInt(document.getElementById('digits-decimal-places').value, 10) || 0,
+    show_example: document.getElementById('digits-show-example').checked,
+  };
+
+  const decimal_config = {
+    type: document.getElementById('decimal-question-type').value,
+    shift_direction: document.getElementById('decimal-shift-direction').value,
+    max_shift: parseInt(document.getElementById('decimal-max-shift').value, 10) || 2,
+    left_max_digits: parseInt(document.getElementById('decimal-left-max-digits').value, 10) || 4,
+    whole_left: document.getElementById('decimal-whole-left').checked,
+    show_example: document.getElementById('decimal-show-example').checked,
+  };
+
   const include_answer_key = document.getElementById('cfg-answerkey').checked;
   const show_answer_boxes = document.getElementById('cfg-answerboxes').checked;
   const title = document.getElementById('cfg-title').value;
@@ -436,7 +723,7 @@ function buildConfig() {
   const show_settings_footer = document.getElementById('cfg-footer').checked;
   const include_answer_qr = document.getElementById('cfg-answerqr').checked;
 
-  return { rows, columns, num_pages, problem_font_size, circle_question_numbers, randomize_order, combined_pdf: true, mode, ops, mixed_config, simultaneous_config, include_answer_key, show_answer_boxes, title, teacher, show_settings_footer, include_answer_qr };
+  return { rows, columns, num_pages, problem_font_size, circle_question_numbers, randomize_order, combined_pdf: true, mode, ops, mixed_config, simultaneous_config, fraction_config, digits_config, decimal_config, include_answer_key, show_answer_boxes, title, teacher, show_settings_footer, include_answer_qr };
 }
 
 // Reverse of readOpConfig() - writes an OpConfig-shaped object back onto one
@@ -519,16 +806,92 @@ function applyMathConfigToForm(cfg) {
     if (sc.allow_negatives != null) document.getElementById('sim-negatives').checked = sc.allow_negatives;
     if (sc.max_coef != null) document.getElementById('sim-maxcoef').value = sc.max_coef;
   }
+  if (cfg.fraction_config) {
+    const fc = cfg.fraction_config;
+    if (fc.type) document.getElementById('fraction-type').value = fc.type;
+    if (fc.min_denominator != null) document.getElementById('fraction-min-denominator').value = fc.min_denominator;
+    if (fc.max_denominator != null) document.getElementById('fraction-max-denominator').value = fc.max_denominator;
+    const numeratorMode = document.getElementById('fraction-numerator-mode');
+    numeratorMode.dataset.preferredMode = fc.numerator_preference || 'proper';
+    numeratorMode.value = fc.numerator_preference ? (fc.numerator_mode || fc.numerator_preference) : 'proper';
+    if (fc.max_numerator != null) document.getElementById('fraction-max-numerator').value = fc.max_numerator;
+    if (fc.denominator_mode) document.getElementById('fraction-denominator-mode').value = fc.denominator_mode;
+    if (fc.comparison_format) document.getElementById('fraction-comparison-format').value = fc.comparison_format;
+    if (fc.operations) {
+      if (fc.operations['+'] != null) document.getElementById('fraction-add').checked = fc.operations['+'];
+      if (fc.operations['-'] != null) document.getElementById('fraction-sub').checked = fc.operations['-'];
+      if (fc.operations.x != null) document.getElementById('fraction-mul').checked = fc.operations.x;
+      if (fc.operations['/'] != null) document.getElementById('fraction-div').checked = fc.operations['/'];
+    }
+    if (fc.operation_weights) setFractionOpWeights(fc.operation_weights);
+    if (fc.choice_count != null) document.getElementById('fraction-choice-count').value = fc.choice_count;
+    if (fc.include_simplification != null) document.getElementById('fraction-include-simplification').checked = fc.include_simplification;
+    if (fc.simplify_result) document.getElementById('fraction-simplify-result').value = fc.simplify_result;
+    if (fc.decimal_direction) document.getElementById('fraction-decimal-direction').value = fc.decimal_direction;
+    if (fc.decimal_places != null) document.getElementById('fraction-decimal-places').value = fc.decimal_places;
+  }
+  if (cfg.digits_config) {
+    const dc = cfg.digits_config;
+    if (dc.direction) {
+      const direction = document.querySelector(`input[name="digits-direction"][value="${dc.direction}"]`);
+      if (direction) direction.checked = true;
+    }
+    if (dc.min_digits != null) document.getElementById('digits-min-digits').value = dc.min_digits;
+    if (dc.max_digits != null) document.getElementById('digits-max-digits').value = dc.max_digits;
+    if (dc.multiplication_form != null) document.getElementById('digits-multiplication').checked = dc.multiplication_form;
+    if (dc.decimal_places != null) document.getElementById('digits-decimal-places').value = dc.decimal_places;
+    if (dc.show_example != null) document.getElementById('digits-show-example').checked = dc.show_example;
+    if (cfg.mode === 'digits') digitsLayoutInitialized = true;
+  }
+  const legacyDecimals = cfg.digits_config?.worksheet_type === 'decimal_multiplication' ? cfg.digits_config : null;
+  const dc = cfg.decimal_config || legacyDecimals;
+  if (dc) {
+    if (dc.type) document.getElementById('decimal-question-type').value = dc.type;
+    else if (dc.decimal_types) document.getElementById('decimal-question-type').value = 'mixed';
+    if (dc.shift_direction) document.getElementById('decimal-shift-direction').value = dc.shift_direction;
+    if (dc.max_shift != null) document.getElementById('decimal-max-shift').value = dc.max_shift;
+    if (dc.left_max_digits != null || dc.decimal_operand_digits != null) {
+      document.getElementById('decimal-left-max-digits').value = dc.left_max_digits ?? dc.decimal_operand_digits;
+    }
+    if (dc.whole_left != null) document.getElementById('decimal-whole-left').checked = dc.whole_left;
+    if (dc.show_example != null) document.getElementById('decimal-show-example').checked = dc.show_example;
+    if (cfg.mode === 'decimals' || legacyDecimals) decimalsLayoutInitialized = true;
+    if (legacyDecimals && cfg.mode === 'digits') setMathMode('decimals');
+  }
   syncAllDigitOptions();
   syncOperationMixer();
+  syncFractionControls();
   if (cfg.problem_font_size == null) syncAutoProblemFontSize();
+}
+
+function scheduleMathSettingsSave(cfg) {
+  clearTimeout(mathSettingsSaveTimer);
+  mathSettingsSaveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(MATH_SETTINGS_STORAGE_KEY, JSON.stringify(cfg));
+    } catch (error) {
+      console.warn('Worksheet settings could not be saved in this browser:', error);
+    }
+  }, 120);
+}
+
+function restoreMathSettings() {
+  try {
+    const saved = localStorage.getItem(MATH_SETTINGS_STORAGE_KEY);
+    if (!saved) return false;
+    applyMathConfigToForm(JSON.parse(saved));
+    return true;
+  } catch (error) {
+    console.warn('Saved worksheet settings could not be restored:', error);
+    return false;
+  }
 }
 
 // ---------- level-based quick templates ----------
 // Only uses features the generator actually has (standard +/-/x/÷ with digit
 // range/vertical/regrouping/negatives/decimals, mixed continuous equations,
-// and 2-variable simultaneous equations) - no fractions/money/geometry/ratios/
-// coordinate-plane/statistics, since none of those exist in the generator.
+// and 2-variable simultaneous equations). Fraction worksheets have their own
+// controls instead of level presets; money/geometry/ratios/statistics are absent.
 // Full OpConfig shape per operator, so every field the generator/UI reads is
 // explicit and template-matching (below) can compare states reliably.
 function op(overrides) {
@@ -725,7 +1088,7 @@ function applyMathTemplate(name) {
 // ---------- export/import settings as .ini ----------
 // Mirrors the section layout the original Tkinter app's configparser used
 // (GLOBAL + one OP_<symbol> section per operator), plus MIXED/SIMULTANEOUS
-// sections for this port's two extra modes.
+// sections for this port's additional worksheet modes.
 const MATH_OPS = ['+', '-', '×', '÷'];
 
 function mathConfigToIni(cfg) {
@@ -785,12 +1148,51 @@ function mathConfigToIni(cfg) {
   lines.push(`type = ${cfg.simultaneous_config.type}`);
   lines.push(`allow_negatives = ${cfg.simultaneous_config.allow_negatives}`);
   lines.push(`max_coef = ${cfg.simultaneous_config.max_coef}`);
+  lines.push('');
+  lines.push('[FRACTIONS]');
+  lines.push(`type = ${cfg.fraction_config.type}`);
+  lines.push(`min_denominator = ${cfg.fraction_config.min_denominator}`);
+  lines.push(`max_denominator = ${cfg.fraction_config.max_denominator}`);
+  lines.push(`numerator_mode = ${cfg.fraction_config.numerator_mode}`);
+  lines.push(`numerator_preference = ${cfg.fraction_config.numerator_preference}`);
+  lines.push(`max_numerator = ${cfg.fraction_config.max_numerator}`);
+  lines.push(`denominator_mode = ${cfg.fraction_config.denominator_mode}`);
+  lines.push(`comparison_format = ${cfg.fraction_config.comparison_format}`);
+  lines.push(`add = ${!!cfg.fraction_config.operations['+']}`);
+  lines.push(`sub = ${!!cfg.fraction_config.operations['-']}`);
+  lines.push(`mul = ${!!cfg.fraction_config.operations.x}`);
+  lines.push(`div = ${!!cfg.fraction_config.operations['/']}`);
+  lines.push(`add_weight = ${cfg.fraction_config.operation_weights['+']}`);
+  lines.push(`sub_weight = ${cfg.fraction_config.operation_weights['-']}`);
+  lines.push(`mul_weight = ${cfg.fraction_config.operation_weights.x}`);
+  lines.push(`div_weight = ${cfg.fraction_config.operation_weights['/']}`);
+  lines.push(`choice_count = ${cfg.fraction_config.choice_count}`);
+  lines.push(`include_simplification = ${cfg.fraction_config.include_simplification}`);
+  lines.push(`simplify_result = ${cfg.fraction_config.simplify_result}`);
+  lines.push(`decimal_direction = ${cfg.fraction_config.decimal_direction}`);
+  lines.push(`decimal_places = ${cfg.fraction_config.decimal_places}`);
+  lines.push('');
+  lines.push('[DIGITS]');
+  lines.push(`direction = ${cfg.digits_config.direction}`);
+  lines.push(`min_digits = ${cfg.digits_config.min_digits}`);
+  lines.push(`max_digits = ${cfg.digits_config.max_digits}`);
+  lines.push(`multiplication_form = ${cfg.digits_config.multiplication_form}`);
+  lines.push(`decimal_places = ${cfg.digits_config.decimal_places}`);
+  lines.push(`show_example = ${cfg.digits_config.show_example}`);
+  lines.push('');
+  lines.push('[DECIMALS]');
+  lines.push(`type = ${cfg.decimal_config.type}`);
+  lines.push(`shift_direction = ${cfg.decimal_config.shift_direction}`);
+  lines.push(`max_shift = ${cfg.decimal_config.max_shift}`);
+  lines.push(`left_max_digits = ${cfg.decimal_config.left_max_digits}`);
+  lines.push(`whole_left = ${cfg.decimal_config.whole_left}`);
+  lines.push(`show_example = ${cfg.decimal_config.show_example}`);
 
   return lines.join('\n') + '\n';
 }
 
 function mathConfigFromIni(text) {
-  const cfg = { ops: {}, mixed_config: { enabled_ops: {} }, simultaneous_config: {} };
+  const cfg = { ops: {}, mixed_config: { enabled_ops: {} }, simultaneous_config: {}, fraction_config: { operations: {}, operation_weights: {} }, digits_config: {}, decimal_config: {} };
   const toBool = (v) => /^(true|1|yes)$/i.test(v.trim());
   const toInt = (v) => parseInt(v, 10);
   let section = '';
@@ -865,6 +1267,56 @@ function mathConfigFromIni(text) {
       if (key === 'type') cfg.simultaneous_config.type = value;
       else if (key === 'allow_negatives') cfg.simultaneous_config.allow_negatives = toBool(value);
       else if (key === 'max_coef') cfg.simultaneous_config.max_coef = toInt(value);
+    } else if (section === 'FRACTIONS') {
+      if (key === 'type') cfg.fraction_config.type = value;
+      else if (key === 'min_denominator') cfg.fraction_config.min_denominator = toInt(value);
+      else if (key === 'max_denominator') cfg.fraction_config.max_denominator = toInt(value);
+      else if (key === 'numerator_mode') cfg.fraction_config.numerator_mode = value;
+      else if (key === 'numerator_preference') cfg.fraction_config.numerator_preference = value;
+      else if (key === 'max_numerator') cfg.fraction_config.max_numerator = toInt(value);
+      else if (key === 'denominator_mode') cfg.fraction_config.denominator_mode = value;
+      else if (key === 'comparison_format') cfg.fraction_config.comparison_format = value;
+      else if (key === 'add') cfg.fraction_config.operations['+'] = toBool(value);
+      else if (key === 'sub') cfg.fraction_config.operations['-'] = toBool(value);
+      else if (key === 'mul') cfg.fraction_config.operations.x = toBool(value);
+      else if (key === 'div') cfg.fraction_config.operations['/'] = toBool(value);
+      else if (key === 'add_weight') cfg.fraction_config.operation_weights['+'] = toInt(value);
+      else if (key === 'sub_weight') cfg.fraction_config.operation_weights['-'] = toInt(value);
+      else if (key === 'mul_weight') cfg.fraction_config.operation_weights.x = toInt(value);
+      else if (key === 'div_weight') cfg.fraction_config.operation_weights['/'] = toInt(value);
+      else if (key === 'choice_count') cfg.fraction_config.choice_count = toInt(value);
+      else if (key === 'include_simplification' || key === 'allow_equivalent_answers') cfg.fraction_config.include_simplification = toBool(value);
+      else if (key === 'simplify_result') cfg.fraction_config.simplify_result = value;
+      else if (key === 'decimal_direction') cfg.fraction_config.decimal_direction = value;
+      else if (key === 'decimal_places') cfg.fraction_config.decimal_places = toInt(value);
+    } else if (section === 'DIGITS') {
+      if (key === 'worksheet_type') cfg.digits_config.worksheet_type = value;
+      else if (key === 'direction') cfg.digits_config.direction = value;
+      else if (key === 'min_digits') cfg.digits_config.min_digits = toInt(value);
+      else if (key === 'max_digits') cfg.digits_config.max_digits = toInt(value);
+      else if (key === 'multiplication_form') cfg.digits_config.multiplication_form = toBool(value);
+      else if (key === 'decimal_places') cfg.digits_config.decimal_places = toInt(value);
+      else if (key === 'show_example') cfg.digits_config.show_example = toBool(value);
+      else if (key === 'shift_direction') cfg.digits_config.shift_direction = value;
+      else if (key === 'max_shift') cfg.digits_config.max_shift = toInt(value);
+      else if (key === 'decimal_operand_digits') cfg.digits_config.decimal_operand_digits = toInt(value);
+      else if (key === 'decimal_multiplication') {
+        cfg.digits_config.decimal_types ||= {};
+        cfg.digits_config.decimal_types.multiplication = toBool(value);
+      } else if (key === 'decimal_percent') {
+        cfg.digits_config.decimal_types ||= {};
+        cfg.digits_config.decimal_types.percent = toBool(value);
+      } else if (key === 'decimal_bar') {
+        cfg.digits_config.decimal_types ||= {};
+        cfg.digits_config.decimal_types.bar = toBool(value);
+      }
+    } else if (section === 'DECIMALS') {
+      if (key === 'type') cfg.decimal_config.type = value;
+      else if (key === 'shift_direction') cfg.decimal_config.shift_direction = value;
+      else if (key === 'max_shift') cfg.decimal_config.max_shift = toInt(value);
+      else if (key === 'left_max_digits') cfg.decimal_config.left_max_digits = toInt(value);
+      else if (key === 'whole_left') cfg.decimal_config.whole_left = toBool(value);
+      else if (key === 'show_example') cfg.decimal_config.show_example = toBool(value);
     }
   }
   return cfg;
@@ -907,8 +1359,9 @@ function validateWeights(cfg) {
 
 function checkDensity(cfg) {
   const warnEl = document.getElementById('density-warning');
-  const maxRecommendedRows = cfg.mode === 'simultaneous' ? 5 : 10;
-  const dense = cfg.rows > maxRecommendedRows || cfg.rows * cfg.columns > 24;
+  const maxRecommendedRows = cfg.mode === 'simultaneous' ? 5 : cfg.mode === 'fractions' ? 6 : 10;
+  const maxRecommendedProblems = cfg.mode === 'fractions' ? 16 : 24;
+  const dense = cfg.rows > maxRecommendedRows || cfg.rows * cfg.columns > maxRecommendedProblems;
   if (dense) {
     const modeLabel = cfg.mode === 'simultaneous' ? 'equation-pair' : cfg.mode.replace('_', ' ');
     warnEl.textContent = `Layout (${cfg.rows} rows x ${cfg.columns} cols) exceeds recommended spacing for ${modeLabel} problems - content may look tightly packed.`;
@@ -1068,12 +1521,16 @@ function syncGenerateButtonLabel(cfg) {
 }
 
 function updateAll() {
+  syncFractionControls();
+  syncDigitsControls();
+  syncDecimalControls();
   syncAllDigitOptions();
   const cfg = buildConfig();
   validateWeights(cfg);
   checkDensity(cfg);
   renderPreview(cfg);
   syncGenerateButtonLabel(cfg);
+  scheduleMathSettingsSave(cfg);
 }
 
 function refreshWorksheetPreview() {
@@ -1099,9 +1556,43 @@ function setMathMode(mode) {
   if (modeFolder) modeFolder.dataset.mode = mode;
 }
 
+function syncDigitsControls() {
+  const direction = document.querySelector('input[name="digits-direction"]:checked')?.value || 'parts_to_number';
+  const minDigits = document.getElementById('digits-min-digits');
+  const maxDigits = document.getElementById('digits-max-digits');
+  const multiplication = document.getElementById('digits-multiplication');
+  const multiplicationLabel = document.getElementById('digits-multiplication-label');
+  if (!multiplication) return;
+
+  if (Number(maxDigits?.value) < Number(minDigits?.value)) maxDigits.value = minDigits.value;
+
+  const expandsNumber = direction === 'number_to_parts';
+  multiplication.disabled = !expandsNumber;
+  multiplicationLabel?.classList.toggle('is-disabled', !expandsNumber);
+}
+
+function syncDecimalControls() {
+  const type = document.getElementById('decimal-question-type')?.value || 'multiplication';
+  const showMultiplicationSettings = type === 'multiplication' || type === 'mixed';
+  document.querySelectorAll('#panel-decimals [data-decimal-setting="multiplication"]').forEach((element) => {
+    element.classList.toggle('hidden', !showMultiplicationSettings);
+  });
+}
+
 function initTabs() {
   document.querySelectorAll('.mode-tab').forEach((btn) => {
     btn.addEventListener('click', () => {
+      const previousMode = getCurrentMode();
+      if (btn.dataset.mode === 'digits' && previousMode !== 'digits' && !digitsLayoutInitialized) {
+        document.getElementById('cfg-rows').value = '10';
+        document.getElementById('cfg-cols').value = '1';
+        digitsLayoutInitialized = true;
+      }
+      if (btn.dataset.mode === 'decimals' && previousMode !== 'decimals' && !decimalsLayoutInitialized) {
+        document.getElementById('cfg-rows').value = '10';
+        document.getElementById('cfg-cols').value = '1';
+        decimalsLayoutInitialized = true;
+      }
       setMathMode(btn.dataset.mode);
       syncAutoProblemFontSize();
       updateAll();
@@ -1110,7 +1601,7 @@ function initTabs() {
 }
 
 function bindLiveInputs() {
-  ['controls', 'panel-mixed_ops', 'panel-simultaneous'].forEach((id) => {
+  ['controls', 'panel-digits', 'panel-decimals', 'panel-mixed_ops', 'panel-simultaneous', 'panel-fractions'].forEach((id) => {
     const container = document.getElementById(id);
     if (!container) return;
     container.addEventListener('input', updateAll);
@@ -1216,6 +1707,7 @@ async function handleGenerate() {
 document.addEventListener('DOMContentLoaded', () => {
   initOpPanels();
   initOperationMixer();
+  initFractionOperationMixer();
   initAllVerticalToggle();
   initTabs();
   initProblemFontSizeControl();
@@ -1226,6 +1718,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.level-template-btn').forEach((btn) => {
     btn.addEventListener('click', () => applyMathTemplate(btn.dataset.levelTemplate));
   });
+  restoreMathSettings();
   syncLevelTemplateButtons();
 
   document.getElementById('export-ini-btn').addEventListener('click', exportMathIni);
