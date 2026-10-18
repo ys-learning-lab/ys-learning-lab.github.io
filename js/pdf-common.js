@@ -195,6 +195,139 @@ function base64UrlDecodeUtf8(b64url) {
   return new TextDecoder().decode(bytes);
 }
 
+function base64UrlEncodeBytes(bytes) {
+  let bin = '';
+  bytes.forEach((byte) => { bin += String.fromCharCode(byte); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlDecodeBytes(b64url) {
+  let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const bin = atob(b64);
+  return Uint8Array.from(bin, (char) => char.charCodeAt(0));
+}
+
+function writeUnsignedVarint(output, value) {
+  let remaining = Math.floor(value);
+  do {
+    const byte = remaining % 128;
+    remaining = Math.floor(remaining / 128);
+    output.push(byte + (remaining ? 128 : 0));
+  } while (remaining);
+}
+
+function writeSignedVarint(output, value) {
+  writeUnsignedVarint(output, value >= 0 ? value * 2 : (-value * 2) - 1);
+}
+
+function readUnsignedVarint(bytes, state) {
+  let value = 0;
+  let multiplier = 1;
+  for (let count = 0; count < 8; count++) {
+    if (state.offset >= bytes.length) throw new Error('Truncated answer payload');
+    const byte = bytes[state.offset++];
+    value += (byte & 127) * multiplier;
+    if (!(byte & 128)) return value;
+    multiplier *= 128;
+  }
+  throw new Error('Invalid answer payload');
+}
+
+function readSignedVarint(bytes, state) {
+  const value = readUnsignedVarint(bytes, state);
+  return value % 2 === 0 ? value / 2 : -((value + 1) / 2);
+}
+
+// Compact math-answer format, version 1. Question numbers are implicit from
+// reading order. Common numeric, remainder, and equation-pair answers use
+// variable-length integers; unusual answer text has a UTF-8 fallback.
+function encodeMathAnswerPayload(answers) {
+  const output = [1];
+  const encoder = new TextEncoder();
+  const writeRaw = (answer) => {
+    output.push(6);
+    const bytes = encoder.encode(answer);
+    writeUnsignedVarint(output, bytes.length);
+    output.push(...bytes);
+  };
+
+  answers.forEach((value) => {
+    const answer = String(value);
+    let match = answer.match(/^x=(-?\d+),y=(-?\d+)$/);
+    if (match) {
+      output.push(3);
+      writeSignedVarint(output, Number(match[1]));
+      writeSignedVarint(output, Number(match[2]));
+      return;
+    }
+    match = answer.match(/^([xy])=(-?\d+)$/);
+    if (match) {
+      output.push(match[1] === 'x' ? 4 : 5);
+      writeSignedVarint(output, Number(match[2]));
+      return;
+    }
+    match = answer.match(/^(-?\d+) R (\d+)$/);
+    if (match) {
+      output.push(2);
+      writeSignedVarint(output, Number(match[1]));
+      writeUnsignedVarint(output, Number(match[2]));
+      return;
+    }
+    if (/^-?\d+$/.test(answer) && Number.isSafeInteger(Number(answer))) {
+      output.push(0);
+      writeSignedVarint(output, Number(answer));
+      return;
+    }
+    match = answer.match(/^(-?)(\d+)\.(\d+)$/);
+    if (match) {
+      const unscaled = Number(`${match[1]}${match[2]}${match[3]}`);
+      if (Number.isSafeInteger(unscaled)) {
+        output.push(1);
+        writeUnsignedVarint(output, match[3].length);
+        writeSignedVarint(output, unscaled);
+        return;
+      }
+    }
+    writeRaw(answer);
+  });
+  return base64UrlEncodeBytes(Uint8Array.from(output));
+}
+
+function decodeMathAnswerPayload(encoded) {
+  const bytes = base64UrlDecodeBytes(encoded);
+  if (!bytes.length || bytes[0] !== 1) throw new Error('Unsupported answer payload');
+  const state = { offset: 1 };
+  const answers = [];
+  const decoder = new TextDecoder();
+  while (state.offset < bytes.length) {
+    const type = bytes[state.offset++];
+    if (type === 0) {
+      answers.push(String(readSignedVarint(bytes, state)));
+    } else if (type === 1) {
+      const scale = readUnsignedVarint(bytes, state);
+      const unscaled = readSignedVarint(bytes, state);
+      const sign = unscaled < 0 ? '-' : '';
+      const digits = String(Math.abs(unscaled)).padStart(scale + 1, '0');
+      answers.push(`${sign}${digits.slice(0, -scale)}.${digits.slice(-scale)}`);
+    } else if (type === 2) {
+      answers.push(`${readSignedVarint(bytes, state)} R ${readUnsignedVarint(bytes, state)}`);
+    } else if (type === 3) {
+      answers.push(`x=${readSignedVarint(bytes, state)},y=${readSignedVarint(bytes, state)}`);
+    } else if (type === 4 || type === 5) {
+      answers.push(`${type === 4 ? 'x' : 'y'}=${readSignedVarint(bytes, state)}`);
+    } else if (type === 6) {
+      const length = readUnsignedVarint(bytes, state);
+      if (state.offset + length > bytes.length) throw new Error('Truncated answer text');
+      answers.push(decoder.decode(bytes.slice(state.offset, state.offset + length)));
+      state.offset += length;
+    } else {
+      throw new Error('Unknown answer type');
+    }
+  }
+  return answers;
+}
+
 // `c` = worksheet-matching code, `t` = optional title, `a` = the compact
 // answer-list string (e.g. "1:56,2:29,..." or, for Japanese, a plain
 // reading-order answer list with no prompt half - see the callers in
@@ -205,6 +338,13 @@ function buildAnswerQrUrl({ c, t, a }) {
   params.set('c', c);
   if (t) params.set('t', t);
   params.set('a', base64UrlEncodeUtf8(a));
+  return `https://ys-learning-lab.github.io/answers.html?${params.toString()}`;
+}
+
+function buildCompactMathAnswerQrUrl({ c, answers }) {
+  const params = new URLSearchParams();
+  params.set('c', c);
+  params.set('m', encodeMathAnswerPayload(answers));
   return `https://ys-learning-lab.github.io/answers.html?${params.toString()}`;
 }
 
