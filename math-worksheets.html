@@ -19,7 +19,8 @@
 <script src="js/mobile-nav.js?v=5"></script>
 <script src="js/i18n-boot.js?v=3"></script>
 <link rel="icon" type="image/png" href="assets/YsSchool.png" />
-<link rel="stylesheet" href="assets/css/site.css?v=13" />
+<link rel="stylesheet" href="assets/css/site.css?v=14" />
+<link rel="stylesheet" href="assets/css/math-worksheets.css?v=20" />
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
 
@@ -74,7 +75,7 @@
           <button type="button" data-level-template="level5" class="level-template-btn btn-key btn-key-sm btn-key-plum px-2 py-2">Level 5</button>
           <button type="button" data-level-template="level6" class="level-template-btn btn-key btn-key-sm btn-key-terracotta px-2 py-2">Level 6</button>
         </div>
-        <p class="text-[11px] text-stone-500 mt-2">Levels 3-6 cycle through two variants on repeat clicks (e.g. Level 3: multiplication/division fluency &rarr; multi-step problems). Covers arithmetic, mixed expressions, and simple equations only &mdash; this tool doesn't generate fractions, geometry, money, or ratio problems.</p>
+        <p class="text-[11px] text-stone-500 mt-2">Levels 3, 5, and 6 cycle through variants on repeat clicks. The pressed button shows the active variant; choosing a different level starts with A. Each preset makes 20 questions. Covers arithmetic, mixed expressions, and simple equations only &mdash; this tool doesn't generate fractions, geometry, money, or ratio problems.</p>
       </fieldset>
 
       <div class="mb-4">
@@ -96,6 +97,20 @@
           <input id="cfg-pages" type="number" min="1" max="50" value="1" class="w-16 border-2 border-stone-300 rounded-lg px-2 py-1 ml-1" />
         </label>
       </div>
+      <div class="problem-font-size-control mb-4">
+        <div class="flex items-baseline justify-between gap-2">
+          <label for="cfg-font-size" class="text-sm font-medium">Problem font size</label>
+          <span class="text-[10px] text-stone-500">Adjusts with rows and columns</span>
+        </div>
+        <div class="problem-font-size-inputs">
+          <input id="cfg-font-size" type="range" min="8" max="26" step="1" value="17" aria-label="Problem font size" />
+          <input id="cfg-font-size-value" type="number" min="8" max="26" step="1" value="17" aria-label="Problem font size in points" />
+          <span class="text-xs text-stone-500">pt</span>
+        </div>
+      </div>
+      <label class="flex items-center gap-2 text-sm mb-2">
+        <input id="cfg-circle-numbers" type="checkbox" class="h-4 w-4" /> Circle question numbers (①)
+      </label>
       <label class="flex items-center gap-2 text-sm mb-2">
         <input id="cfg-randorder" type="checkbox" checked class="h-4 w-4" /> Randomize problem order
       </label>
@@ -103,11 +118,15 @@
         <input id="cfg-answerkey" type="checkbox" checked class="h-4 w-4" /> Include answer key page(s)
       </label>
       <label class="flex items-center gap-2 text-sm mb-2">
+        <input id="cfg-answerboxes" type="checkbox" class="h-4 w-4" /> Show answer boxes on worksheet
+      </label>
+      <label class="flex items-center gap-2 text-sm mb-2">
         <input id="cfg-footer" type="checkbox" checked class="h-4 w-4" /> Print settings footer on PDF
       </label>
-      <label class="flex items-center gap-2 text-sm mb-4">
+      <label class="flex items-center gap-2 text-sm mb-1">
         <input id="cfg-answerqr" type="checkbox" checked class="h-4 w-4" /> Add Answer-key QR code on each worksheet page
       </label>
+      <p class="text-[11px] text-amber-800 ml-6 mb-4">Large pages can exceed QR capacity. The PDF will print a notice instead of an unreadable code.</p>
 
       <div class="flex gap-2 mb-4">
         <button id="export-ini-btn" type="button" class="btn-key btn-key-sm btn-key-cream flex-1">Export (.ini)</button>
@@ -116,13 +135,6 @@
       </div>
 
       <div id="density-warning" class="hidden text-xs bg-amber-50 border-2 border-amber-300 text-amber-800 rounded-xl p-2 mb-4"></div>
-
-      <!-- Mode tabs -->
-      <div class="flex gap-2 mb-4 text-sm font-medium">
-        <button data-mode="standard" class="mode-tab btn-key btn-key-sm btn-key-primary">Standard</button>
-        <button data-mode="mixed_ops" class="mode-tab btn-key btn-key-sm btn-key-cream">Mixed Continuous</button>
-        <button data-mode="simultaneous" class="mode-tab btn-key btn-key-sm btn-key-cream">Simultaneous</button>
-      </div>
 
       <!-- STANDARD PANEL -->
       <div id="panel-standard" class="mode-panel space-y-4">
@@ -135,15 +147,14 @@
           <legend class="text-sm font-bold px-1">Addition (+)</legend>
           <input type="checkbox" class="op-enabled hidden" checked />
           <input type="hidden" class="op-weight" value="50" />
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
+          <label class="flex gap-2 mb-2 text-xs items-center">Digits L/R
+            <select class="op-digitsl w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Addition left number digits"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>/<select class="op-digitsr w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Addition right number digits"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select>
+          </label>
           <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
           <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-regroup h-4 w-4" /> Allow regrouping</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
+          <label class="flex items-center gap-2 text-xs mb-1">Negatives <select class="op-negatives border-2 border-stone-300 rounded-lg px-1 py-0.5"><option value="never">No negatives</option><option value="allow">Allow negatives</option><option value="force">Force a negative</option></select></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
           <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
@@ -156,15 +167,14 @@
           <legend class="text-sm font-bold px-1">Subtraction (-)</legend>
           <input type="checkbox" class="op-enabled hidden" checked />
           <input type="hidden" class="op-weight" value="50" />
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
+          <label class="flex gap-2 mb-2 text-xs items-center">Digits L/R
+            <select class="op-digitsl w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Subtraction left number digits"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>/<select class="op-digitsr w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Subtraction right number digits"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select>
+          </label>
           <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
           <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-regroup h-4 w-4" /> Allow regrouping</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
+          <label class="flex items-center gap-2 text-xs mb-1">Negatives <select class="op-negatives border-2 border-stone-300 rounded-lg px-1 py-0.5"><option value="never">No negatives</option><option value="allow">Allow negatives</option><option value="force">Force a negative</option></select></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
           <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
@@ -177,14 +187,13 @@
           <legend class="text-sm font-bold px-1">Multiplication (×)</legend>
           <input type="checkbox" class="op-enabled hidden" />
           <input type="hidden" class="op-weight" value="0" />
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
+          <label class="flex gap-2 mb-2 text-xs items-center">Digits L/R
+            <select class="op-digitsl w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Multiplication left number digits"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>/<select class="op-digitsr w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Multiplication right number digits"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select>
+          </label>
           <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
           <label class="block text-xs mb-2">Terms <input type="number" class="op-terms w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="2" min="2" max="4" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical form</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
+          <label class="flex items-center gap-2 text-xs mb-1">Negatives <select class="op-negatives border-2 border-stone-300 rounded-lg px-1 py-0.5"><option value="never">No negatives</option><option value="allow">Allow negatives</option><option value="force">Force a negative</option></select></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-allowzero h-4 w-4" /> Allow 0</label>
           <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
@@ -197,50 +206,18 @@
           <legend class="text-sm font-bold px-1">Division (÷)</legend>
           <input type="checkbox" class="op-enabled hidden" />
           <input type="hidden" class="op-weight" value="0" />
-          <div class="flex gap-2 mb-2 text-xs items-center">Digits L/R
-            <input type="number" class="op-digitsl w-12 border-2 border-stone-300 rounded-lg px-1" value="2" min="1" max="5" />/
-            <input type="number" class="op-digitsr w-12 border-2 border-stone-300 rounded-lg px-1" value="1" min="1" max="5" />
-          </div>
+          <label class="flex gap-2 mb-2 text-xs items-center">Digits L/R
+            <select class="op-digitsl w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Division dividend digits"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>/<select class="op-digitsr w-14 border-2 border-stone-300 rounded-lg px-1 py-1" aria-label="Division divisor digits"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select>
+          </label>
           <label class="block text-xs mb-2">Max limit (0=unlimited) <input type="number" class="op-maxnum w-16 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-vertical h-4 w-4" /> Vertical (long division) form</label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-remainder h-4 w-4" /> Allow remainder</label>
-          <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-negatives h-4 w-4" /> Allow negatives</label>
+          <label class="flex items-center gap-2 text-xs mb-1">Negatives <select class="op-negatives border-2 border-stone-300 rounded-lg px-1 py-0.5"><option value="never">No negatives</option><option value="allow">Allow negatives</option><option value="force">Force a negative</option></select></label>
           <label class="block text-xs mb-1">Decimal digits <input type="number" class="op-decimals w-12 border-2 border-stone-300 rounded-lg px-1 ml-1" value="0" min="0" max="3" /></label>
           <label class="flex items-center gap-2 text-xs mb-1"><input type="checkbox" class="op-crypto h-4 w-4" /> Cryptarithms %
             <select class="op-cryptopct border-2 border-stone-300 rounded-lg px-1 py-0.5"></select>
           </label>
         </fieldset>
-      </div>
-
-      <!-- MIXED PANEL -->
-      <div id="panel-mixed_ops" class="mode-panel space-y-3 hidden">
-        <p class="text-sm font-semibold">Operations included</p>
-        <div class="flex flex-wrap gap-3 text-xs">
-          <label class="flex items-center gap-1"><input id="mixed-add" type="checkbox" checked class="h-4 w-4" /> +</label>
-          <label class="flex items-center gap-1"><input id="mixed-sub" type="checkbox" checked class="h-4 w-4" /> -</label>
-          <label class="flex items-center gap-1"><input id="mixed-mul" type="checkbox" checked class="h-4 w-4" /> ×</label>
-          <label class="flex items-center gap-1"><input id="mixed-div" type="checkbox" checked class="h-4 w-4" /> ÷</label>
-        </div>
-        <label class="block text-xs">Max digits per number
-          <input id="mixed-maxdigits" type="number" min="1" max="4" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
-        </label>
-        <label class="block text-xs">Number of operations (up to 3)
-          <input id="mixed-numops" type="number" min="1" max="3" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
-        </label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-parens" type="checkbox" checked class="h-4 w-4" /> Randomized parentheses (e.g. 3 × (4 + 3))</label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-negatives" type="checkbox" class="h-4 w-4" /> Allow negative results</label>
-        <label class="flex items-center gap-2 text-xs"><input id="mixed-allowzero" type="checkbox" class="h-4 w-4" /> Allow 0</label>
-        <label class="block text-xs">Decimal digits <input id="mixed-decimals" type="number" min="0" max="3" value="0" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
-      </div>
-
-      <!-- SIMULTANEOUS PANEL -->
-      <div id="panel-simultaneous" class="mode-panel space-y-3 hidden">
-        <p class="text-sm font-semibold">Problem type</p>
-        <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="standard" checked class="h-4 w-4" /> Standard (x = / y = boxes)</label>
-        <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="substitution_simple" class="h-4 w-4" /> Simple substitution (2nd eq. like y = 6)</label>
-        <label class="block text-xs">Max coefficient <input id="sim-maxcoef" type="number" min="2" max="10" value="5" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
-        <label class="flex items-center gap-2 text-xs"><input id="sim-negatives" type="checkbox" class="h-4 w-4" /> Allow negative values/solutions</label>
-        <p class="text-[11px] italic text-stone-500">Uses only variables x and y.</p>
       </div>
 
       <button id="generate-btn" class="btn-key btn-key-primary mt-6 w-full py-3 text-sm">
@@ -252,24 +229,77 @@
 
     <!-- PREVIEW -->
     <div id="preview" class="order-2 md:order-2 card-soft p-4 w-full">
-      <section id="operation-mixer" class="operation-mixer" aria-labelledby="operation-mixer-title">
-        <div class="flex items-baseline justify-between gap-3">
-          <h2 id="operation-mixer-title" class="text-sm font-semibold text-stone-700">Problem mix</h2>
-          <p class="text-[11px] text-stone-500">Choose operations, then drag a divider. Values snap to 5%.</p>
+      <div class="worksheet-mode-tabs" role="tablist" aria-label="Worksheet type">
+        <button id="mode-tab-standard" type="button" data-mode="standard" class="mode-tab worksheet-mode-tab is-active" role="tab" aria-selected="true" aria-controls="operation-mixer">Standard</button>
+        <button id="mode-tab-mixed" type="button" data-mode="mixed_ops" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-mixed_ops">Mixed Continuous</button>
+        <button id="mode-tab-equations" type="button" data-mode="simultaneous" class="mode-tab worksheet-mode-tab" role="tab" aria-selected="false" aria-controls="panel-simultaneous">Linear Equations</button>
+        <button id="refresh-preview-btn" type="button" class="btn-key btn-key-sm btn-key-cream preview-refresh-btn" title="Reroll the worksheet preview" aria-label="Reroll worksheet preview">↻</button>
+      </div>
+
+      <section id="worksheet-mode-folder" class="worksheet-mode-folder mb-5" data-mode="standard" aria-label="Worksheet type settings">
+        <section id="operation-mixer" class="operation-mixer" role="tabpanel" aria-labelledby="mode-tab-standard operation-mixer-title">
+          <div class="flex items-baseline justify-between gap-3">
+            <h2 id="operation-mixer-title" class="text-sm font-semibold text-stone-700">Problem mix</h2>
+            <p class="text-[11px] text-stone-600">Choose operations, then drag a divider. Values snap to 5%.</p>
+          </div>
+          <div class="operation-picker" role="group" aria-label="Operations to include">
+            <label class="operation-picker-option operation-picker-option--add"><input type="checkbox" class="operation-toggle" data-op="+" checked /> Addition (+)</label>
+            <label class="operation-picker-option operation-picker-option--sub"><input type="checkbox" class="operation-toggle" data-op="-" checked /> Subtraction (-)</label>
+            <label class="operation-picker-option operation-picker-option--mul"><input type="checkbox" class="operation-toggle" data-op="×" /> Multiplication (×)</label>
+            <label class="operation-picker-option operation-picker-option--div"><input type="checkbox" class="operation-toggle" data-op="÷" /> Division (÷)</label>
+            <label class="operation-picker-option operation-all-vertical" title="Turn off to make every operation regular"><input id="standard-all-vertical" type="checkbox" /> All vertical</label>
+          </div>
+          <div id="operation-distribution" class="operation-distribution" aria-live="polite"></div>
+          <p id="operation-distribution-help" class="text-[11px] text-stone-600 mt-2">Select at least one operation. Click a colored operation to jump to its settings. Click a divider to enter an exact percentage.</p>
+        </section>
+
+        <div id="panel-mixed_ops" class="mode-panel mode-folder-panel compact-mode-settings hidden" role="tabpanel" aria-labelledby="mode-tab-mixed">
+          <div class="mode-setting-operations">
+            <p class="text-sm font-semibold">Operations included</p>
+            <div class="flex flex-wrap gap-3 text-xs">
+              <label class="flex items-center gap-1"><input id="mixed-add" type="checkbox" checked class="h-4 w-4" /> +</label>
+              <label class="flex items-center gap-1"><input id="mixed-sub" type="checkbox" checked class="h-4 w-4" /> -</label>
+              <label class="flex items-center gap-1"><input id="mixed-mul" type="checkbox" checked class="h-4 w-4" /> ×</label>
+              <label class="flex items-center gap-1"><input id="mixed-div" type="checkbox" checked class="h-4 w-4" /> ÷</label>
+            </div>
+          </div>
+          <label class="compact-mode-field text-xs">Max digits per number
+            <input id="mixed-maxdigits" type="number" min="1" max="4" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
+          </label>
+          <label class="compact-mode-field text-xs">Number of operations (up to 3)
+            <input id="mixed-numops" type="number" min="1" max="3" value="2" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" />
+          </label>
+          <label class="compact-mode-field mode-setting-wide text-xs"><input id="mixed-parens" type="checkbox" checked class="h-4 w-4" /> Randomized parentheses (e.g. 3 × (4 + 3))</label>
+          <label class="compact-mode-field mode-setting-wide text-xs"><input id="mixed-require-muldiv" type="checkbox" class="h-4 w-4" /> Require × or ÷ in every question</label>
+          <label class="compact-mode-field text-xs"><input id="mixed-negatives" type="checkbox" class="h-4 w-4" /> Allow negative results</label>
+          <label class="compact-mode-field text-xs"><input id="mixed-allowzero" type="checkbox" class="h-4 w-4" /> Allow 0</label>
+          <label class="compact-mode-field text-xs">Decimal digits <input id="mixed-decimals" type="number" min="0" max="3" value="0" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
         </div>
-        <div class="operation-picker" role="group" aria-label="Operations to include">
-          <label class="operation-picker-option operation-picker-option--add"><input type="checkbox" class="operation-toggle" data-op="+" checked /> Addition (+)</label>
-          <label class="operation-picker-option operation-picker-option--sub"><input type="checkbox" class="operation-toggle" data-op="-" checked /> Subtraction (-)</label>
-          <label class="operation-picker-option operation-picker-option--mul"><input type="checkbox" class="operation-toggle" data-op="×" /> Multiplication (×)</label>
-          <label class="operation-picker-option operation-picker-option--div"><input type="checkbox" class="operation-toggle" data-op="÷" /> Division (÷)</label>
+
+        <div id="panel-simultaneous" class="mode-panel mode-folder-panel compact-mode-settings hidden" role="tabpanel" aria-labelledby="mode-tab-equations">
+          <div class="mode-setting-types">
+            <p class="text-sm font-semibold">Problem type</p>
+            <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="standard" checked class="h-4 w-4" /> Standard (x = / y = boxes)</label>
+            <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="substitution_simple" class="h-4 w-4" /> Simple substitution (2nd eq. like y = 6)</label>
+            <label class="flex items-center gap-2 text-xs"><input type="radio" name="sim-type" value="substitution_blank" class="h-4 w-4" /> One-step equation (x = ?)</label>
+          </div>
+          <label class="compact-mode-field text-xs">Max coefficient <input id="sim-maxcoef" type="number" min="2" max="10" value="5" class="w-14 border-2 border-stone-300 rounded-lg px-1 ml-1" /></label>
+          <label class="compact-mode-field mode-setting-wide text-xs"><input id="sim-negatives" type="checkbox" class="h-4 w-4" /> Allow negative values/solutions</label>
+          <p class="compact-mode-field text-[11px] italic text-stone-600">Uses only variables x and y.</p>
         </div>
-        <div id="operation-distribution" class="operation-distribution" aria-live="polite"></div>
-        <p id="operation-distribution-help" class="text-[11px] text-stone-500 mt-2">Select at least one operation. Click a divider to enter an exact percentage.</p>
       </section>
-      <h2 class="text-sm font-semibold text-stone-600">Problem Selection Preview</h2>
-      <p class="text-[11px] text-stone-400 mb-2">This is a sample of the problems your current settings would generate, so you can check the mix of operators and difficulty before printing &mdash; it is not a mockup of the page design. The actual PDF has no colors or rounded corners: every box is a plain black rectangle on white paper.</p>
-      <div class="overflow-x-auto">
-        <div id="preview-grid" class="grid gap-2" style="min-width:480px"></div>
+
+      <div class="flex items-baseline justify-between gap-3 mb-1">
+        <h2 class="text-sm font-semibold text-stone-600">Print Preview</h2>
+        <span id="print-preview-page-label" class="text-[11px] text-stone-500">Worksheet page 1</span>
+      </div>
+      <p class="text-[11px] text-stone-500 mb-2">Rendered by the same PDF layout used when you generate the worksheet. Use the thumbnails to inspect additional pages.</p>
+      <div id="print-preview-shell" class="print-preview-shell">
+        <nav id="print-preview-thumbnails" class="print-preview-thumbnails hidden" aria-label="Worksheet preview pages"></nav>
+        <div id="print-preview-stage" class="print-preview-stage">
+          <p id="print-preview-status" class="text-xs text-stone-500">Preparing print preview…</p>
+          <canvas id="print-preview-canvas" class="hidden" aria-label="Selected worksheet page print preview"></canvas>
+        </div>
       </div>
 
       <!-- Below-preview ad slot (AdSense unit: Leaderboard - top, repositioned here). -->
@@ -291,7 +321,7 @@
       <h2 class="text-2xl font-extrabold text-stone-900 mb-3">How to use the Math Worksheet Generator</h2>
       <ol class="list-decimal pl-6 space-y-2">
         <li><strong>Pick a starting level.</strong> The six Quick Template buttons set every option at once. Start with the level that matches what your child is learning now. You can adjust anything afterward.</li>
-        <li><strong>Check the preview.</strong> The Problem Selection Preview shows a sample of the problems your settings will produce, so you can check the difficulty before you print.</li>
+        <li><strong>Check the preview.</strong> The Print Preview renders the first worksheet page with the current question count, spacing, orientation, digit lengths, and answer-box setting.</li>
         <li><strong>Set the layout.</strong> Rows and Cols set how many problems fit on a page. Fewer, larger problems suit younger children and vertical (column-form) arithmetic. More problems suit quick fact drills.</li>
         <li><strong>Generate and print.</strong> You get one PDF with the worksheet pages followed by the answer-key pages. Print only the pages you need.</li>
       </ol>
@@ -309,7 +339,7 @@
             <tr><td class="p-2 border-b border-stone-200 font-semibold">3</td><td class="p-2 border-b border-stone-200">Times-table fluency: single-digit multiplication and division, written in column form</td><td class="p-2 border-b border-stone-200">Multi-step expressions with parentheses, such as 3 × (4 + 3)</td></tr>
             <tr><td class="p-2 border-b border-stone-200 font-semibold">4</td><td class="p-2 border-b border-stone-200">Up to four-digit addition and subtraction, two-digit multiplication, long division with remainders</td><td class="p-2 border-b border-stone-200">Arithmetic with one decimal place</td></tr>
             <tr><td class="p-2 border-b border-stone-200 font-semibold">5</td><td class="p-2 border-b border-stone-200">Decimal operations to two places</td><td class="p-2 border-b border-stone-200">Introduction to algebra: solving for one unknown by substitution</td></tr>
-            <tr><td class="p-2 font-semibold">6</td><td class="p-2">Arithmetic with negative numbers</td><td class="p-2">Two-variable simultaneous equations (x and y)</td></tr>
+            <tr><td class="p-2 font-semibold">6</td><td class="p-2">Arithmetic with negative numbers</td><td class="p-2">Linear equations: one-step equations and two-variable systems</td></tr>
           </tbody>
         </table>
       </div>
@@ -374,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
   I18N.init();
 });
 </script>
-<script src="js/pdf-common.js?v=18"></script>
-<script src="js/math-generator.js?v=18"></script>
-<script src="js/math-ui.js?v=18"></script>
+<script src="js/pdf-common.js?v=21"></script>
+<script src="js/math-generator.js?v=34"></script>
+<script src="js/math-ui.js?v=37"></script>
 </body>
 </html>

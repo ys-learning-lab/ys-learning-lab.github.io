@@ -71,9 +71,37 @@ function makeOpConfig(overrides = {}) {
   return Object.assign({
     enabled: true, weight: 25, digits_left: 2, digits_right: 1, max_number: 0,
     is_vertical: false, allow_regrouping: false, pct_regrouping: 30,
-    allow_remainder: false, allow_negatives: false, decimal_places: 0,
+    allow_remainder: false, allow_negatives: false, force_negatives: false, decimal_places: 0,
     allow_crypto: false, pct_crypto: 10, num_terms: 2, allow_zero: false,
+    random_decimal_places: false,
+    division_answer_digits: null,
   }, overrides);
+}
+
+function calculateMathProblemFontSize({ rows, columns, mode, has_vertical = false }) {
+  const safeRows = Math.max(1, Number(rows) || 1);
+  const safeColumns = Math.max(1, Number(columns) || 1);
+  const cellWidth = (PDF_PAGE.WIDTH - PDF_PAGE.MARGIN * 2) / safeColumns;
+  const cellHeight = (PDF_PAGE.HEIGHT - PDF_PAGE.MARGIN - PDF_PAGE.HEADER_HEIGHT - 30) / safeRows;
+  let minimum = 8;
+  let maximum = 17;
+  let widthDivisor = 10.5;
+  let heightDivisor = 3;
+
+  if (mode === 'simultaneous') {
+    maximum = 24;
+    widthDivisor = 11.5;
+    heightDivisor = 4.45;
+  } else if (mode === 'mixed_ops') {
+    widthDivisor = 15.5;
+  } else if (has_vertical) {
+    maximum = 26;
+    widthDivisor = 8;
+    heightDivisor = 3.2;
+  }
+
+  const fitted = Math.min(cellWidth / widthDivisor, cellHeight / heightDivisor);
+  return Math.floor(Math.max(minimum, Math.min(maximum, fitted)));
 }
 
 class MathGenerator {
@@ -87,41 +115,57 @@ class MathGenerator {
     return Math.round(val * f) / f;
   }
 
-  _getMaxLimit(opCfg) {
-    const digMax = Math.pow(10, opCfg.digits_left) - 1;
-    if (opCfg.max_number <= 0) return digMax;
-    return Math.min(digMax, opCfg.max_number);
+  _getTermBounds(opCfg, digits) {
+    const digitCount = Math.max(1, Math.min(3, parseInt(digits, 10) || 1));
+    const minimum = digitCount === 1 ? 1 : Math.pow(10, digitCount - 1);
+    const digitMaximum = Math.pow(10, digitCount) - 1;
+    const maximum = opCfg.max_number > 0 ? Math.min(digitMaximum, opCfg.max_number) : digitMaximum;
+    return { minimum, maximum };
   }
 
-  _generateSingleTerm(opCfg, allowZero, avoidOne = false) {
-    const ml = this._getMaxLimit(opCfg);
-    const minVal = allowZero ? 0 : 1;
-    let raw = randInt(minVal, ml);
+  _generateSingleTerm(opCfg, allowZero, avoidOne = false, digits = opCfg.digits_left) {
+    const bounds = this._getTermBounds(opCfg, digits);
+    const randomDecimalPlaces = opCfg.random_decimal_places && opCfg.decimal_places > 0;
+    const minVal = randomDecimalPlaces
+      ? (allowZero ? 0 : 1)
+      : (allowZero && bounds.minimum === 1 ? 0 : bounds.minimum);
+    let raw = randInt(minVal, Math.max(minVal, bounds.maximum));
+    let places = randomDecimalPlaces ? randInt(0, Math.min(3, opCfg.decimal_places)) : (opCfg.decimal_places || 0);
     let attempts = 0;
-    while (avoidOne && raw === 1 && attempts < 50) {
-      raw = randInt(minVal, ml);
+    while (avoidOne && raw / Math.pow(10, places) === 1 && attempts < 50) {
+      raw = randInt(minVal, Math.max(minVal, bounds.maximum));
+      places = randomDecimalPlaces ? randInt(0, Math.min(3, opCfg.decimal_places)) : (opCfg.decimal_places || 0);
       attempts++;
     }
     let val;
     if (opCfg.decimal_places > 0) {
-      const f = Math.pow(10, opCfg.decimal_places);
+      const f = Math.pow(10, places);
       val = Math.round((raw / f) * f) / f;
     } else {
       val = raw;
     }
-    if (opCfg.allow_negatives && Math.random() < 0.5) val = -val;
+    if (opCfg.allow_negatives && !opCfg.force_negatives && Math.random() < 0.5) val = -val;
     return val;
   }
 
   _generateStandardProblem(operator, opCfg) {
-    const ml = this._getMaxLimit(opCfg);
     const numTerms = opCfg.num_terms;
 
     for (let attempts = 0; attempts < 100; attempts++) {
       const terms = [];
       for (let i = 0; i < numTerms; i++) {
-        const avoid1 = (operator === '×' || operator === '÷') && Math.random() > 0.15;
-        terms.push(this._generateSingleTerm(opCfg, opCfg.allow_zero, avoid1));
+        // Multiplication/division by 1 is intentionally omitted from generated
+        // practice; it produces identity facts that are too easy for these presets.
+        const avoid1 = operator === '×' || operator === '÷';
+        const digits = i === 0 ? opCfg.digits_left : opCfg.digits_right;
+        terms.push(this._generateSingleTerm(opCfg, opCfg.allow_zero, avoid1, digits));
+      }
+
+      if (opCfg.force_negatives && !terms.some((term) => term < 0)) {
+        const nonzeroIndexes = terms.map((term, index) => term !== 0 ? index : -1).filter((index) => index >= 0);
+        if (!nonzeroIndexes.length) continue;
+        const negativeIndex = randChoice(nonzeroIndexes);
+        terms[negativeIndex] = -Math.abs(terms[negativeIndex]);
       }
 
       if (operator === '+') {
@@ -152,30 +196,55 @@ class MathGenerator {
       }
 
       if (operator === '÷') {
-        let op2 = terms[1];
-        if (op2 === 0) op2 = 2;
-        if (opCfg.allow_remainder && opCfg.decimal_places === 0) {
-          let divisor = Math.abs(Math.trunc(op2));
-          if (divisor <= 1) divisor = 2;
-          const quotient = randInt(1, Math.max(1, Math.floor(ml / divisor)));
-          const remainder = divisor > 1 ? randInt(1, divisor - 1) : 0;
+        const dividendBounds = this._getTermBounds(opCfg, opCfg.digits_left);
+        const divisorBounds = this._getTermBounds(opCfg, opCfg.digits_right);
+        const divisorMin = Math.max(2, divisorBounds.minimum);
+        const divisorMax = divisorBounds.maximum;
+        if (divisorMin > divisorMax) continue;
+
+        let divisor = randInt(divisorMin, divisorMax);
+        if (opCfg.allow_remainder && opCfg.decimal_places === 0 && !opCfg.force_negatives) {
+          const quotientMin = Math.max(1, Math.ceil((dividendBounds.minimum - (divisor - 1)) / divisor));
+          const quotientMax = Math.floor((dividendBounds.maximum - 1) / divisor);
+          if (quotientMin > quotientMax) continue;
+          const quotient = randInt(quotientMin, quotientMax);
+          const remainder = randInt(1, divisor - 1);
           const dividend = quotient * divisor + remainder;
-          const ans = remainder > 0 ? `${quotient} R ${remainder}` : String(quotient);
-          return [[dividend, '÷', divisor], ans];
-        } else {
-          const rawAns = randInt(1, ml);
-          const rawDiv = randInt(opCfg.allow_zero ? 2 : 1, Math.min(ml, 12));
-          const dividend = rawAns * rawDiv;
-          const dec = opCfg.decimal_places;
-          const f = Math.pow(10, dec);
-          const op1 = dec > 0 ? Math.round((dividend / f) * f) / f : dividend;
-          const op2v = dec > 0 ? Math.round((rawDiv / f) * f) / f : rawDiv;
-          const ans = this._formatVal(rawAns, dec);
-          return [[op1, '÷', op2v], ans];
+          if (dividend < dividendBounds.minimum || dividend > dividendBounds.maximum) continue;
+          return [[dividend, '÷', divisor], `${quotient} R ${remainder}`];
         }
+
+        // Do not emit same-number facts such as 7 ÷ 7. A quotient of at least
+        // two keeps division practice meaningfully different from identity.
+        let quotientMin = Math.max(2, Math.ceil(dividendBounds.minimum / divisor));
+        let quotientMax = Math.floor(dividendBounds.maximum / divisor);
+        const quotientMode = opCfg.division_answer_digits;
+        if (quotientMode === 'one' || quotientMode === 'mostly_two') {
+          const preferTwoDigit = quotientMode === 'mostly_two' && Math.random() < 0.9;
+          if (preferTwoDigit) {
+            quotientMin = Math.max(quotientMin, 10);
+          } else {
+            quotientMax = Math.min(quotientMax, 9);
+          }
+        }
+        if (quotientMin > quotientMax) continue;
+        let quotient = randInt(quotientMin, quotientMax);
+        let dividend = quotient * divisor;
+        if (opCfg.force_negatives) {
+          if (Math.random() < 0.5) dividend = -dividend;
+          else divisor = -divisor;
+          quotient = -quotient;
+        } else if (opCfg.allow_negatives) {
+          const negativeDividend = Math.random() < 0.5;
+          const negativeDivisor = Math.random() < 0.5;
+          if (negativeDividend) dividend = -dividend;
+          if (negativeDivisor) divisor = -divisor;
+          if (negativeDividend !== negativeDivisor) quotient = -quotient;
+        }
+        return [[dividend, '÷', divisor], this._formatVal(quotient, opCfg.decimal_places)];
       }
     }
-    return [[2, operator, 2], 1];
+    return operator === '÷' ? [[4, '÷', 2], 2] : [[2, operator, 2], 1];
   }
 
   _generateCleanMixedProblem() {
@@ -197,6 +266,11 @@ class MathGenerator {
 
       const ops = [];
       for (let i = 0; i < numOps; i++) ops.push(randChoice(activeOps));
+      const multiplicativeOps = activeOps.filter((op) => op === '×' || op === '÷');
+      const requireMulDiv = mc.require_mul_div && multiplicativeOps.length > 0;
+      if (requireMulDiv && !ops.some((op) => op === '×' || op === '÷')) {
+        ops[randInt(0, ops.length - 1)] = randChoice(multiplicativeOps);
+      }
 
       ops.forEach((op, i) => {
         if (op === '÷') {
@@ -246,6 +320,7 @@ class MathGenerator {
         continue;
       }
     }
+    if (mc.require_mul_div && (activeOps.includes('×') || activeOps.includes('÷'))) return [[2, '×', 3], 6];
     return [[2, '+', 3], 5];
   }
 
@@ -283,7 +358,18 @@ class MathGenerator {
       if (b1 === 0) b1 = 1;
       const c1 = a1 * xVal + b1 * yVal;
 
-      if (stype === 'substitution_simple') {
+      if (stype === 'substitution_blank') {
+        const coefficient = randInt(1, maxC);
+        let constant = randInt(1, maxC);
+        xVal = randInt(2, 9);
+        const subtractConstant = Math.random() < 0.5;
+        if (subtractConstant) constant = Math.min(constant, coefficient * xVal - 1);
+        const simpleC = coefficient * xVal + (subtractConstant ? -constant : constant);
+        const coefficientText = coefficient === 1 ? 'x' : `${coefficient}x`;
+        const line1 = `${coefficientText} ${subtractConstant ? '-' : '+'} ${constant} = ${simpleC}`;
+        const line2 = '';
+        return [[line1, line2], `x = ${xVal}`, xVal, 0, 'substitution_blank'];
+      } else if (stype === 'substitution_simple') {
         const line1 = formatEq(a1, b1, c1);
         const varName = randChoice(['x', 'y']);
         const valTarget = varName === 'x' ? xVal : yVal;
@@ -402,7 +488,7 @@ class MathGenerator {
 
         pageProblems.push({
           expr_parts: expr, operator, answer: ans,
-          is_vertical: opCfg.is_vertical && operator !== '÷' && expr.length === 3,
+          is_vertical: opCfg.is_vertical && expr.length === 3,
           is_cryptarithm: isCrypto, missing_index: missingIndex,
         });
       }
@@ -423,14 +509,18 @@ class MathPDFRenderer {
     this.cellWidth = (PDF_PAGE.WIDTH - PDF_PAGE.MARGIN * 2) / config.columns;
     this.cellHeight = (PDF_PAGE.HEIGHT - PDF_PAGE.MARGIN - PDF_PAGE.HEADER_HEIGHT - 30) / config.rows;
 
-    const flat = pages.flat();
-    const hasVertical = flat.some((p) => p.is_vertical);
-    if (config.mode === 'simultaneous') {
-      this.fontSize = Math.min(24.0, Math.max(8.0, this.cellWidth / 11.5, this.cellHeight / 5.0));
-    } else if (!hasVertical && config.mode === 'standard') {
-      this.fontSize = Math.min(17.0, Math.max(8.0, this.cellWidth / 10.5, this.cellHeight / 3.0));
+    const requestedFontSize = Number(config.problem_font_size);
+    if (Number.isFinite(requestedFontSize) && requestedFontSize > 0) {
+      this.fontSize = Math.max(8, Math.min(26, requestedFontSize));
     } else {
-      this.fontSize = Math.min(26.0, Math.max(10.0, this.cellWidth / 15.5, this.cellHeight / 4.8));
+      const flat = pages.flat();
+      const hasVertical = flat.some((p) => p.is_vertical);
+      this.fontSize = calculateMathProblemFontSize({
+        rows: config.rows,
+        columns: config.columns,
+        mode: config.mode,
+        has_vertical: hasVertical,
+      });
     }
   }
 
@@ -439,6 +529,36 @@ class MathPDFRenderer {
     const color = opts.isRed ? PDFLib.rgb(0.9, 0.2, 0.2) : PDFLib.rgb(0, 0, 0);
     const font = opts.fontKey === 'F3' ? this.fonts.timesBold : this.fonts.helvetica;
     page.drawText(String(text), { x, y, size: fs, font, color });
+  }
+
+  _drawProblemNumber(page, probNum, x, y, fontSize = this.fontSize * 0.9) {
+    const text = String(probNum);
+    if (!this.config.circle_question_numbers) {
+      this._drawText(page, `${text}.`, x, y, { fontOverride: fontSize, fontKey: 'F3' });
+      return (text.length + 1) * this.fontSize * 0.5 * 0.9 + this.fontSize * 0.25;
+    }
+
+    const radius = Math.max(5.5, fontSize * 0.58);
+    const labelSize = fontSize * (text.length >= 3 ? 0.55 : text.length === 2 ? 0.72 : 0.82);
+    const centerX = x + radius;
+    const centerY = y + fontSize * 0.3;
+    const font = this.fonts.timesBold;
+    const textWidth = font.widthOfTextAtSize(text, labelSize);
+    page.drawCircle({
+      x: centerX,
+      y: centerY,
+      size: radius,
+      borderColor: PDFLib.rgb(0, 0, 0),
+      borderWidth: 1,
+    });
+    page.drawText(text, {
+      x: centerX - textWidth / 2,
+      y: centerY - labelSize * 0.32,
+      size: labelSize,
+      font,
+      color: PDFLib.rgb(0, 0, 0),
+    });
+    return radius * 2 + this.fontSize * 0.25;
   }
 
   _drawBox(page, x, y, charsWide = 2) {
@@ -451,18 +571,28 @@ class MathPDFRenderer {
 
   _drawSimultaneous(page, prob, x, y, isAnswerKey, probNum) {
     const fs = this.fontSize;
-    this._drawText(page, `${probNum}.`, x + 5, y, { fontOverride: fs, fontKey: 'F3' });
+    const showAnswerBoxes = isAnswerKey || this.config.show_answer_boxes !== false;
+    this._drawProblemNumber(page, probNum, x + 5, y, fs);
 
     const eqX = x + Math.max(35, this.cellWidth * 0.12);
-    const lineSpacing = fs * 1.55;
+    const lineSpacing = Math.max(fs * 1.05, Math.min(fs * 1.55, (this.cellHeight - fs * 0.8) / 3.45));
 
     this._drawText(page, prob.sim_lines[0], eqX, y, { fontOverride: fs });
-    this._drawText(page, prob.sim_lines[1], eqX, y - lineSpacing, { fontOverride: fs });
+    if (prob.sim_type !== 'substitution_blank') {
+      this._drawText(page, prob.sim_lines[1], eqX, y - lineSpacing, { fontOverride: fs });
+    }
 
-    const yAns1 = y - lineSpacing * 2.35;
+    const yAns1 = y - lineSpacing * (prob.sim_type === 'substitution_blank' ? 1.35 : 2.35);
     const yAns2 = y - lineSpacing * 3.45;
 
-    if (prob.sim_type === 'substitution_simple') {
+    if (prob.sim_type === 'substitution_blank') {
+      this._drawText(page, 'x =', eqX, yAns1, { fontOverride: fs });
+      const boxW = fs * 3.0, boxH = fs * 1.15;
+      const boxX = eqX + fs * 2.0;
+      const boxY = yAns1 - fs * 0.15;
+      if (showAnswerBoxes) drawBoxOutline(page, boxX, boxY, boxW, boxH);
+      if (isAnswerKey) this._drawText(page, String(prob.sim_ans_x), boxX + 6, yAns1, { isRed: true, fontOverride: fs });
+    } else if (prob.sim_type === 'substitution_simple') {
       const targetVar = (prob.sim_lines[1].includes('x =') || prob.sim_lines[1].includes('x=')) ? 'x' : 'y';
       const missingVar = targetVar === 'x' ? 'y' : 'x';
       const ansVal = missingVar === 'x' ? prob.sim_ans_x : prob.sim_ans_y;
@@ -471,19 +601,19 @@ class MathPDFRenderer {
       const boxW = fs * 3.0, boxH = fs * 1.15;
       const boxX = eqX + fs * 2.2;
       const boxY = yAns1 - fs * 0.15;
-      drawBoxOutline(page, boxX, boxY, boxW, boxH);
+      if (showAnswerBoxes) drawBoxOutline(page, boxX, boxY, boxW, boxH);
       if (isAnswerKey) this._drawText(page, String(ansVal), boxX + 6, yAns1, { isRed: true, fontOverride: fs });
     } else {
       this._drawText(page, 'x =', eqX, yAns1, { fontOverride: fs });
       const boxW = fs * 3.0, boxH = fs * 1.15;
       const boxX = eqX + fs * 2.0;
       const boxY = yAns1 - fs * 0.15;
-      drawBoxOutline(page, boxX, boxY, boxW, boxH);
+      if (showAnswerBoxes) drawBoxOutline(page, boxX, boxY, boxW, boxH);
       if (isAnswerKey) this._drawText(page, String(prob.sim_ans_x), boxX + 6, yAns1, { isRed: true, fontOverride: fs });
 
       this._drawText(page, 'y =', eqX, yAns2, { fontOverride: fs });
       const boxY2 = yAns2 - fs * 0.15;
-      drawBoxOutline(page, boxX, boxY2, boxW, boxH);
+      if (showAnswerBoxes) drawBoxOutline(page, boxX, boxY2, boxW, boxH);
       if (isAnswerKey) this._drawText(page, String(prob.sim_ans_y), boxX + 6, yAns2, { isRed: true, fontOverride: fs });
     }
   }
@@ -494,8 +624,7 @@ class MathPDFRenderer {
     const charW = this.fontSize * 0.5;
 
     if (probNum !== undefined) {
-      this._drawText(page, `${probNum}.`, cx, y, { fontOverride: this.fontSize * 0.9, fontKey: 'F3' });
-      cx += (String(probNum).length + 1) * charW * 0.9 + spacing;
+      cx += this._drawProblemNumber(page, probNum, cx, y, this.fontSize * 0.9);
     }
 
     const advanceBox = (valStr) => {
@@ -522,12 +651,14 @@ class MathPDFRenderer {
     cx += advanceText('=');
 
     const ansStr = String(prob.answer);
-    cx += prob.is_cryptarithm ? advanceText(ansStr) : advanceBox(ansStr);
+    const showAnswerBox = isAnswerKey || this.config.show_answer_boxes !== false;
+    if (prob.is_cryptarithm) cx += advanceText(ansStr);
+    else if (showAnswerBox) cx += advanceBox(ansStr);
   }
 
   _drawVerticalStandard(page, prob, x, y, isAnswerKey, probNum) {
     const xRight = x + this.cellWidth * 0.65;
-    const lineSpacing = this.fontSize * 1.05;
+    const lineSpacing = Math.max(this.fontSize * 0.82, Math.min(this.fontSize * 1.05, (this.cellHeight - this.fontSize * 0.55) / 3.2));
     const charW = this.fontSize * 0.5;
 
     const [op1, op, op2] = prob.expr_parts;
@@ -537,11 +668,35 @@ class MathPDFRenderer {
     const yLine = y - lineSpacing * 2.1;
 
     if (probNum !== undefined) {
-      this._drawText(page, `${probNum}.`, x + 5, y, { fontOverride: this.fontSize * 0.9, fontKey: 'F3' });
+      this._drawProblemNumber(page, probNum, x + 5, y, this.fontSize * 0.9);
     }
 
-    const rightText = (valStr, cy) => {
-      this._drawText(page, valStr, xRight - valStr.length * charW, cy);
+    const op1Text = (typeof op1 === 'number' && op1 < 0) ? `(${op1})` : String(op1);
+    const op2Text = (typeof op2 === 'number' && op2 < 0) ? `(${op2})` : String(op2);
+    const font = this.fonts.helvetica;
+    const textWidth = (value) => font.widthOfTextAtSize(value, this.fontSize);
+    const alignDecimals = !op1Text.startsWith('(') && !op2Text.startsWith('(')
+      && (op1Text.includes('.') || op2Text.includes('.'));
+    const fractions = [op1Text, op2Text].map((text) => text.includes('.') ? text.split('.')[1] : '');
+    const maxFractionWidth = Math.max(...fractions.map(textWidth));
+    const dotWidth = textWidth('.');
+    const decimalX = xRight - maxFractionWidth - dotWidth;
+    let operandLeft = xRight;
+    const drawOperand = (value, cy) => {
+      if (!alignDecimals) {
+        const textX = xRight - textWidth(value);
+        this._drawText(page, value, textX, cy);
+        operandLeft = Math.min(operandLeft, textX);
+        return;
+      }
+      const [integer, fraction] = value.split('.');
+      const integerX = decimalX - textWidth(integer);
+      this._drawText(page, integer, integerX, cy);
+      if (fraction !== undefined) {
+        this._drawText(page, '.', decimalX, cy);
+        this._drawText(page, fraction, decimalX + dotWidth, cy);
+      }
+      operandLeft = Math.min(operandLeft, integerX);
     };
     const rightBox = (valStr, cy) => {
       const bw = this.fontSize * (Math.max(valStr.length, 2) * 0.5) + this.fontSize * 0.3;
@@ -552,61 +707,70 @@ class MathPDFRenderer {
       }
     };
 
-    rightText((typeof op1 === 'number' && op1 < 0) ? `(${op1})` : String(op1), yOp1);
-    this._drawText(page, op, xRight - this.fontSize * 2.2, yOp2);
-    rightText((typeof op2 === 'number' && op2 < 0) ? `(${op2})` : String(op2), yOp2);
+    drawOperand(op1Text, yOp1);
+    drawOperand(op2Text, yOp2);
+    const operatorX = operandLeft - textWidth(op) - this.fontSize * 0.28;
+    this._drawText(page, op, operatorX, yOp2);
 
-    drawLineSeg(page, xRight - this.fontSize * 2.5, yLine, xRight + this.fontSize * 0.2, yLine, 1);
+    drawLineSeg(page, operatorX - this.fontSize * 0.08, yLine, xRight + this.fontSize * 0.2, yLine, 1);
 
-    rightBox(String(prob.answer), yAns);
+    if (isAnswerKey || this.config.show_answer_boxes !== false) rightBox(String(prob.answer), yAns);
   }
 
   _drawVerticalDivision(page, prob, x, y, isAnswerKey, probNum) {
-    let cx = x + this.cellWidth * 0.15;
-    const cy = y - this.cellHeight * 0.45;
-    const charW = this.fontSize * 0.5;
+    const showAnswerBox = isAnswerKey || this.config.show_answer_boxes !== false;
+    // Keep the question number at the top of the cell. Without an answer box,
+    // the old 0.05 offset lifted the division roof above that baseline and made
+    // mixed vertical rows look crooked. Reserve one text line for the roof even
+    // when the quotient area is intentionally omitted.
+    const cy = y - this.fontSize * (showAnswerBox ? 1.95 : 1.05);
 
-    const op1 = prob.expr_parts[2], op2 = prob.expr_parts[0];
+    const divisor = prob.expr_parts[2], dividend = prob.expr_parts[0];
 
+    let cx = x + 5;
     if (probNum !== undefined) {
-      this._drawText(page, `${probNum}.`, x + 5, y, { fontOverride: this.fontSize * 0.9, fontKey: 'F3' });
+      cx += this._drawProblemNumber(page, probNum, cx, y, this.fontSize * 0.9) + this.fontSize * 0.12;
     }
 
-    const divStr = String(op2);
-    this._drawText(page, divStr, cx, cy);
-    const cxDivEnd = cx + divStr.length * charW;
+    const divisorText = String(divisor);
+    this._drawText(page, divisorText, cx, cy);
+    const cxDivEnd = cx + this.fonts.helvetica.widthOfTextAtSize(divisorText, this.fontSize);
 
-    const parenX = cxDivEnd + this.fontSize * 0.05;
-    this._drawText(page, ')', parenX, cy);
+    const bracketX = cxDivEnd + this.fontSize * 0.14;
+    const roofY = cy + this.fontSize * 0.9;
+    const roofStartX = bracketX + this.fontSize * 0.12;
+    drawLineSeg(page, bracketX, cy - this.fontSize * 0.12, roofStartX, roofY, 1.1);
 
-    const dividendX = parenX + this.fontSize * 0.55;
-    const divStrVal = String(op1);
-    this._drawText(page, divStrVal, dividendX, cy);
-    const dividendEnd = dividendX + divStrVal.length * charW;
+    const dividendX = roofStartX + this.fontSize * 0.18;
+    const dividendText = String(dividend);
+    this._drawText(page, dividendText, dividendX, cy);
+    const dividendEnd = dividendX + this.fonts.helvetica.widthOfTextAtSize(dividendText, this.fontSize);
 
-    const roofY = cy + this.fontSize * 0.85;
-    const lineStart = parenX + this.fontSize * 0.15;
     const lineEnd = dividendEnd + this.fontSize * 0.2;
-    drawLineSeg(page, lineStart, roofY, lineEnd, roofY, 1);
+    drawLineSeg(page, roofStartX, roofY, lineEnd, roofY, 1.1);
 
     const ansY = roofY + this.fontSize * 0.2;
     const ansStr = String(prob.answer);
-    const bwAns = this._drawBox(page, dividendX, ansY, Math.max(ansStr.length, 2));
+    const bwAns = showAnswerBox
+      ? this._drawBox(page, dividendX, ansY, Math.max(ansStr.length, 2))
+      : this.fontSize * (Math.max(ansStr.length, 2) * 0.5) + this.fontSize * 0.3;
     if (isAnswerKey) {
-      this._drawText(page, ansStr, dividendX + bwAns / 2 - (ansStr.length * charW) / 2, ansY + this.fontSize * 0.12, { isRed: true });
+      const answerWidth = this.fonts.helvetica.widthOfTextAtSize(ansStr, this.fontSize);
+      this._drawText(page, ansStr, dividendX + bwAns / 2 - answerWidth / 2, ansY + this.fontSize * 0.12, { isRed: true });
     }
   }
 
   _settingsSummary() {
     const cfg = this.config;
-    let opsStr = cfg.mode;
+    let opsStr = cfg.mode === 'simultaneous' ? 'linear equations' : cfg.mode;
     if (cfg.mode === 'standard' && cfg.ops) {
       const enabled = Object.entries(cfg.ops)
         .filter(([, op]) => op.enabled)
         .map(([sym, op]) => `${sym}${op.weight}%`);
       if (enabled.length) opsStr = `standard (${enabled.join(' ')})`;
     }
-    return `Layout: ${cfg.rows}x${cfg.columns} | Pages: ${cfg.num_pages} | Mode: ${opsStr} | Randomized: ${cfg.randomize_order}`;
+    const numberStyle = cfg.circle_question_numbers ? ' | Numbers: circled' : '';
+    return `Layout: ${cfg.rows}x${cfg.columns} | Pages: ${cfg.num_pages} | Font: ${this.fontSize}pt | Mode: ${opsStr}${numberStyle} | Randomized: ${cfg.randomize_order}`;
   }
 
   // Short answer text for one problem - used by the parent-facing answer QR,
@@ -615,6 +779,9 @@ class MathPDFRenderer {
   // reliably scannable at print size.
   _answerSummary(prob) {
     if (prob.operator === 'simultaneous') {
+      if (prob.sim_type === 'substitution_blank') {
+        return `x=${prob.sim_ans_x}`;
+      }
       if (prob.sim_type === 'substitution_simple') {
         const targetVar = (prob.sim_lines[1].includes('x =') || prob.sim_lines[1].includes('x=')) ? 'x' : 'y';
         const missingVar = targetVar === 'x' ? 'y' : 'x';
@@ -650,21 +817,43 @@ class MathPDFRenderer {
     // the grid) rather than being squeezed under the code text, which
     // previously left it touching the grid on denser worksheets. Sized to
     // its actual module count (see sizeQrForData() in pdf-common.js), not
-    // just guessed from string length, and skipped entirely if even the max
-    // available size can't keep its modules legibly large - a QR a phone
-    // can't focus on is worse than no QR.
+    // just guessed from string length. If even the maximum size cannot keep
+    // its modules legible, the PDF prints an explanation in the QR area
+    // instead of silently omitting it or drawing an unreadable code.
     const qrTop = PDF_PAGE.HEIGHT - 34;
     let qrBottom = qrTop;
+    const drawQrOmissionNotice = (tooManyQuestions) => {
+      const lines = tooManyQuestions
+        ? ['Answer QR code', 'was not added because', 'there are too many', 'questions.']
+        : ['Answer QR code', 'could not be added.'];
+      const noticeSize = 6.5;
+      lines.forEach((line, index) => {
+        const width = helvetica.widthOfTextAtSize(line, noticeSize);
+        page.drawText(line, {
+          x: PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - width,
+          y: qrTop - 10 - index * 9,
+          size: noticeSize,
+          font: helvetica,
+          color: PDFLib.rgb(0.45, 0.2, 0.12),
+        });
+      });
+      qrBottom = qrTop - 10 - lines.length * 9;
+    };
     if (!isAnswerKey && this.config.include_answer_qr !== false) {
-      const items = problems.map((prob, i) => `${i + 1}:${this._answerSummary(prob)}`).join(',');
-      const url = buildAnswerQrUrl({ c: code, t: baseTitle, a: items });
+      const answers = problems.map((prob) => this._answerSummary(prob));
+      const url = buildCompactMathAnswerQrUrl({ c: code, answers });
       try {
-        const fit = sizeQrForData(url, 'L', { maxSize: 64 });
+        const fit = sizeQrForData(url, 'L', { maxSize: 74 });
         if (fit) {
           qrBottom = qrTop - fit.size;
           drawQrCode(page, url, PDF_PAGE.WIDTH - PDF_PAGE.MARGIN - fit.size, qrBottom, fit.size, 'L');
+        } else {
+          drawQrOmissionNotice(true);
+          console.warn('Answer QR payload is too large to print legibly on this worksheet page.');
         }
       } catch (e) {
+        const tooManyQuestions = /overflow|too large|code length/i.test(String(e?.message || e));
+        drawQrOmissionNotice(tooManyQuestions);
         console.warn('Answer QR code unavailable:', e);
       }
     }
