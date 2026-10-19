@@ -1,0 +1,332 @@
+@media (max-width: 700px) {
+  .phone-layout-demo .phone-demo-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .phone-layout-demo .phone-demo-template-region,
+  .phone-layout-demo .phone-demo-type-region {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .phone-layout-demo .phone-demo-template-region > fieldset {
+    margin: 0;
+    padding: 0.7rem;
+  }
+
+  .phone-layout-demo .phone-demo-template-region fieldset > p {
+    display: none;
+  }
+
+  .phone-layout-demo .level-template-btn {
+    min-height: 2.65rem;
+  }
+
+  .phone-layout-demo .phone-demo-type-region,
+  .phone-layout-demo #controls {
+    padding: 0.75rem;
+    border: 2.5px solid #24262a;
+    border-radius: 0.9rem;
+    background: #f4f5f7;
+    box-shadow: 0 3px 0 rgba(36, 38, 42, 0.17);
+  }
+
+  .phone-layout-demo .phone-demo-section-title {
+    margin: 0 0 0.55rem;
+    color: #44403c;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  .phone-layout-demo .phone-demo-operation-title {
+    margin-bottom: 0.65rem;
+  }
+
+  .phone-layout-demo .worksheet-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: none;
+    margin: 0 0 0.65rem;
+    gap: 0.45rem;
+  }
+
+  .phone-layout-demo .worksheet-mode-tab,
+  .phone-layout-demo .worksheet-mode-tab.is-active {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0.45rem 0.2rem;
+    border: 2.5px solid #24262a;
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 0 rgba(36, 38, 42, 0.38);
+    font-size: 0.72rem;
+    line-height: 1.05;
+  }
+
+  .phone-layout-demo .worksheet-mode-tab + .worksheet-mode-tab {
+    margin-left: 0;
+  }
+
+  .phone-layout-demo .worksheet-mode-tab.is-active {
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72), 0 2px 0 #24262a;
+    transform: translateY(1px);
+  }
+
+  .phone-layout-demo .worksheet-mode-folder {
+    margin: 0;
+    padding: 0.65rem;
+    border-width: 2.5px;
+    border-radius: 0.75rem;
+    box-shadow: 0 3px 0 rgba(36, 38, 42, 0.17);
+  }
+
+  .phone-layout-demo .operation-distribution {
+    margin-top: 1rem;
+  }
+
+  .phone-layout-demo .operation-segment.is-compact .operation-segment-keycap {
+    display: none;
+  }
+
+  .phone-layout-demo #controls {
+    width: 100%;
+  }
+
+  .phone-layout-demo #controls > .phone-demo-section-title:first-child {
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid rgba(36, 38, 42, 0.18);
+  }
+
+  .phone-layout-demo .phone-demo-preview-refresh {
+    position: absolute;
+    right: 0.45rem;
+    bottom: 0.45rem;
+    z-index: 2;
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+    opacity: 0.92;
+  }
+
+  .phone-layout-demo #print-preview-page-label {
+    margin: 0;
+    white-space: nowrap;
+    font-size: 0.62rem;
+  }
+
+  .phone-layout-demo body {
+    padding-bottom: calc(4.4rem + env(safe-area-inset-bottom));
+  }
+
+  .phone-layout-demo .phone-demo-mobile-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.45rem 0.55rem calc(0.45rem + env(safe-area-inset-bottom));
+    border-top: 3px solid #24262a;
+    background: #e8dfc6;
+    box-shadow: 0 -4px 10px rgba(36, 38, 42, 0.24);
+  }
+
+  .phone-layout-demo .phone-demo-dock-button {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.15rem;
+    font-size: 0.72rem;
+    line-height: 1;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay {
+    position: fixed;
+    inset: 0 0 calc(4rem + env(safe-area-inset-bottom));
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    padding: max(0.3rem, env(safe-area-inset-top)) 0.3rem max(0.3rem, env(safe-area-inset-bottom));
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    border: 0;
+    border-radius: 0;
+    background: rgba(28, 29, 31, 0.72);
+    box-shadow: none;
+    transition: opacity 140ms ease, visibility 140ms ease;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay.is-open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .phone-layout-demo .phone-demo-preview-sheet {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 40rem);
+    height: 100%;
+    max-height: 100%;
+    padding: 0.5rem;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    border: 2.5px solid #24262a;
+    border-radius: 0.9rem;
+    background: #f4f5f7;
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .phone-layout-demo .phone-demo-overlay-header {
+    position: sticky;
+    top: -0.5rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin: -0.5rem -0.5rem 0.45rem;
+    padding: 0.45rem 0.5rem;
+    border-bottom: 2px solid #24262a;
+    background: #e8dfc6;
+  }
+
+  .phone-layout-demo .phone-demo-overlay-header h2 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .phone-layout-demo .phone-demo-overlay-page-controls {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+  }
+
+  .phone-layout-demo .phone-demo-preview-meta {
+    display: none;
+  }
+
+  .phone-layout-demo .phone-demo-preview-help {
+    display: none;
+  }
+
+  .phone-layout-demo .phone-demo-page-select {
+    display: none;
+    min-width: 5.5rem;
+    margin-left: auto;
+    padding: 0.25rem 1.6rem 0.25rem 0.45rem;
+    border: 2px solid #a8a29e;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: #292524;
+    font-size: 0.75rem;
+  }
+
+  .phone-layout-demo .phone-demo-page-select.is-available {
+    display: block;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-shell {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-thumbnails {
+    display: block;
+    flex: 0 0 3.75rem;
+    width: 3.75rem;
+    max-height: 100%;
+    padding: 0.1rem 0.2rem 0.25rem 0.05rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-thumbnails.hidden {
+    display: none;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-thumbnail {
+    width: 100%;
+    margin: 0 0 0.45rem;
+    padding: 0.15rem;
+    font-size: 0.55rem;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-thumbnail canvas {
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 0.15rem;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-stage {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    place-items: start center;
+    padding: 0.1rem;
+    overflow: auto;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay .print-preview-stage > canvas {
+    max-width: 100%;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay.phone-demo-pages-hidden .print-preview-thumbnails {
+    display: none !important;
+  }
+
+  .phone-layout-demo .phone-demo-preview-sheet:focus {
+    outline: none;
+  }
+
+  .phone-layout-demo .phone-demo-overlay-actions {
+    position: sticky;
+    bottom: -0.5rem;
+    z-index: 3;
+    margin: 0.45rem -0.5rem -0.5rem;
+    padding: 0.5rem;
+    border-top: 2px solid #24262a;
+    background: #e8dfc6;
+  }
+
+  .phone-layout-demo .phone-demo-overlay-actions button {
+    width: 100%;
+    min-height: 2.6rem;
+  }
+
+  .phone-layout-demo .phone-demo-preview-overlay #ad-slot-below-preview {
+    display: none;
+  }
+
+  .phone-layout-demo.phone-demo-preview-open,
+  .phone-layout-demo .phone-demo-preview-open {
+    overflow: hidden;
+  }
+}
